@@ -4,17 +4,28 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import timeGridPlugin from '@fullcalendar/timegrid';
-
 import interactionPlugin from '@fullcalendar/interaction';
-
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { addMonths, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import AddEventModal from './Components/AddEventModal';
 import UpdateEventModal from './Components/UpdateEventModal';
+import { Modal } from 'react-bootstrap';
+import { useMemo } from 'react';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
 
 
 export default function Home() {
+
+  const [selectedCard, setSelectedCard] = useState(null); // 'total', 'received', 'due', etc.
+  const [showListModal, setShowListModal] = useState(false);
+
+  const handleCardClick = (type) => {
+    setSelectedCard(type);
+    setShowListModal(true);
+  };
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -104,81 +115,191 @@ export default function Home() {
     fetchOrders(selectedDate);
   }, []);
 
+  const { totalAssignments, totalPayment, duePayment, receivedPayment } = useMemo(() => {
+    const totalAssignments = allEvents.length;
+
+    let totalPayment = 0;
+    let duePayment = 0;
+    let receivedPayment = 0;
+
+    allEvents.forEach(event => {
+      const assignment = event.extendedProps || {};
+      const totalAmount = assignment.totalAmount || 0;
+      const transactions = assignment.transactions || [];
+
+      const receivedSum = transactions.reduce((sum, t) => sum + (t.receivedPayment || 0), 0);
+
+      totalPayment += totalAmount;
+      receivedPayment += receivedSum;
+      duePayment += Math.max(totalAmount - receivedSum, 0);
+    });
+
+    return { totalAssignments, totalPayment, duePayment, receivedPayment };
+  }, [allEvents]);
+
+  const filteredAssignments = useMemo(() => {
+    return allEvents.filter(event => {
+      const assignment = event.extendedProps;
+      const totalAmount = assignment?.totalAmount || 0;
+      const transactions = assignment?.transactions || [];
+      const received = transactions.reduce((sum, t) => sum + (t.receivedPayment || 0), 0);
+
+      if (selectedCard === 'total') return true;
+      if (selectedCard === 'received') return received > 0;
+      if (selectedCard === 'due') return totalAmount - received > 0;
+      return false;
+    });
+  }, [selectedCard, allEvents]);
+
+  const {
+    assignmentsCount,
+    totalPaymentSum,
+    totalDueAmount,
+    totalReceivedAmount,
+    assignmentGrowthPercent,
+    paymentGrowthPercent,
+    dueGrowthPercent,
+    receivedGrowthPercent
+  } = useMemo(() => {
+    const thisWeekStart = dayjs().startOf('week');
+    const lastWeekStart = dayjs().subtract(1, 'week').startOf('week');
+    const lastWeekEnd = thisWeekStart;
+  
+    let totalPayment = 0;
+    let duePayment = 0;
+    let receivedPayment = 0;
+  
+    let lastWeekTotal = 0;
+    let thisWeekTotal = 0;
+  
+    let lastWeekReceived = 0;
+    let thisWeekReceived = 0;
+  
+    let lastWeekDue = 0;
+    let thisWeekDue = 0;
+  
+    const assignmentsCount = allEvents.length;
+  
+    allEvents.forEach(event => {
+      const assignment = event.extendedProps || {};
+      const totalAmount = assignment.totalAmount || 0;
+      const transactions = assignment.transactions || [];
+      const assignmentDate = dayjs(assignment.assignmentDateTime);
+  
+      const received = transactions.reduce((sum, t) => sum + (t.receivedPayment || 0), 0);
+      const due = Math.max(totalAmount - received, 0);
+  
+      totalPayment += totalAmount;
+      receivedPayment += received;
+      duePayment += due;
+  
+      if (assignmentDate.isBetween(lastWeekStart, lastWeekEnd, null, '[)')) {
+        lastWeekTotal += 1;
+        lastWeekReceived += received;
+        lastWeekDue += due;
+      }
+  
+      if (assignmentDate.isAfter(thisWeekStart)) {
+        thisWeekTotal += 1;
+        thisWeekReceived += received;
+        thisWeekDue += due;
+      }
+    });
+  
+    const calcPercent = (thisVal, lastVal) => {
+      if (lastVal === 0) return thisVal > 0 ? 100 : 0;
+      return +(((thisVal - lastVal) / lastVal) * 100).toFixed(1);
+    };
+  
+    return {
+      assignmentsCount,
+      totalPaymentSum: totalPayment,
+      totalDueAmount: duePayment,
+      totalReceivedAmount: receivedPayment,
+      assignmentGrowthPercent: calcPercent(thisWeekTotal, lastWeekTotal),
+      paymentGrowthPercent: calcPercent(totalPayment, totalPayment - duePayment),
+      dueGrowthPercent: calcPercent(thisWeekDue, lastWeekDue),
+      receivedGrowthPercent: calcPercent(thisWeekReceived, lastWeekReceived)
+    };
+  }, [allEvents]);
+  
+
+
   return (
     <div>
       <div className="container-xxl flex-grow-1 container-p-y">
         <div className="row g-6">
-          <div className="col-sm-6 col-lg-3">
+          <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('total')}>
             <div className="card card-border-shadow-primary h-100">
               <div className="card-body">
                 <div className="d-flex align-items-center mb-2">
                   <div className="avatar me-4">
                     <span className="avatar-initial rounded-3 bg-label-primary"
-                    ><i className="ri-car-line ri-24px"></i
+                    ><i className="ri-briefcase-line ri-24px"></i
                     ></span>
                   </div>
-                  <h4 className="mb-0">42</h4>
+                  <h4 className="mb-0">{totalAssignments}</h4>
                 </div>
-                <h6 className="mb-0 fw-normal">On route vehicles</h6>
+                <h6 className="mb-0 fw-normal">Total assignment</h6>
                 <p className="mb-0">
-                  <span className="me-1 fw-medium">+18.2%</span>
+                  <span className="me-1 fw-medium">{assignmentGrowthPercent}%</span>
                   <small className="text-muted">than last week</small>
                 </p>
               </div>
             </div>
           </div>
-          <div className="col-sm-6 col-lg-3">
+          <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('total')}>
             <div className="card card-border-shadow-warning h-100">
               <div className="card-body">
                 <div className="d-flex align-items-center mb-2">
                   <div className="avatar me-4">
                     <span className="avatar-initial rounded-3 bg-label-warning"
-                    ><i className="ri-alert-line ri-24px"></i
+                    ><i className="ri-wallet-3-line ri-24px"></i
                     ></span>
                   </div>
-                  <h4 className="mb-0">8</h4>
+                  <h4 className="mb-0">{totalPayment}</h4>
                 </div>
-                <h6 className="mb-0 fw-normal">Vehicles with errors</h6>
+                <h6 className="mb-0 fw-normal">Total Payment</h6>
                 <p className="mb-0">
-                  <span className="me-1 fw-medium">-8.7%</span>
+                  <span className="me-1 fw-medium">{paymentGrowthPercent > 0 ? '+' : ''}{paymentGrowthPercent}%</span>
                   <small className="text-muted">than last week</small>
                 </p>
               </div>
             </div>
           </div>
-          <div className="col-sm-6 col-lg-3">
+          <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('due')}>
             <div className="card card-border-shadow-danger h-100">
               <div className="card-body">
                 <div className="d-flex align-items-center mb-2">
                   <div className="avatar me-4">
                     <span className="avatar-initial rounded-3 bg-label-danger"
-                    ><i className="ri-route-line ri-24px"></i
+                    ><i className="ri-error-warning-line ri-24px"></i
                     ></span>
                   </div>
-                  <h4 className="mb-0">27</h4>
+                  <h4 className="mb-0">{duePayment}</h4>
                 </div>
-                <h6 className="mb-0 fw-normal">Deviated from route</h6>
+                <h6 className="mb-0 fw-normal">Due Payment </h6>
                 <p className="mb-0">
-                  <span className="me-1 fw-medium">+4.3%</span>
+                  <span className="me-1 fw-medium">{dueGrowthPercent > 0 ? '+' : ''}{dueGrowthPercent}%</span>
                   <small className="text-muted">than last week</small>
                 </p>
               </div>
             </div>
           </div>
-          <div className="col-sm-6 col-lg-3">
+          <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('received')}>
             <div className="card card-border-shadow-info h-100">
               <div className="card-body">
                 <div className="d-flex align-items-center mb-2">
                   <div className="avatar me-4">
                     <span className="avatar-initial rounded-3 bg-label-info"
-                    ><i className="ri-time-line ri-24px"></i
+                    ><i className="ri-bank-card-line ri-24px"></i
                     ></span>
                   </div>
-                  <h4 className="mb-0">13</h4>
+                  <h4 className="mb-0">{receivedPayment}</h4>
                 </div>
-                <h6 className="mb-0 fw-normal">Late vehicles</h6>
+                <h6 className="mb-0 fw-normal">Recieved Payment</h6>
                 <p className="mb-0">
-                  <span className="me-1 fw-medium">-2.5%</span>
+                  <span className="me-1 fw-medium">{receivedGrowthPercent > 0 ? '+' : ''}{receivedGrowthPercent}%</span>
                   <small className="text-muted">than last week</small>
                 </p>
               </div>
@@ -432,6 +553,29 @@ export default function Home() {
         selectedDate={selectedDate}
         allEvents={allEvents}
       />
+
+      <Modal show={showListModal} onHide={() => setShowListModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {selectedCard === 'total' && 'All Assignments'}
+            {selectedCard === 'received' && 'Received Payments'}
+            {selectedCard === 'due' && 'Due Payments'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul className="list-group">
+            {filteredAssignments.map((event, i) => {
+              const a = event.extendedProps;
+              return (
+                <li className="list-group-item" key={i}>
+                  <strong>{a.assignmentName}</strong> - ₹{a.totalAmount} - {a.assignmentStatus}
+                </li>
+              );
+            })}
+          </ul>
+        </Modal.Body>
+      </Modal>
+
 
 
     </div>
