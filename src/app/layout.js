@@ -6,6 +6,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import Sidebar from "./Components/Sidebar";
 import Navbar from "./Components/Navbar";
+import "react-datepicker/dist/react-datepicker.css";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

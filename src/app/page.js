@@ -2,12 +2,11 @@
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { addMonths, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import AddEventModal from './Components/AddEventModal';
 import UpdateEventModal from './Components/UpdateEventModal';
 import { Modal } from 'react-bootstrap';
