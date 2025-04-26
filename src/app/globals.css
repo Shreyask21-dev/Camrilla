@@ -40,3 +40,25 @@ a {
     color-scheme: dark;
   }
 }
+.react-datepicker__header{
+  background-color: transparent !important;
+} 
+.react-datepicker__current-month{
+  line-height: 1.2rem;
+}
+
+.react-datepicker{
+  border: none !important;
+}
+
+.react-datepicker__header{
+  border-bottom: none !important;
+}
+
+h2#fc-dom-86 {
+  padding-left: 10px;
+}
+
+/* .fc-button-group {
+  display: none !important;
+} */
