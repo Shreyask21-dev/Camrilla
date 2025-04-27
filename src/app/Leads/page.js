@@ -459,42 +459,37 @@ export default function Page() {
                                                                 <strong>{leadCreatedDate.toLocaleDateString()}</strong>
                                                             </div>
 
+                                                            <div className='text-center my-2'>
+                                                                <span className={`badge rounded-pill ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
+                                                                    lead.status === 'CONVERTED' ? 'bg-label-success' :
+                                                                        lead.status === 'NEW' ? 'bg-label-primary' :
+                                                                            'bg-label-secondary'
+                                                                    }`}>
+                                                                    {lead.status}
+                                                                </span>
+                                                            </div>
+
                                                             {/* Status Badge */}
-                                                            <div className='d-flex flex-column justify-content-center align-itmes-center'>
-                                                                <div className='text-center my-2'>
-                                                                    <span className={`badge rounded-pill ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
-                                                                        lead.status === 'CONVERTED' ? 'bg-label-success' :
-                                                                            lead.status === 'NEW' ? 'bg-label-primary' :
-                                                                                'bg-label-secondary'
-                                                                        }`}>
-                                                                        {lead.status}
-                                                                    </span>
-                                                                </div>
+                                                            <div className='d-flex flex-wrap justify-content-center align-items-center gap-2'>
 
                                                                 {lead.status === 'CONVERTED' && (
-                                                                    <div className='text-center my-2'>
-                                                                        <button
-                                                                            className="btn btn-sm btn-outline-success ms-2"
-                                                                            onClick={() => openAssignmentModal(lead)}
-                                                                        >
-                                                                            + Assignment
-                                                                        </button>
-                                                                    </div>
-
+                                                                    <button
+                                                                        className="btn btn-sm btn-outline-warning"
+                                                                        onClick={() => openAssignmentModal(lead)}
+                                                                    >
+                                                                        <i className="bi bi-plus-lg"></i> {/* Bootstrap Plus Icon */}
+                                                                    </button>
                                                                 )}
 
-
-                                                                <div className='text-center my-2'>
-                                                                    <button
-                                                                        className="btn btn-sm btn-outline-dark"
-                                                                        onClick={() => openEditLeadModal(lead)}
-                                                                    >
-                                                                        <i className="ri-pencil-line"></i> Edit {/* Remixicon Pencil */}
-                                                                    </button>
-                                                                </div>
-
+                                                                <button
+                                                                    className="btn btn-sm btn-outline-dark"
+                                                                    onClick={() => openEditLeadModal(lead)}
+                                                                >
+                                                                    <i className="ri-pencil-line"></i> {/* Remixicon Pencil */}
+                                                                </button>
 
                                                             </div>
+
 
                                                         </div>
 
