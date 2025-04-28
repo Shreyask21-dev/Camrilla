@@ -96,17 +96,17 @@ export default function Sidebar() {
           </li>
 
           <li className="menu-item">
-            <a href="javascript:void(0);" className="menu-link">
+            <Link href="/Subscriptions" className="menu-link">
               <i className="menu-icon tf-icons ri-home-smile-line"></i>
               <div data-i18n="Subscription">Subscription</div>
-            </a>
+            </Link>
           </li>
 
           <li className="menu-item">
-            <a href="javascript:void(0);" className="menu-link">
+            <Link href="/Feedback" className="menu-link">
               <i className="menu-icon tf-icons ri-home-smile-line"></i>
               <div data-i18n="Feedback">Feedback</div>
-            </a>
+            </Link>
           </li>
 
 

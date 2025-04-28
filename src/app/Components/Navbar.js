@@ -1,6 +1,7 @@
 'use client';
 import React from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link';
 
 export default function Navbar() {
 
@@ -462,38 +463,48 @@ export default function Navbar() {
                                     <div className="dropdown-divider"></div>
                                 </li>
                                 <li>
-                                    <a className="dropdown-item" href="pages-profile-user.html">
+                                    <Link className="dropdown-item" href="/Profile">
                                         <i className="ri-user-3-line ri-22px me-3"></i><span className="align-middle">My Profile</span>
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li>
-                                    <a className="dropdown-item" href="pages-account-settings-account.html">
+                                    <Link className="dropdown-item" href="/Settings">
                                         <i className="ri-settings-4-line ri-22px me-3"></i><span className="align-middle">Settings</span>
-                                    </a>
+                                    </Link>
                                 </li>
-                                <li>
-                                    <a className="dropdown-item" href="pages-account-settings-billing.html">
-                                        <span className="d-flex align-items-center align-middle">
-                                            <i className="flex-shrink-0 ri-file-text-line ri-22px me-3"></i>
-                                            <span className="flex-grow-1 align-middle">Billing</span>
-                                            <span className="flex-shrink-0 badge badge-center rounded-pill bg-danger">4</span>
-                                        </span>
-                                    </a>
-                                </li>
+                                
                                 <li>
                                     <div className="dropdown-divider"></div>
                                 </li>
+
                                 <li>
-                                    <a className="dropdown-item" href="pages-pricing.html">
+                                    <Link className="dropdown-item" href="/Subscriptions">
                                         <i className="ri-money-dollar-circle-line ri-22px me-3"></i
                                         ><span className="align-middle">Pricing</span>
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li>
-                                    <a className="dropdown-item" href="pages-faq.html">
+                                    <Link className="dropdown-item" href="Feedback">
                                         <i className="ri-question-line ri-22px me-3"></i><span className="align-middle">FAQ</span>
-                                    </a>
+                                    </Link>
                                 </li>
+
+                                <li>
+                                    <div className="dropdown-divider"></div>
+                                </li>
+
+                                <li>
+                                    <Link className="dropdown-item" href="https://www.instagram.com/camrilla_photography_club/" target='_blank'>
+                                        <i className="ri-instagram-line ri-22px me-3"></i><span className="align-middle">Instagram</span>
+                                    </Link>
+                                </li>
+
+                                <li>
+                                    <Link className="dropdown-item" href="https://camrilla.com/" target='_blank'>
+                                        <i className="ri-earth-line ri-22px me-3"></i><span className="align-middle">Website</span>
+                                    </Link>
+                                </li>
+
                                 <li>
                                     <div className="d-grid px-4 pt-2 pb-1">
                                         <button onClick={handleLogout} className="btn btn-sm btn-danger d-flex">

@@ -105,6 +105,14 @@ export default function RootLayout({ children }) {
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"></link>
 
+        <link rel="stylesheet" href="/assets/vendor/css/pages/page-profile.css" />
+
+        <link rel="stylesheet" href="/assets/vendor/css/pages/page-auth.css" />
+
+        <link rel="stylesheet" href="/assets/vendor/css/pages/page-faq.css" />
+
+        <link rel="stylesheet" href="/assets/vendor/css/pages/page-pricing.css" />
+
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
 
@@ -130,6 +138,13 @@ export default function RootLayout({ children }) {
         <Script src="/assets/js/main.js" />
 
         <Script src="/assets/js/pages-auth.js" />
+
+        <Script src="/assets/js/pages-profile-user.js"/>
+
+        <script src="/assets/js/pages-auth.js"></script>
+        <script src="/assets//js/pages-pricing.js"></script>
+
+        
 
         {/* <div class="layout-wrapper layout-content-navbar">
           <div class="layout-container">
