@@ -365,19 +365,25 @@ export default function AssignmentPage() {
 
                                                     {/* Edit Button */}
                                                     {/* Action Buttons */}
-                                                    <div className="d-flex flex-wrap gap-1" style={{ minWidth: '100px' }}>
-                                                        <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditAssignment(assignment)}>
-                                                            <i className="bi bi-pencil-fill"></i>
-                                                        </button>
-                                                        <button className="btn btn-sm btn-outline-success" onClick={() => handleAddPayment(assignment)}>
-                                                            <i className="bi bi-currency-rupee"></i>
-                                                        </button>
-                                                        <button className="btn btn-sm btn-outline-info" onClick={() => handleAddNote(assignment)}>
-                                                            <i className="bi bi-journals"></i>
-                                                        </button>
-                                                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAssignment(assignment.id)}>
-                                                            <i className="bi bi-trash-fill"></i>
-                                                        </button>
+                                                    <div className="d-flex flex-column gap-2" style={{ minWidth: '100px' }}>
+                                                        <div className='d-flex justify-content-center align-items-center gap-2'>
+                                                            <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditAssignment(assignment)}>
+                                                                <i className="bi bi-pencil-fill"></i>
+                                                            </button>
+                                                            <button className="btn btn-sm btn-outline-success" onClick={() => handleAddPayment(assignment)}>
+                                                                <i className="bi bi-currency-rupee"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <div className='d-flex justify-content-center align-items-center gap-2'>
+                                                            <button className="btn btn-sm btn-outline-info" onClick={() => handleAddNote(assignment)}>
+                                                                <i className="bi bi-journals"></i>
+                                                            </button>
+                                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAssignment(assignment.id)}>
+                                                                <i className="bi bi-trash-fill"></i>
+                                                            </button>
+                                                        </div>
+
                                                     </div>
 
 

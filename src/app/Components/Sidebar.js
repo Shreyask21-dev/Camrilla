@@ -1,7 +1,12 @@
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import React from 'react'
 
 export default function Sidebar() {
+
+
+  const pathname = usePathname();
+
   return (
     <div>
       <aside id="layout-menu" className="layout-menu menu-vertical menu bg-menu-theme">
@@ -27,35 +32,35 @@ export default function Sidebar() {
 
         <ul className="menu-inner py-1">
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/' ? 'active':''}`}>
             <Link href="/" className="menu-link ">
               <i className="menu-icon tf-icons ri-bar-chart-line"></i>
               <div data-i18n="Dashboards">Dashboards</div>
             </Link>
           </li>
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/Assignments' ? 'active':''}`}>
             <Link href="/Assignments" className="menu-link ">
               <i className="menu-icon  tf-icons ri-bill-line"></i>
               <div data-i18n="Assignments">Assignments</div>
             </Link>
           </li>
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/Leads' ? 'active':''} `}>
             <Link href="/Leads" className="menu-link ">
               <i className="menu-icon tf-icons ri-edit-line"></i>
               <div data-i18n="Leads">Leads</div>
             </Link>
           </li>
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/Subscriptions' ? 'active':''} `}>
             <Link href="/Subscriptions" className="menu-link">
               <i className="menu-icon tf-icons ri-bank-card-line"></i>
               <div data-i18n="Subscription">Subscription</div>
             </Link>
           </li>
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/Feedback' ? 'active':''} `}>
             <Link href="/Feedback" className="menu-link">
               <i className="menu-icon tf-icons ri-discuss-line"></i>
               <div data-i18n="Feedback">Feedback</div>
@@ -66,14 +71,14 @@ export default function Sidebar() {
             <span class="menu-header-text">User &amp; Profile</span>
           </li>
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/Profile' ? 'active':''} `}>
             <Link href="/Profile" className="menu-link">
               <i className="menu-icon tf-icons ri-user-line"></i>
               <div data-i18n="My Profile">My Profile</div>
             </Link>
           </li>
 
-          <li className="menu-item">
+          <li className={`menu-item ${pathname === '/Settings' ? 'active':''}`}>
             <Link href="/Settings" className="menu-link">
               <i className="menu-icon tf-icons ri-settings-3-line"></i>
               <div data-i18n="Settings">Settings</div>
