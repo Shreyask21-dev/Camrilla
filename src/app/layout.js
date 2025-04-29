@@ -89,15 +89,10 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en"
-    className="light-style layout-wide customizer-hide"
-    dir="ltr"
-    data-theme="theme-default"
-    data-assets-path="/assets/"
-    data-template="vertical-menu-template"
-    data-style="light">
+    className="light-style layout-wide customizer-hide">
       <head>
-
-        <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+      <link rel="icon" type="image/png" href="/images/logo.png" />
+      <title>Camrilla | Made business easy</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
