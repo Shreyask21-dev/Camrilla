@@ -47,12 +47,14 @@ export default function Page() {
 
                 // Fetch both APIs together
                 const [assignmentsRes, leadsRes] = await Promise.all([
-                    axios.get(assignmentURL, {
-                        headers: { Authorization: `Bearer ${accessToken}` }
-                    }),
-                    axios.get(leadsURL, {
-                        headers: { Authorization: `Bearer ${accessToken}` }
-                    }),
+                    axios.get(assignmentURL),
+                    // , {
+                    //     headers: { Authorization: `Bearer ${accessToken}` }
+                    // }
+                    axios.get(leadsURL),
+                    // , {
+                    //     headers: { Authorization: `Bearer ${accessToken}` }
+                    // }
                 ]);
 
                 setAssignments(assignmentsRes.data.data || []);

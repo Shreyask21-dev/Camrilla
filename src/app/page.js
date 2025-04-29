@@ -75,9 +75,9 @@ export default function Home() {
           startDate,
           endDate,
         },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        // headers: {
+        //   Authorization: `Bearer ${accessToken}`,
+        // },
       });
 
       if (response.data.code === 0 && response.data.message === 'Success') {

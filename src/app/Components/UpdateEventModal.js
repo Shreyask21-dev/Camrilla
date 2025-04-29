@@ -72,10 +72,12 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
             totalAmount: formData.totalAmount,
         };
 
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
+
         try {
-            const res = await axios.put(`http://api.camrilla.com/order/assignment/${eventData.id}`, payload, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await axios.put(`http://api.camrilla.com/order/assignment/${eventData.id}`, payload);
             if (res.data.code === 0) {
                 alert('Updated successfully');
                 handleClose();
@@ -95,10 +97,11 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
         const token = JSON.parse(localStorage.getItem('camrilla_token'))?.accessToken;
         if (!token || !eventData?.id) return alert('Missing token or event ID');
 
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
         try {
-            const res = await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}`);
             if (res.data.code === 0) {
                 alert('Deleted successfully');
                 handleClose();

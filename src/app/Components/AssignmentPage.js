@@ -51,11 +51,13 @@ export default function AssignmentPage() {
                     params: {
                         startDate: startMillis,
                         endDate: endMillis
-                    },
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
                     }
                 });
+
+                // ,
+                //     headers: {
+                //         Authorization: `Bearer ${accessToken}`
+                //     }
     
                 setAssignments(response.data.data); // save your data here
                 console.log('Assignments fetched:', response.data);
@@ -146,18 +148,22 @@ export default function AssignmentPage() {
                     totalAmount: Number(totalAmount),
                     reminderBeforedays: assignment.reminderBeforedays || 0,
                     reminderDate: assignment.reminderDate || ""
-                }, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
                 });
+
+                // , {
+                //     headers: { Authorization: `Bearer ${accessToken}` }
+                // }
     
                 // Step 2: Add a Transaction with receivedPayment = 0
                 await axios.post(`http://api.camrilla.com/order/assignment/${assignment.id}/transaction`, {
                     receivedPayment: 0,
                     receivedDate: Date.now(),
                     paymentNote: paymentNote
-                }, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
                 });
+
+                // , {
+                //     headers: { Authorization: `Bearer ${accessToken}` }
+                // }
     
                 alert('Payment added successfully');
                 fetchAssignments(startOfMonth, endOfMonth); // refresh assignments
@@ -179,12 +185,14 @@ export default function AssignmentPage() {
             }
     
             try {
-                await axios.delete(`http://api.camrilla.com/order/assignment/${assignmentId}`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
+                await axios.delete(`http://api.camrilla.com/order/assignment/${assignmentId}`);
     
+                // , {
+                //     headers: {
+                //         Authorization: `Bearer ${accessToken}`
+                //     }
+                // }
+
                 alert('Assignment deleted successfully');
                 fetchAssignments(startOfMonth, endOfMonth); // Refresh after delete
             } catch (error) {

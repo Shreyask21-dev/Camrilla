@@ -27,13 +27,15 @@ export default function Page() {
         try {
             const response = await axios.post(
                 'http://api.camrilla.com/user-feedback',
-                { feedback },
-                {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
+                { feedback }
             );
+
+            // ,
+            //     {
+            //         headers: {
+            //             Authorization: `Bearer ${accessToken}`,
+            //         },
+            //     }
 
             console.log('Feedback submitted:', response.data);
             alert('Thank you for your feedback!');

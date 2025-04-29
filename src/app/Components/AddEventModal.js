@@ -70,10 +70,12 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
             reminderDate: '',
         };
 
+        // {
+        //     headers: { Authorization: `Bearer ${accessToken}` },
+        // }
+
         try {
-            const res = await axios.post('http://api.camrilla.com/order/assignment', payload, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const res = await axios.post('http://api.camrilla.com/order/assignment', payload);
             if (res.data.code === 0) {
                 alert('Assignment created successfully');
                 handleClose();

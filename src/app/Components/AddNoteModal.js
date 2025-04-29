@@ -39,9 +39,10 @@ export default function AddNoteModal({ show, handleClose, assignmentData, refres
         totalAmount: assignmentData.totalAmount || 0,
         reminderBeforedays: assignmentData.reminderBeforedays || 0,
         reminderDate: assignmentData.reminderDate || ""
-      }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
       });
+      // , {
+      //   headers: { Authorization: `Bearer ${accessToken}` }
+      // }
 
       alert('Note updated successfully');
       handleClose();

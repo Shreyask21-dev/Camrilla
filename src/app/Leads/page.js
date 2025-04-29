@@ -102,12 +102,13 @@ export default function Page() {
             assignmentDateTime: new Date(selectedLead.assignmentDateTime).getTime(), // back to timestamp
         };
 
-        axios.put(`http://api.camrilla.com/lead-manager/lead/${selectedLead.id}`, body, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-            }
-        })
+        axios.put(`http://api.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
+        // , {
+        //     headers: {
+        //         Authorization: `Bearer ${accessToken}`,
+        //         'Content-Type': 'application/json',
+        //     }
+        // }
             .then(response => {
                 console.log('Lead Updated:', response.data);
                 // Close Modal
@@ -135,12 +136,13 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.post('http://api.camrilla.com/lead-manager/lead', newLead, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-            }
-        })
+        axios.post('http://api.camrilla.com/lead-manager/lead', newLead)
+        // , {
+        //     headers: {
+        //         Authorization: `Bearer ${accessToken}`,
+        //         'Content-Type': 'application/json',
+        //     }
+        // }
             .then(response => {
                 console.log('Lead Added:', response.data);
                 // Close Modal
@@ -175,11 +177,12 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.get('http://api.camrilla.com/lead-manager/lead', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        })
+        axios.get('http://api.camrilla.com/lead-manager/lead')
+        // , {
+        //     headers: {
+        //         Authorization: `Bearer ${accessToken}`
+        //     }
+        // }
             .then(response => {
                 setLeads(response.data.data);
                 setLoading(false);
@@ -259,9 +262,10 @@ export default function Page() {
         };
 
         try {
-            const res = await axios.post('http://api.camrilla.com/order/assignment', payload, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            const res = await axios.post('http://api.camrilla.com/order/assignment', payload);
+            // , {
+            //     headers: { Authorization: `Bearer ${accessToken}` }
+            // }
             if (res.data.code === 0) {
                 alert('Assignment Created Successfully');
                 setShowAssignmentModal(false);
@@ -289,11 +293,13 @@ export default function Page() {
         const { accessToken } = JSON.parse(camrillaToken);
 
         try {
-            const response = await axios.delete(`http://api.camrilla.com/lead-manager/lead/${selectedLead.id}`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                }
-            });
+            const response = await axios.delete(`http://api.camrilla.com/lead-manager/lead/${selectedLead.id}`);
+
+            // , {
+            //     headers: {
+            //         Authorization: `Bearer ${accessToken}`,
+            //     }
+            // }
 
             console.log('Lead deleted:', response.data);
 

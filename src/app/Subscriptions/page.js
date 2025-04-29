@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Script from 'next/script'; // For Razorpay script
 
 export default function Page() {
 
@@ -22,13 +23,15 @@ export default function Page() {
                 const tokenData = JSON.parse(tokenDataString);
 
                 const accessToken = tokenData.accessToken;
-                const countryCode = userData.country; // "IN" or "US" etc.
+                const countryCode = userData.country;
 
-                const response = await axios.get(`http://api.camrilla.com/admin/plan-master/${countryCode}`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                });
+                const response = await axios.get(`http://api.camrilla.com/admin/plan-master/${countryCode}`);
+
+                // , {
+                //     headers: {
+                //         Authorization: `Bearer ${accessToken}`,
+                //     },
+                // }
 
                 console.log('Plans API Response:', response.data);
 
@@ -48,8 +51,90 @@ export default function Page() {
     }
 
 
+    const initiatePayment = async (planId) => {
+        try {
+            const tokenDataString = localStorage.getItem('camrilla_token');
+            if (!tokenDataString) {
+                alert('Please login first');
+                return;
+            }
+
+            const tokenData = JSON.parse(tokenDataString);
+            const accessToken = tokenData.accessToken;
+
+            const response = await axios.post('http://api.camrilla.com/initiate-payment-request', {
+                id: planId,
+                discountCouponCode: "2020" // or allow user input later
+            });
+
+            // , {
+            //     headers: {
+            //         Authorization: `Bearer ${accessToken}`,
+            //     }
+            // }
+
+            const paymentData = response.data.data;
+            console.log('Initiate Payment Response:', paymentData);
+
+            openRazorpay(paymentData);
+
+        } catch (error) {
+            console.error('Error initiating payment:', error);
+            alert('Failed to initiate payment');
+        }
+    };
+
+    const openRazorpay = (paymentData) => {
+        if (typeof window === "undefined" || typeof window.Razorpay === "undefined") {
+          alert("Razorpay SDK not yet loaded.");
+          return;
+        }
+      
+        const options = {
+          key: paymentData.razorPayKey,
+          amount: paymentData.amount * 100,
+          currency: paymentData.currency,
+          name: "Camrilla",
+          description: paymentData.planDescription,
+          order_id: paymentData.orderId,
+          handler: async function (response) {
+            console.log('Payment Success Response:', response);
+      
+            try {
+              await axios.post('http://api.camrilla.com/update-payment-response', {
+                orderId: paymentData.camrillaOrderId
+              });
+              alert('Payment successful and updated!');
+            } catch (error) {
+              console.error('Error updating payment response:', error);
+              alert('Payment was successful but updating server failed.');
+            }
+          },
+          prefill: {
+            email: paymentData.email,
+            contact: paymentData.mobile
+          },
+          theme: {
+            color: "#3399cc"
+          }
+        };
+      
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      };
+      
+
+
+
     return (
         <div>
+            <Script
+                src="http://checkout.razorpay.com/v1/checkout.js"
+                strategy="afterInteractive"
+                onLoad={() => {
+                    console.log("Razorpay script loaded!");
+                }}
+            />
 
             <div className="container-xxl flex-grow-1 container-p-y">
                 <div className="card">
@@ -94,9 +179,12 @@ export default function Page() {
                                                             ))}
                                                         </ul>
 
-                                                        <a href="javascript:void(0);" className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}>
+                                                        <button
+                                                            onClick={() => initiatePayment(plan.id)}
+                                                            className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
+                                                        >
                                                             {index === 0 ? 'Your Current Plan' : 'Upgrade'}
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>

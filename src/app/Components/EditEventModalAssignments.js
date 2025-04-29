@@ -62,10 +62,12 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         const payload = { ...formData, assignmentDateTime: dateTime, assignmentStatus: 'Completed', contactPerson1Name: '', contactPerson2Name: '', contactPerson2Mobile: '' };
         payload.assignmentName = showOtherInput ? customAssignmentName : payload.assignmentName;
 
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
+
         try {
-            await axios.put(`http://api.camrilla.com/order/assignment/${eventData.id}`, payload, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await axios.put(`http://api.camrilla.com/order/assignment/${eventData.id}`, payload);
             alert('Assignment updated');
             handleClose();
             refreshEvents(selectedDate);
@@ -80,17 +82,19 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/function`, {
             ...newFunction,
             functionDateTime,
-        }, {
-            headers: { Authorization: `Bearer ${token}` },
         });
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
         alert('Function added');
         refreshEvents(selectedDate);
     };
 
+    // , {
+    //     headers: { Authorization: `Bearer ${token}` },
+    // }
     const handleDeleteFunction = async (functionId) => {
-        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}/function/${functionId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}/function/${functionId}`);
         alert('Function deleted');
         refreshEvents(selectedDate);
     };
@@ -100,27 +104,30 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction`, {
             ...newTransaction,
             receivedDate,
-        }, {
-            headers: { Authorization: `Bearer ${token}` },
         });
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
         alert('Transaction added');
         refreshEvents(selectedDate);
     };
 
     const handleDeleteTransaction = async (transactionId) => {
-        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction/${transactionId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction/${transactionId}`);
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
         alert('Transaction deleted');
         refreshEvents(selectedDate);
     };
 
     const handleDeleteAssignment = async () => {
         if (!window.confirm('Delete this assignment?')) return;
-        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}`);
         alert('Assignment deleted');
+        // , {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // }
         handleClose();
         refreshEvents(selectedDate);
     };
@@ -134,9 +141,10 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 await axios.put(`http://api.camrilla.com/order/assignment/${eventData.id}/function/${editingFunction.id}`, {
                     ...newFunction,
                     functionDateTime,
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
+                // , {
+                //     headers: { Authorization: `Bearer ${token}` }
+                // }
                 alert('Function updated');
                 
             } else {
@@ -144,9 +152,10 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/function`, {
                     ...newFunction,
                     functionDateTime,
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
+                // , {
+                //     headers: { Authorization: `Bearer ${token}` }
+                // }
                 alert('Function added');
             }
             setNewFunction({ functionName: '', functionDateTime: '', assingTo: 'Me' });
@@ -174,17 +183,19 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 await axios.put(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction/${editingTransaction.id}`, {
                     ...newTransaction,
                     receivedDate,
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
+                // , {
+                //     headers: { Authorization: `Bearer ${token}` }
+                // }
                 alert('Transaction updated');
             } else {
                 await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction`, {
                     ...newTransaction,
                     receivedDate,
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
+                // , {
+                //     headers: { Authorization: `Bearer ${token}` }
+                // }
                 alert('Transaction added');
             }
             setNewTransaction({ receivedPayment: '', receivedDate: '', paymentNote: '' });

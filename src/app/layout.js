@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import Sidebar from "./Components/Sidebar";
 import Navbar from "./Components/Navbar";
 import "react-datepicker/dist/react-datepicker.css";
+import axios from "axios";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,57 +26,75 @@ export default function RootLayout({ children }) {
   const pathname = usePathname()
 
   useEffect(() => {
-    const tokenData = JSON.parse(localStorage.getItem('camrilla_token'))
-    const refreshToken = tokenData?.refreshToken
-    const accessToken = tokenData?.accessToken
-
-    const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/signup'
-
-    // Redirect if not logged in and not on login/signup
-    if (!accessToken && !isAuthPage) {
-      router.push('/Login')
+    const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
+    const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/forgot' || pathname.toLowerCase() === '/signup';
+  
+    if (!tokenData?.accessToken && !isAuthPage) {
+      router.push('/Login');
+      return;
     }
-
-    // Set up access token refresher if token exists
-    let interval
-    if (refreshToken && accessToken) {
-      interval = setInterval(() => {
-        axios.post('http://api.camrilla.com/user/update-access-token', {
-          refreshToken: refreshToken
-        })
-          .then((response) => {
-            const newAccessToken = response.data?.data?.accessToken
-            const newRefreshToken = response.data?.data?.refreshToken
-
+  
+    // Set token to axios defaults
+    axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData?.accessToken}`;
+  
+    // Axios response interceptor
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      async error => {
+        if (error.response && error.response.status === 401) {
+          try {
+            const storedToken = JSON.parse(localStorage.getItem('camrilla_token'));
+            const refreshToken = storedToken?.refreshToken;
+    
+            if (!refreshToken) throw new Error("No refresh token");
+    
+            const axiosInstance = axios.create(); // no headers
+            const res = await axiosInstance.post('http://api.camrilla.com/user/update-access-token', {
+              refreshToken: refreshToken,
+            });
+    
+            const newAccessToken = res.data?.data?.token?.accessToken;
+            const newRefreshToken = res.data?.data?.token?.refreshToken;
+    
             if (newAccessToken && newRefreshToken) {
               localStorage.setItem('camrilla_token', JSON.stringify({
                 accessToken: newAccessToken,
                 refreshToken: newRefreshToken
-              }))
-              console.log('🔁 Access token updated successfully.')
+              }));
+              axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+              error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
+              console.log("🔄 Access token refreshed");
+              return axios(error.config);
             } else {
-              console.warn('⚠️ Failed to refresh access token. Logging out...')
-              localStorage.clear()
-              router.push('/Login')
+              throw new Error("Token refresh failed");
             }
-          })
-          .catch((err) => {
-            console.error('❌ Error refreshing token:', err)
-            localStorage.clear()
-            router.push('/Login')
-          })
-      }, 290000) // 290 seconds (just before token expires)
+          } catch (refreshError) {
+            console.error("🚫 Token refresh failed", refreshError);
+            localStorage.clear();
+            router.push('/Login');
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+  
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [pathname, router]);
 
-      // Cleanup interval on unmount
-      return () => clearInterval(interval)
-    }
-  }, [router, pathname])
 
-
-  const isAuthPage = pathname === '/Login' || pathname === '/Signup'
+  const isAuthPage = pathname === '/Login' || pathname === '/Forgot' || pathname === '/Signup'
 
   return (
-    <html lang="en">
+    <html lang="en"
+    class="light-style layout-wide customizer-hide"
+    dir="ltr"
+    data-theme="theme-default"
+    data-assets-path="/assets/"
+    data-template="vertical-menu-template"
+    data-style="light">
       <head>
 
         <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />

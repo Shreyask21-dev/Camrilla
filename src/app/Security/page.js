@@ -38,13 +38,15 @@ export default function Page() {
           email: email,
           oldPassword: currentPassword,
           newPassword: newPassword,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
         }
       );
+
+      // ,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${accessToken}`,
+      //     },
+      //   }
 
       console.log('Password Changed Successfully:', response.data);
       alert('Password updated successfully!');

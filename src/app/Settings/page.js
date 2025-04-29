@@ -216,32 +216,6 @@ export default function Page() {
                             </div>
 
                         </div>
-                        <div class="card">
-                            <h5 class="card-header mb-1">Delete Account</h5>
-                            <div class="card-body">
-                                <div class="mb-6 col-12 mb-0">
-                                    <div class="alert alert-warning">
-                                        <h6 class="alert-heading mb-1">Are you sure you want to delete your account?</h6>
-                                        <p class="mb-0">Once you delete your account, there is no going back. Please be certain.</p>
-                                    </div>
-                                </div>
-                                <form id="formAccountDeactivation" onsubmit="return false">
-                                    <div class="form-check mb-6">
-                                        <input
-                                            class="form-check-input"
-                                            type="checkbox"
-                                            name="accountActivation"
-                                            id="accountActivation" />
-                                        <label class="form-check-label" for="accountActivation"
-                                        >I confirm my account deactivation</label
-                                        >
-                                    </div>
-                                    <button type="submit" class="btn btn-danger deactivate-account" disabled>
-                                        Deactivate Account
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
