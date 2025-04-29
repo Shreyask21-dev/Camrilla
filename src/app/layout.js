@@ -141,22 +141,8 @@ export default function RootLayout({ children }) {
 
         <Script src="/assets/js/pages-profile-user.js"/>
 
-        <script src="/assets/js/pages-auth.js"></script>
-        <script src="/assets//js/pages-pricing.js"></script>
-
-        
-
-        {/* <div class="layout-wrapper layout-content-navbar">
-          <div class="layout-container">
-            <Sidebar />
-            <div class="layout-page">
-              <Navbar />
-              <div class="content-wrapper">
-                {children}
-              </div>
-            </div>
-          </div>
-        </div> */}
+        <Script src="/assets/js/pages-auth.js" />
+        <Script src="/assets//js/pages-pricing.js" />
 
         {isAuthPage ? (
           <>{children}</>

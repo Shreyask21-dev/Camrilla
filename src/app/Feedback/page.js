@@ -183,7 +183,7 @@ export default function Page() {
                                                 data-bs-toggle="collapse"
                                                 data-bs-target="#accordionPayment-3"
                                                 aria-controls="accordionPayment-3">
-                                                What should I do if I'm having trouble placing an order?
+                                                What should I do if I am having trouble placing an order?
                                             </button>
                                         </h2>
                                         <div id="accordionPayment-3" class="accordion-collapse collapse">
@@ -405,7 +405,7 @@ export default function Page() {
                         <div class="badge bg-label-primary rounded-pill">Question?</div>
                         <h4 class="my-2">You still have a question?</h4>
                         <p class="mb-0">
-                            If you can't find question in our FAQ, you can contact us. We'll answer you shortly!
+                            If you cannot find question in our FAQ, you can contact us. We will answer you shortly!
                         </p>
                     </div>
                 </div>
