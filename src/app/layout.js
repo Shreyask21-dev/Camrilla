@@ -89,7 +89,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en"
-    class="light-style layout-wide customizer-hide"
+    className="light-style layout-wide customizer-hide"
     dir="ltr"
     data-theme="theme-default"
     data-assets-path="/assets/"
@@ -110,8 +110,8 @@ export default function RootLayout({ children }) {
 
         <link rel="stylesheet" href="/assets/vendor/libs/node-waves/node-waves.css" />
 
-        <link rel="stylesheet" href="/assets/vendor/css/rtl/core.css" class="template-customizer-core-css" />
-        <link rel="stylesheet" href="/assets/vendor/css/rtl/theme-default.css" class="template-customizer-theme-css" />
+        <link rel="stylesheet" href="/assets/vendor/css/rtl/core.css" className="template-customizer-core-css" />
+        <link rel="stylesheet" href="/assets/vendor/css/rtl/theme-default.css" className="template-customizer-theme-css" />
         <link rel="stylesheet" href="/assets/css/demo.css" />
 
         <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />

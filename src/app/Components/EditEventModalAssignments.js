@@ -77,38 +77,15 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         }
     };
 
-    const handleAddFunction = async () => {
-        const functionDateTime = new Date(newFunction.functionDateTime).getTime();
-        await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/function`, {
-            ...newFunction,
-            functionDateTime,
-        });
-        // , {
-        //     headers: { Authorization: `Bearer ${token}` },
-        // }
-        alert('Function added');
-        refreshEvents(selectedDate);
-    };
-
     // , {
     //     headers: { Authorization: `Bearer ${token}` },
     // }
     const handleDeleteFunction = async (functionId) => {
-        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}/function/${functionId}`);
-        alert('Function deleted');
-        refreshEvents(selectedDate);
-    };
 
-    const handleAddTransaction = async () => {
-        const receivedDate = new Date(newTransaction.receivedDate).getTime();
-        await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction`, {
-            ...newTransaction,
-            receivedDate,
-        });
-        // , {
-        //     headers: { Authorization: `Bearer ${token}` },
-        // }
-        alert('Transaction added');
+        await axios.delete(`http://api.camrilla.com/order/assignment/${eventData.id}/function/${functionId}`);
+        // Update local state immediately to reflect deletion in the table
+        setFunctions(prevFunctions => prevFunctions.filter(func => func.id !== functionId));
+        alert("Function deleted successfully");
         refreshEvents(selectedDate);
     };
 
@@ -117,6 +94,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         // , {
         //     headers: { Authorization: `Bearer ${token}` },
         // }
+        setTransactions(prevTransactions => prevTransactions.filter(txn => txn.id !== transactionId));
         alert('Transaction deleted');
         refreshEvents(selectedDate);
     };
@@ -145,17 +123,32 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 // , {
                 //     headers: { Authorization: `Bearer ${token}` }
                 // }
+                setFunctions(prevFunctions =>
+                    prevFunctions.map(func =>
+                        func.id === editingFunction.id
+                            ? { ...func, ...newFunction, functionDateTime }
+                            : func
+                    )
+                );
                 alert('Function updated');
-                
+
             } else {
                 // Add new function
-                await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/function`, {
+                const response = await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/function`, {
                     ...newFunction,
                     functionDateTime,
                 });
                 // , {
                 //     headers: { Authorization: `Bearer ${token}` }
                 // }
+
+                const newFunctionWithId = response.data || {
+                    ...newFunction,
+                    functionDateTime,
+                    id: Date.now() // Fallback ID if response doesn't include one
+                };
+
+                setFunctions(prevFunctions => [...prevFunctions, newFunctionWithId]);
                 alert('Function added');
             }
             setNewFunction({ functionName: '', functionDateTime: '', assingTo: 'Me' });
@@ -187,15 +180,32 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 // , {
                 //     headers: { Authorization: `Bearer ${token}` }
                 // }
+                // Update the local state to reflect changes in the table
+                setTransactions(prevTransactions =>
+                    prevTransactions.map(txn =>
+                        txn.id === editingTransaction.id
+                            ? { ...txn, ...newTransaction, receivedDate }
+                            : txn
+                    )
+                );
                 alert('Transaction updated');
             } else {
-                await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction`, {
+                const response = await axios.post(`http://api.camrilla.com/order/assignment/${eventData.id}/transaction`, {
                     ...newTransaction,
                     receivedDate,
                 });
                 // , {
                 //     headers: { Authorization: `Bearer ${token}` }
                 // }
+
+                // Assuming the API returns the created transaction with an ID
+                const newTransactionWithId = response.data || {
+                    ...newTransaction,
+                    receivedDate,
+                    id: Date.now() // Fallback ID if response doesn't include one
+                };
+
+                setTransactions(prevTransactions => [...prevTransactions, newTransactionWithId]);
                 alert('Transaction added');
             }
             setNewTransaction({ receivedPayment: '', receivedDate: '', paymentNote: '' });
@@ -209,20 +219,20 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
 
     const handleEditTransaction = (txn) => {
         setNewTransaction({
-          receivedPayment: txn.receivedPayment,
-          receivedDate: new Date(txn.receivedDate).toISOString().split('T')[0],
-          paymentNote: txn.paymentNote
+            receivedPayment: txn.receivedPayment,
+            receivedDate: new Date(txn.receivedDate).toISOString().split('T')[0],
+            paymentNote: txn.paymentNote
         });
         setEditingTransaction(txn);
-      };
-      
+    };
+
 
 
     return (
         <Modal show={show} onHide={handleClose} size="xl">
             <Modal.Header closeButton>
                 <Modal.Title>Edit Assignment</Modal.Title>
-                <Button variant="danger" className="ms-3" onClick={handleDeleteAssignment}>Delete Assignment</Button>
+                {/* <Button variant="danger" className="ms-3" onClick={handleDeleteAssignment}>Delete Assignment</Button> */}
             </Modal.Header>
             <Modal.Body>
                 <Tabs activeKey={key} onSelect={(k) => setKey(k)}>
