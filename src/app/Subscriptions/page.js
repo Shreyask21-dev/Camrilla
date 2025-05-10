@@ -8,6 +8,12 @@ export default function Page() {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [couponCodes, setCouponCodes] = useState({});
+    const [appliedCoupons, setAppliedCoupons] = useState({});
+    const [errorMessages, setErrorMessages] = useState({});
+
+    const [AppliedCouponData, setAppliedCouponData] = useState(null); 
+
     useEffect(() => {
         const fetchPlans = async () => {
             try {
@@ -26,12 +32,6 @@ export default function Page() {
                 const countryCode = userData.country;
 
                 const response = await axios.get(`http://api.camrilla.com/admin/plan-master/${countryCode}`);
-
-                // , {
-                //     headers: {
-                //         Authorization: `Bearer ${accessToken}`,
-                //     },
-                // }
 
                 console.log('Plans API Response:', response.data);
 
@@ -62,69 +62,114 @@ export default function Page() {
             const tokenData = JSON.parse(tokenDataString);
             const accessToken = tokenData.accessToken;
 
-            const response = await axios.post('http://api.camrilla.com/initiate-payment-request', {
-                id: planId,
-                discountCouponCode: "2020" // or allow user input later
-            });
+            let payload = {};
 
-            // , {
-            //     headers: {
-            //         Authorization: `Bearer ${accessToken}`,
-            //     }
-            // }
+            // ✅ If coupon applied, use coupon's ID and code
+            if (AppliedCouponData && AppliedCouponData.id && AppliedCouponData.discountCouponCode) {
+                payload = {
+                    id: AppliedCouponData.id,
+                    discountCouponCode: AppliedCouponData.discountCouponCode
+                };
+            } else {
+                payload = {
+                    id: planId
+                };
+            }
+
+            const response = await axios.post(
+                'http://api.camrilla.com/initiate-payment-request',
+                payload,
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                }
+            );
 
             const paymentData = response.data.data;
             console.log('Initiate Payment Response:', paymentData);
 
             openRazorpay(paymentData);
-
         } catch (error) {
             console.error('Error initiating payment:', error);
             alert('Failed to initiate payment');
         }
     };
 
+
+
+
     const openRazorpay = (paymentData) => {
         if (typeof window === "undefined" || typeof window.Razorpay === "undefined") {
-          alert("Razorpay SDK not yet loaded.");
-          return;
+            alert("Razorpay SDK not yet loaded.");
+            return;
         }
-      
+
         const options = {
-          key: paymentData.razorPayKey,
-          amount: paymentData.amount * 100,
-          currency: paymentData.currency,
-          name: "Camrilla",
-          description: paymentData.planDescription,
-          order_id: paymentData.orderId,
-          handler: async function (response) {
-            console.log('Payment Success Response:', response);
-      
-            try {
-              await axios.post('http://api.camrilla.com/update-payment-response', {
-                orderId: paymentData.camrillaOrderId
-              });
-              alert('Payment successful and updated!');
-            } catch (error) {
-              console.error('Error updating payment response:', error);
-              alert('Payment was successful but updating server failed.');
+            key: paymentData.razorPayKey,
+            amount: paymentData.amount * 100,
+            currency: paymentData.currency,
+            name: "Camrilla",
+            description: paymentData.planDescription,
+            order_id: paymentData.orderId,
+            handler: async function (response) {
+                console.log('Payment Success Response:', response);
+
+                try {
+                    await axios.post('http://api.camrilla.com/update-payment-response', {
+                        orderId: paymentData.camrillaOrderId
+                    });
+                    alert('Payment successful and updated!');
+                } catch (error) {
+                    console.error('Error updating payment response:', error);
+                    alert('Payment was successful but updating server failed.');
+                }
+            },
+            prefill: {
+                email: paymentData.email,
+                contact: paymentData.mobile
+            },
+            theme: {
+                color: "#3399cc"
             }
-          },
-          prefill: {
-            email: paymentData.email,
-            contact: paymentData.mobile
-          },
-          theme: {
-            color: "#3399cc"
-          }
         };
-      
+
         const rzp = new window.Razorpay(options);
         rzp.open();
-      };
-      
+    };
 
+    const handleApplyCoupon = async (planId) => {
+        const code = couponCodes[planId];
+        try {
+            setErrorMessages((prev) => ({ ...prev, [planId]: '' }));
+            const tokenDataString = localStorage.getItem('camrilla_token');
+            if (!tokenDataString) {
+                alert('Please login first');
+                return;
+            }
 
+            const tokenData = JSON.parse(tokenDataString);
+            const accessToken = tokenData.accessToken;
+
+            const response = await axios.get(`http://api.camrilla.com/admin/discount-coupon/validate/${code}`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            if (response.data && response.data.code === 0) {
+                setAppliedCouponData(response.data.data);
+                setAppliedCoupons((prev) => ({ ...prev, [planId]: response.data.data }));
+            } else {
+                setErrorMessages((prev) => ({ ...prev, [planId]: 'Invalid or expired coupon.' }));
+                setAppliedCoupons((prev) => ({ ...prev, [planId]: null }));
+            }
+        } catch (error) {
+            console.error('Error validating coupon:', error);
+            setErrorMessages((prev) => ({ ...prev, [planId]: 'Failed to validate coupon.' }));
+            setAppliedCoupons((prev) => ({ ...prev, [planId]: null }));
+        }
+    };
 
     return (
         <div>
@@ -168,7 +213,16 @@ export default function Page() {
                                                         <div className="text-center">
                                                             <div className="d-flex justify-content-center">
                                                                 <sup className="h6 pricing-currency mt-2 mb-0 me-1 text-body">{plan.currency}</sup>
-                                                                <h1 className="mb-0 text-primary">{plan.finalAmount}</h1>
+                                                                {/* <h1 className="mb-0 text-primary">{plan.finalAmount}</h1> */}
+                                                                <h1 className="mb-0 text-primary">
+                                                                    {/* {appliedCoupon
+                                                                        ? (plan.finalAmount * (1 - appliedCoupon.discountValue / 100)).toFixed(2)
+                                                                        : plan.finalAmount} */}
+
+                                                                    {appliedCoupons[plan.id]
+                                                                        ? (plan.finalAmount * (1 - appliedCoupons[plan.id].discountValue / 100)).toFixed(2)
+                                                                        : plan.finalAmount}
+                                                                </h1>
                                                                 <sub className="h6 pricing-duration mt-auto mb-1 text-body">/month</sub>
                                                             </div>
                                                         </div>
@@ -178,6 +232,33 @@ export default function Page() {
                                                                 <li key={idx} className="mb-4">{feature}</li>
                                                             ))}
                                                         </ul>
+
+                                                        <div className="coupon-section mb-4 text-center">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter coupon code"
+                                                                value={couponCodes[plan.id] || ''}
+                                                                onChange={(e) =>
+                                                                    setCouponCodes((prev) => ({ ...prev, [plan.id]: e.target.value }))
+                                                                }
+                                                                className="form-control d-inline-block w-auto me-2"
+                                                            />
+                                                            <button
+                                                                onClick={() => handleApplyCoupon(plan.id)}
+                                                                className="btn btn-sm btn-success"
+                                                            >
+                                                                Apply Coupon
+                                                            </button>
+                                                            {appliedCoupons[plan.id] && (
+                                                                <div className="mt-2 text-success">
+                                                                    Coupon applied: {appliedCoupons[plan.id].discountCouponCode} (
+                                                                    {appliedCoupons[plan.id].discountValue}% off)
+                                                                </div>
+                                                            )}
+                                                            {errorMessages[plan.id] && (
+                                                                <div className="mt-2 text-danger">{errorMessages[plan.id]}</div>
+                                                            )}
+                                                        </div>
 
                                                         <button
                                                             onClick={() => initiatePayment(plan.id)}
