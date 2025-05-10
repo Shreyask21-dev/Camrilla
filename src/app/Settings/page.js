@@ -6,12 +6,39 @@ export default function Page() {
 
     const [userData, setUserData] = useState({});
 
+    const [planInfo, setPlanInfo] = useState(null);
+
     useEffect(() => {
         const data = localStorage.getItem('userData');
         if (data) {
             const parsedData = JSON.parse(data);
             setUserData(parsedData);
         }
+    }, []);
+
+    useEffect(() => {
+        const fetchUserPlan = async () => {
+            const tokenData = localStorage.getItem('camrilla_token');
+            if (!tokenData) return;
+
+            try {
+                const { accessToken } = JSON.parse(tokenData);
+                const res = await fetch('http://api.camrilla.com/user-plan', {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                const json = await res.json();
+                if (json.code === 0) {
+                    setPlanInfo(json.data.userPlanDetails);
+                }
+            } catch (err) {
+                console.error("Error fetching user plan:", err);
+            }
+        };
+
+        fetchUserPlan();
     }, []);
 
     return (
@@ -132,19 +159,6 @@ export default function Page() {
                                                 <span class="input-group-text">US (+1)</span>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    id="address"
-                                                    name="address"
-                                                    value={userData.address || ''}
-                                                    readOnly
-                                                />
-                                                <label for="address">Address</label>
-                                            </div>
-                                        </div>
 
                                         <div className="col-md-6">
                                             <div className="form-floating form-floating-outline">
@@ -171,31 +185,7 @@ export default function Page() {
                                                 <label htmlFor="TagifyLanguageSuggestion">Language</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
-                                                <select id="timeZones" class="select2 form-select">
-                                                    <option value="-12" selected>(GMT-12:00) International Date Line West</option>
-                                                    <option value="-11">(GMT-11:00) Midway Island, Samoa</option>
-                                                    <option value="-10">(GMT-10:00) Hawaii</option>
-                                                    <option value="-9">(GMT-09:00) Alaska</option>
-                                                    <option value="-8">(GMT-08:00) Pacific Time (US & Canada)</option>
-                                                    <option value="-8">(GMT-08:00) Tijuana, Baja California</option>
-                                                    <option value="-7">(GMT-07:00) Arizona</option>
-                                                    <option value="-7">(GMT-07:00) Chihuahua, La Paz, Mazatlan</option>
-                                                    <option value="-7">(GMT-07:00) Mountain Time (US & Canada)</option>
-                                                    <option value="-6">(GMT-06:00) Central America</option>
-                                                    <option value="-6">(GMT-06:00) Central Time (US & Canada)</option>
-                                                    <option value="-6">(GMT-06:00) Guadalajara, Mexico City, Monterrey</option>
-                                                    <option value="-6">(GMT-06:00) Saskatchewan</option>
-                                                    <option value="-5">(GMT-05:00) Bogota, Lima, Quito, Rio Branco</option>
-                                                    <option value="-5">(GMT-05:00) Eastern Time (US & Canada)</option>
-                                                    <option value="-5">(GMT-05:00) Indiana (East)</option>
-                                                    <option value="-4">(GMT-04:00) Atlantic Time (Canada)</option>
-                                                    <option value="-4">(GMT-04:00) Caracas, La Paz</option>
-                                                </select>
-                                                <label for="timeZones">Timezone</label>
-                                            </div>
-                                        </div>
+                                       
                                         <div class="col-md-6">
                                             <div class="form-floating form-floating-outline">
                                                 <select id="currency" class="select2 form-select">
@@ -207,10 +197,62 @@ export default function Page() {
                                                 <label for="currency">Currency</label>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="mt-6">
-                                        <button type="submit" class="btn btn-primary me-3">Save changes</button>
-                                        <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                                        <h5 className="mb-4">Your Current Plan Details</h5>
+                                        {planInfo && (<>
+                                            <div class="col-md-6">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        className="form-control"
+                                                        type="text"
+                                                        id="Plan"
+                                                        name="Plan"
+                                                        value={planInfo.planName}
+                                                        readOnly
+                                                    />
+                                                    <label for="Plan">Plan</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        className="form-control"
+                                                        type="text"
+                                                        id="Status"
+                                                        name="Status"
+                                                        value={planInfo.planStatus}
+                                                        readOnly
+                                                    />
+                                                    <label for="Status">Status</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        className="form-control"
+                                                        type="text"
+                                                        id="startDate"
+                                                        name="startDate"
+                                                        value={new Date(planInfo.startDate).toLocaleDateString()}
+                                                        readOnly
+                                                    />
+                                                    <label for="startDate">Start Date</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        className="form-control"
+                                                        type="text"
+                                                        id="endDate"
+                                                        name="endDate"
+                                                        value={new Date(planInfo.endDate).toLocaleDateString()}
+                                                        readOnly
+                                                    />
+                                                    <label for="startDate">End Date</label>
+                                                </div>
+                                            </div>
+                                        </>
+                                        )}
                                     </div>
                                 </form>
                             </div>
