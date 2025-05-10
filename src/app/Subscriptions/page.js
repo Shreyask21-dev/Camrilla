@@ -5,6 +5,8 @@ import Script from 'next/script'; // For Razorpay script
 
 export default function Page() {
 
+    const [activePlan, setActivePlan] = useState(null);
+
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -12,30 +14,67 @@ export default function Page() {
     const [appliedCoupons, setAppliedCoupons] = useState({});
     const [errorMessages, setErrorMessages] = useState({});
 
-    const [AppliedCouponData, setAppliedCouponData] = useState(null); 
+    const [AppliedCouponData, setAppliedCouponData] = useState(null);
+
+    // useEffect(() => {
+    //     const fetchPlans = async () => {
+    //         try {
+    //             const userDataString = localStorage.getItem('userData');
+    //             const tokenDataString = localStorage.getItem('camrilla_token');
+
+    //             if (!userDataString || !tokenDataString) {
+    //                 console.error('Missing userData or camrilla_token');
+    //                 return;
+    //             }
+
+    //             const userData = JSON.parse(userDataString);
+    //             const tokenData = JSON.parse(tokenDataString);
+
+    //             const accessToken = tokenData.accessToken;
+    //             const countryCode = userData.country;
+
+    //             const response = await axios.get(`http://api.camrilla.com/admin/plan-master/${countryCode}`);
+
+    //             console.log('Plans API Response:', response.data);
+
+    //             setPlans(response.data.data || []);
+    //         } catch (error) {
+    //             console.error('Error fetching plans:', error);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     fetchPlans();
+    // }, []);
 
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const userDataString = localStorage.getItem('userData');
                 const tokenDataString = localStorage.getItem('camrilla_token');
-
-                if (!userDataString || !tokenDataString) {
-                    console.error('Missing userData or camrilla_token');
+                if (!tokenDataString) {
+                    console.error('Missing camrilla_token');
                     return;
                 }
 
-                const userData = JSON.parse(userDataString);
                 const tokenData = JSON.parse(tokenDataString);
-
                 const accessToken = tokenData.accessToken;
-                const countryCode = userData.country;
 
-                const response = await axios.get(`http://api.camrilla.com/admin/plan-master/${countryCode}`);
+                const response = await axios.get('http://api.camrilla.com/user-plan', {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
 
                 console.log('Plans API Response:', response.data);
 
-                setPlans(response.data.data || []);
+                if (response.data.code === 0) {
+                    // Set both available plans and active plan
+                    setPlans(response.data.data.availablePlans || []);
+                    setActivePlan(response.data.data.userPlanDetails || {});
+                } else {
+                    console.error('API Error:', response.data.message);
+                }
             } catch (error) {
                 console.error('Error fetching plans:', error);
             } finally {
@@ -45,6 +84,7 @@ export default function Page() {
 
         fetchPlans();
     }, []);
+
 
     if (loading) {
         return <div>Loading plans...</div>;
@@ -232,40 +272,66 @@ export default function Page() {
                                                                 <li key={idx} className="mb-4">{feature}</li>
                                                             ))}
                                                         </ul>
+                                                        {/* {!(plan.planName === 'Basic' &&
+                                                            plan.monthlyAmount === 0.0 &&
+                                                            plan.monthlyDisscountedAmount === 0.0 &&
+                                                            plan.finalAmount === 0.0) && ( */}
 
-                                                        <div className="coupon-section mb-4 text-center">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Enter coupon code"
-                                                                value={couponCodes[plan.id] || ''}
-                                                                onChange={(e) =>
-                                                                    setCouponCodes((prev) => ({ ...prev, [plan.id]: e.target.value }))
-                                                                }
-                                                                className="form-control d-inline-block w-auto me-2"
-                                                            />
-                                                            <button
-                                                                onClick={() => handleApplyCoupon(plan.id)}
-                                                                className="btn btn-sm btn-success"
-                                                            >
-                                                                Apply Coupon
-                                                            </button>
-                                                            {appliedCoupons[plan.id] && (
-                                                                <div className="mt-2 text-success">
-                                                                    Coupon applied: {appliedCoupons[plan.id].discountCouponCode} (
-                                                                    {appliedCoupons[plan.id].discountValue}% off)
+                                                        {!( // hide if:
+                                                            (plan.planName === 'Basic' &&
+                                                                plan.monthlyAmount === 0.0 &&
+                                                                plan.monthlyDisscountedAmount === 0.0 &&
+                                                                plan.finalAmount === 0.0) ||
+                                                            (activePlan?.planId === plan.id) // also hide if it's the current active plan
+                                                        ) && (
+                                                                <div className="coupon-section mb-4 text-center">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Enter coupon code"
+                                                                        value={couponCodes[plan.id] || ''}
+                                                                        onChange={(e) =>
+                                                                            setCouponCodes((prev) => ({ ...prev, [plan.id]: e.target.value }))
+                                                                        }
+                                                                        className="form-control d-inline-block w-auto me-2"
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => handleApplyCoupon(plan.id)}
+                                                                        className="btn btn-sm btn-success"
+                                                                    >
+                                                                        Apply Coupon
+                                                                    </button>
+                                                                    {appliedCoupons[plan.id] && (
+                                                                        <div className="mt-2 text-success">
+                                                                            Coupon applied: {appliedCoupons[plan.id].discountCouponCode} (
+                                                                            {appliedCoupons[plan.id].discountValue}% off)
+                                                                        </div>
+                                                                    )}
+                                                                    {errorMessages[plan.id] && (
+                                                                        <div className="mt-2 text-danger">{errorMessages[plan.id]}</div>
+                                                                    )}
                                                                 </div>
                                                             )}
-                                                            {errorMessages[plan.id] && (
-                                                                <div className="mt-2 text-danger">{errorMessages[plan.id]}</div>
-                                                            )}
-                                                        </div>
-
+                                                        {/* 
                                                         <button
                                                             onClick={() => initiatePayment(plan.id)}
                                                             className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
                                                         >
                                                             {index === 0 ? 'Your Current Plan' : 'Upgrade'}
                                                         </button>
+*/}
+
+                                                        {!(plan.planName === 'Basic' &&
+                                                            plan.monthlyAmount === 0.0 &&
+                                                            plan.monthlyDisscountedAmount === 0.0 &&
+                                                            plan.finalAmount === 0.0) && (
+                                                                <button
+                                                                    onClick={() => initiatePayment(plan.id)}
+                                                                    className={`btn ${activePlan?.planId === plan.id ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
+                                                                    disabled={activePlan?.planId === plan.id}
+                                                                >
+                                                                    {activePlan?.planId === plan.id ? 'Your Current Plan' : 'Upgrade'}
+                                                                </button>
+                                                            )}
                                                     </div>
                                                 </div>
                                             </div>
