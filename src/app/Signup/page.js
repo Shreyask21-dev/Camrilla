@@ -1,8 +1,9 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import countries from 'world-countries'
 
 export default function Page() {
 
@@ -11,6 +12,7 @@ export default function Page() {
 
     const router = useRouter()
 
+    const [countryList, setCountryList] = useState([])
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -19,6 +21,35 @@ export default function Page() {
         mobile: '',
         password: ''
     })
+
+    useEffect(() => {
+        const list = countries.map((country) => {
+            const currencyObject = country.currencies ? Object.values(country.currencies)[0] : null;
+            return {
+                name: country.name.common,
+                code: country.cca2,
+                callingCode: `+${country.idd.root?.replace('+', '') || ''}${country.idd.suffixes ? country.idd.suffixes[0] : ''}`,
+                currency: currencyObject?.name || '',
+                currencyCode: country.currencies ? Object.keys(country.currencies)[0] : ''
+            }
+        })
+        setCountryList(list)
+    }, [])
+
+
+    const handleCountrySelect = (e) => {
+        const selectedCode = e.target.value
+        const selectedCountry = countryList.find(c => c.code === selectedCode)
+
+        setFormData({
+            ...formData,
+            country: selectedCode,
+            mobile: selectedCountry.callingCode,
+            currency: selectedCountry.currency,
+            currencyCode: selectedCountry.currencyCode,
+            phoneCode: selectedCountry.callingCode
+        })
+    }
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -53,10 +84,10 @@ export default function Page() {
                 setErrorMsg(res.data.message || 'Registration failed. Please try again.')
             }
         } catch (error) {
-            // || error.message || error \\ error.response?.data
-            console.error('Signup error:', JSON.stringify(error.response?.data) )
+            
+            console.error('Signup error:', JSON.stringify(error.response?.data))
             setErrorMsg(error.response?.data?.message || 'Something went wrong. Please try again later.')
-          }
+        }
 
     }
 
@@ -78,12 +109,12 @@ export default function Page() {
                             src="/assets/img/illustrations/auth-register-illustration-light.png"
                             className="auth-cover-illustration w-100"
                             alt="auth-illustration"
-                           />
+                        />
                         <img
                             src="/assets/img/illustrations/auth-cover-register-mask-light.png"
                             className="authentication-image"
                             alt="mask"
-                           />
+                        />
                     </div>
 
 
@@ -134,16 +165,21 @@ export default function Page() {
                                     <label htmlFor="email">Email</label>
                                 </div>
                                 <div className="form-floating form-floating-outline mb-5">
-                                    <input
-                                        type="text"
-                                        className="form-control"
+                                    <select
+                                        className="form-select"
                                         id="country"
                                         name="country"
-                                        placeholder="Country Code (e.g. IN)"
                                         value={formData.country}
-                                        onChange={handleChange}
+                                        onChange={handleCountrySelect}
                                         required
-                                    />
+                                    >
+                                        <option value="">Select Country</option>
+                                        {countryList.map((country) => (
+                                            <option key={country.code} value={country.code}>
+                                                {country.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                     <label htmlFor="country">Country</label>
                                 </div>
                                 <div className="form-floating form-floating-outline mb-5">
