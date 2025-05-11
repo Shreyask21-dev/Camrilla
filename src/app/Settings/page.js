@@ -4,6 +4,34 @@ import React, { useState, useEffect } from 'react';
 
 export default function Page() {
 
+    const [paymentHistory, setPaymentHistory] = useState([]);
+
+    useEffect(() => {
+        const fetchPaymentHistory = async () => {
+            const tokenData = localStorage.getItem('camrilla_token');
+            if (!tokenData) return;
+
+            try {
+                const { accessToken } = JSON.parse(tokenData);
+                const res = await fetch('http://api.camrilla.com/payment-history', {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                const json = await res.json();
+                if (json.code === 0) {
+                    setPaymentHistory(json.data || []);
+                }
+            } catch (err) {
+                console.error("Error fetching payment history:", err);
+            }
+        };
+
+        fetchPaymentHistory();
+    }, []);
+
+
     const [userData, setUserData] = useState({});
 
     const [planInfo, setPlanInfo] = useState(null);
@@ -185,7 +213,7 @@ export default function Page() {
                                                 <label htmlFor="TagifyLanguageSuggestion">Language</label>
                                             </div>
                                         </div>
-                                       
+
                                         <div class="col-md-6">
                                             <div class="form-floating form-floating-outline">
                                                 <select id="currency" class="select2 form-select">
@@ -260,6 +288,46 @@ export default function Page() {
                         </div>
                     </div>
                 </div>
+
+                <div className="card p-3" style={{height:"100vh", overflowY:"scroll"}} >
+
+                    {paymentHistory.length > 0 && (
+                        <div className="col-md-12 mt-4">
+                            <h5 className="mb-3">Payment History</h5>
+                            <div className="table-responsive">
+                                <table className="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Plan</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Currency</th>
+                                            <th>Order ID</th>
+                                            <th>Coupon Code</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paymentHistory.map((txn, index) => (
+                                            <tr key={index}>
+                                                <td>{new Date(txn.paymentDate).toLocaleDateString()}</td>
+                                                <td>{txn.planName}</td>
+                                                <td>{txn.amount}</td>
+                                                <td>{txn.paymentStatus}</td>
+                                                <td>{txn.currency}</td>
+                                                <td>{txn.orderId}</td>
+                                                <td>{txn.discountCouponCode || '—'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+
+
             </div>
 
         </div>

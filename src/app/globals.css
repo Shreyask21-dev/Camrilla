@@ -62,3 +62,34 @@ h2#fc-dom-86 {
 /* .fc-button-group {
   display: none !important;
 } */
+
+.layout-menu {
+  transition: width 0.3s ease !important;
+  overflow-x: hidden !important;
+}
+
+.layout-menu-collapsed {
+  width: 80px !important ;
+}
+
+.layout-menu-expanded {
+  width: 260px !important;
+}
+
+@media (max-width: 1199px) {
+  .layout-menu-mobile {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 1001 !important;
+    width: 260px !important;
+    height: 100% !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
+    background-color: #fff !important ;
+  }
+
+  .layout-menu-mobile.layout-menu-expanded {
+    transform: translateX(0) !important;
+  }
+}
