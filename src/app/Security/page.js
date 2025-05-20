@@ -33,7 +33,7 @@ export default function Page() {
 
     try {
       const response = await axios.post(
-        'http://api.camrilla.com/user/reset-password',
+        'https://newapi.camrilla.com/user/reset-password',
         {
           email: email,
           oldPassword: currentPassword,

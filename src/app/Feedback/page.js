@@ -26,7 +26,7 @@ export default function Page() {
 
         try {
             const response = await axios.post(
-                'http://api.camrilla.com/user-feedback',
+                'https://newapi.camrilla.com/user-feedback',
                 { feedback }
             );
 

@@ -52,7 +52,7 @@ export default function AssignmentPage() {
             const startMillis = startDate.getTime();
             const endMillis = endDate.getTime();
 
-            const response = await axios.get(`http://api.camrilla.com/order/assignment`, {
+            const response = await axios.get(`https://newapi.camrilla.com/order/assignment`, {
                 params: {
                     startDate: startMillis,
                     endDate: endMillis
@@ -139,7 +139,7 @@ export default function AssignmentPage() {
 
         // try {
         //     // Step 1: Update Assignment with new Total Amount
-        //     await axios.put(`http://api.camrilla.com/order/assignment/${assignment.id}`, {
+        //     await axios.put(`https://newapi.camrilla.com/order/assignment/${assignment.id}`, {
         //         customerName: assignment.customerName,
         //         customerMobile: assignment.customerMobile,
         //         customerEmail: assignment.customerEmail,
@@ -162,7 +162,7 @@ export default function AssignmentPage() {
 
 
         //     // Step 2: Add a Transaction with receivedPayment = 0
-        //     await axios.post(`http://api.camrilla.com/order/assignment/${assignment.id}/transaction`, {
+        //     await axios.post(`https://newapi.camrilla.com/order/assignment/${assignment.id}/transaction`, {
         //         receivedPayment: 0,
         //         receivedDate: Date.now(),
         //         paymentNote: paymentNote
@@ -189,12 +189,12 @@ export default function AssignmentPage() {
         }
 
         try {
-            await axios.put(`http://api.camrilla.com/order/assignment/${paymentAssignment.id}`, {
+            await axios.put(`https://newapi.camrilla.com/order/assignment/${paymentAssignment.id}`, {
                 ...paymentAssignment,
                 totalAmount: Number(paymentAmount)
             });
 
-            await axios.post(`http://api.camrilla.com/order/assignment/${paymentAssignment.id}/transaction`, {
+            await axios.post(`https://newapi.camrilla.com/order/assignment/${paymentAssignment.id}/transaction`, {
                 receivedPayment: 0,
                 receivedDate: Date.now(),
                 paymentNote
@@ -222,7 +222,7 @@ export default function AssignmentPage() {
         }
 
         try {
-            await axios.delete(`http://api.camrilla.com/order/assignment/${assignmentId}`);
+            await axios.delete(`https://newapi.camrilla.com/order/assignment/${assignmentId}`);
 
             // , {
             //     headers: {

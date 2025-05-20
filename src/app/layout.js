@@ -49,7 +49,7 @@ export default function RootLayout({ children }) {
             if (!refreshToken) throw new Error("No refresh token");
     
             const axiosInstance = axios.create(); // no headers
-            const res = await axiosInstance.post('http://api.camrilla.com/user/update-access-token', {
+            const res = await axiosInstance.post('https://newapi.camrilla.com/user/update-access-token', {
               refreshToken: refreshToken,
             });
     

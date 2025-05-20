@@ -102,7 +102,7 @@ export default function Page() {
             assignmentDateTime: new Date(selectedLead.assignmentDateTime).getTime(), // back to timestamp
         };
 
-        axios.put(`http://api.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
+        axios.put(`https://newapi.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
         // , {
         //     headers: {
         //         Authorization: `Bearer ${accessToken}`,
@@ -136,7 +136,7 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.post('http://api.camrilla.com/lead-manager/lead', newLead)
+        axios.post('https://newapi.camrilla.com/lead-manager/lead', newLead)
         // , {
         //     headers: {
         //         Authorization: `Bearer ${accessToken}`,
@@ -177,7 +177,7 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.get('http://api.camrilla.com/lead-manager/lead')
+        axios.get('https://newapi.camrilla.com/lead-manager/lead')
         // , {
         //     headers: {
         //         Authorization: `Bearer ${accessToken}`
@@ -262,7 +262,7 @@ export default function Page() {
         };
 
         try {
-            const res = await axios.post('http://api.camrilla.com/order/assignment', payload);
+            const res = await axios.post('https://newapi.camrilla.com/order/assignment', payload);
             // , {
             //     headers: { Authorization: `Bearer ${accessToken}` }
             // }
@@ -293,7 +293,7 @@ export default function Page() {
         const { accessToken } = JSON.parse(camrillaToken);
 
         try {
-            const response = await axios.delete(`http://api.camrilla.com/lead-manager/lead/${selectedLead.id}`);
+            const response = await axios.delete(`https://newapi.camrilla.com/lead-manager/lead/${selectedLead.id}`);
 
             // , {
             //     headers: {

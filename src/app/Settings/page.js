@@ -13,7 +13,7 @@ export default function Page() {
 
             try {
                 const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch('http://api.camrilla.com/payment-history', {
+                const res = await fetch('https://newapi.camrilla.com/payment-history', {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -51,7 +51,7 @@ export default function Page() {
 
             try {
                 const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch('http://api.camrilla.com/user-plan', {
+                const res = await fetch('https://newapi.camrilla.com/user-plan', {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }

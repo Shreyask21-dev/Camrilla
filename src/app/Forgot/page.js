@@ -2,22 +2,41 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
 
     const [email, setEmail] = useState('');
 
+    const router = useRouter();
+
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     try {
+    //         const response = await axios.post('https://newapi.camrilla.com/user/forget-password', {
+    //             email: email,
+    //         });
+    //         console.log('Success:', response.data);
+    //         alert('Reset link sent to your email.');
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         alert('Failed to send reset link.');
+    //     }
+    // };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://api.camrilla.com/user/forget-password', {
+            const response = await axios.post('https://newapi.camrilla.com/n/api/auth/reset-password', {
                 email: email,
             });
             console.log('Success:', response.data);
-            alert('Reset link sent to your email.');
+            alert('A temporary password has been sent to your email.');
+            router.push('/Login'); // <-- Redirect to Login page
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to send reset link.');
+            alert('Failed to reset password. Please try again.');
         }
     };
 

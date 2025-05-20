@@ -75,7 +75,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
         // }
 
         try {
-            const res = await axios.post('http://api.camrilla.com/order/assignment', payload);
+            const res = await axios.post('https://newapi.camrilla.com/order/assignment', payload);
             if (res.data.code === 0) {
                 alert('Assignment created successfully');
                 handleClose();
