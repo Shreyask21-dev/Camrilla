@@ -13,7 +13,7 @@ export default function Page() {
 
             try {
                 const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch('https://newapi.camrilla.com/payment-history', {
+                const res = await fetch('https://api.camrilla.com/payment-history', {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }

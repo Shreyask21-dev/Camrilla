@@ -33,7 +33,7 @@ export default function Page() {
     //             const accessToken = tokenData.accessToken;
     //             const countryCode = userData.country;
 
-    //             const response = await axios.get(`https://newapi.camrilla.com/admin/plan-master/${countryCode}`);
+    //             const response = await axios.get(`https://api.camrilla.com/admin/plan-master/${countryCode}`);
 
     //             console.log('Plans API Response:', response.data);
 
@@ -60,7 +60,7 @@ export default function Page() {
                 const tokenData = JSON.parse(tokenDataString);
                 const accessToken = tokenData.accessToken;
 
-                const response = await axios.get('https://newapi.camrilla.com/user-plan', {
+                const response = await axios.get('https://api.camrilla.com/user-plan', {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -117,7 +117,7 @@ export default function Page() {
             }
 
             const response = await axios.post(
-                'https://newapi.camrilla.com/initiate-payment-request',
+                'https://api.camrilla.com/initiate-payment-request',
                 payload,
                 {
                     headers: {
@@ -156,7 +156,7 @@ export default function Page() {
                 console.log('Payment Success Response:', response);
 
                 try {
-                    await axios.post('https://newapi.camrilla.com/update-payment-response', {
+                    await axios.post('https://api.camrilla.com/update-payment-response', {
                         orderId: paymentData.camrillaOrderId
                     });
                     alert('Payment successful and updated!');
@@ -191,7 +191,7 @@ export default function Page() {
             const tokenData = JSON.parse(tokenDataString);
             const accessToken = tokenData.accessToken;
 
-            const response = await axios.get(`https://newapi.camrilla.com/admin/discount-coupon/validate/${code}`, {
+            const response = await axios.get(`https://api.camrilla.com/admin/discount-coupon/validate/${code}`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 }

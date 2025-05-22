@@ -42,8 +42,8 @@ export default function Page() {
                 const startDateMs = startDate.getTime();
 
                 // API endpoints
-                const assignmentURL = `https://newapi.camrilla.com/order/assignment?startDate=${startDateMs}&endDate=${endDate}`;
-                const leadsURL = `https://newapi.camrilla.com/lead-manager/lead`;
+                const assignmentURL = `https://api.camrilla.com/order/assignment?startDate=${startDateMs}&endDate=${endDate}`;
+                const leadsURL = `https://api.camrilla.com/lead-manager/lead`;
 
                 // Fetch both APIs together
                 const [assignmentsRes, leadsRes] = await Promise.all([

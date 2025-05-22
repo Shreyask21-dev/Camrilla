@@ -131,7 +131,7 @@ export default function Page() {
             assignmentDateTime: new Date(selectedLead.assignmentDateTime).getTime(), // back to timestamp
         };
 
-        axios.put(`https://newapi.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
+        axios.put(`https://api.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
 
             .then(response => {
                 console.log('Lead Updated:', response.data);
@@ -160,7 +160,7 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.post('https://newapi.camrilla.com/lead-manager/lead', newLead)
+        axios.post('https://api.camrilla.com/lead-manager/lead', newLead)
 
             .then(response => {
                 console.log('Lead Added:', response.data);
@@ -196,7 +196,7 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.get('https://newapi.camrilla.com/lead-manager/lead')
+        axios.get('https://api.camrilla.com/lead-manager/lead')
             .then(response => {
                 console.log(response.data.data)
                 setLeads(response.data.data);
@@ -277,7 +277,7 @@ export default function Page() {
         };
 
         try {
-            const res = await axios.post('https://newapi.camrilla.com/order/assignment', payload);
+            const res = await axios.post('https://api.camrilla.com/order/assignment', payload);
 
             if (res.data.code === 0) {
                 alert('Assignment Created Successfully');
@@ -306,7 +306,7 @@ export default function Page() {
         const { accessToken } = JSON.parse(camrillaToken);
 
         try {
-            const response = await axios.delete(`https://newapi.camrilla.com/lead-manager/lead/${selectedLead.id}`);
+            const response = await axios.delete(`https://api.camrilla.com/lead-manager/lead/${selectedLead.id}`);
 
             console.log('Lead deleted:', response.data);
 

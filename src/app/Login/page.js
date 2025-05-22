@@ -18,7 +18,7 @@ export default function Page() {
     e.preventDefault()
 
     try {
-      const response = await axios.post('https://newapi.camrilla.com/user/login', {
+      const response = await axios.post('https://api.camrilla.com/user/login', {
         email,
         password
       })

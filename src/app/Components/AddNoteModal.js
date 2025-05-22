@@ -20,7 +20,7 @@ export default function AddNoteModal({ show, handleClose, assignmentData, refres
     }
 
     try {
-      await axios.put(`https://newapi.camrilla.com/order/assignment/${assignmentData.id}`, {
+      await axios.put(`https://api.camrilla.com/order/assignment/${assignmentData.id}`, {
         customerName: assignmentData.customerName,
         customerMobile: assignmentData.customerMobile,
         customerEmail: assignmentData.customerEmail,

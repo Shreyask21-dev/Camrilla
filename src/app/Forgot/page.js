@@ -13,7 +13,7 @@ export default function Page() {
     // const handleSubmit = async (e) => {
     //     e.preventDefault();
     //     try {
-    //         const response = await axios.post('https://newapi.camrilla.com/user/forget-password', {
+    //         const response = await axios.post('https://api.camrilla.com/user/forget-password', {
     //             email: email,
     //         });
     //         console.log('Success:', response.data);
@@ -28,7 +28,7 @@ export default function Page() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('https://newapi.camrilla.com/n/api/auth/reset-password', {
+            const response = await axios.post('https://api.camrilla.com/n/api/auth/reset-password', {
                 email: email,
             });
             console.log('Success:', response.data);

@@ -70,7 +70,7 @@ export default function Home() {
     }
 
     try {
-      const response = await axios.get(`https://newapi.camrilla.com/order/assignment`, {
+      const response = await axios.get(`https://api.camrilla.com/order/assignment`, {
         params: {
           startDate,
           endDate,

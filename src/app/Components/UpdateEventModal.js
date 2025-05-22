@@ -77,7 +77,7 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
         // }
 
         try {
-            const res = await axios.put(`https://newapi.camrilla.com/order/assignment/${eventData.id}`, payload);
+            const res = await axios.put(`https://api.camrilla.com/order/assignment/${eventData.id}`, payload);
             if (res.data.code === 0) {
                 alert('Updated successfully');
                 handleClose();
@@ -101,7 +101,7 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
         //     headers: { Authorization: `Bearer ${token}` },
         // }
         try {
-            const res = await axios.delete(`https://newapi.camrilla.com/order/assignment/${eventData.id}`);
+            const res = await axios.delete(`https://api.camrilla.com/order/assignment/${eventData.id}`);
             if (res.data.code === 0) {
                 alert('Deleted successfully');
                 handleClose();

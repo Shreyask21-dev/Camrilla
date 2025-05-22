@@ -52,7 +52,7 @@ export default function AssignmentPage() {
             const startMillis = startDate.getTime();
             const endMillis = endDate.getTime();
 
-            const response = await axios.get(`https://newapi.camrilla.com/order/assignment`, {
+            const response = await axios.get(`https://api.camrilla.com/order/assignment`, {
                 params: {
                     startDate: startMillis,
                     endDate: endMillis
@@ -133,12 +133,12 @@ export default function AssignmentPage() {
         }
 
         try {
-            await axios.put(`https://newapi.camrilla.com/order/assignment/${paymentAssignment.id}`, {
+            await axios.put(`https://api.camrilla.com/order/assignment/${paymentAssignment.id}`, {
                 ...paymentAssignment,
                 totalAmount: Number(paymentAmount)
             });
 
-            await axios.post(`https://newapi.camrilla.com/order/assignment/${paymentAssignment.id}/transaction`, {
+            await axios.post(`https://api.camrilla.com/order/assignment/${paymentAssignment.id}/transaction`, {
                 receivedPayment: 0,
                 receivedDate: Date.now(),
                 paymentNote
@@ -166,7 +166,7 @@ export default function AssignmentPage() {
         }
 
         try {
-            await axios.delete(`https://newapi.camrilla.com/order/assignment/${assignmentId}`);
+            await axios.delete(`https://api.camrilla.com/order/assignment/${assignmentId}`);
 
             alert('Assignment deleted successfully');
             fetchAssignments(startOfMonth, endOfMonth); // Refresh after delete
