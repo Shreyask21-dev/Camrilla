@@ -3,11 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from 'next/script'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Sidebar from "./Components/Sidebar";
 import Navbar from "./Components/Navbar";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
+import MobileFallbackPage from './Components/MobileFallbackPage';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,19 +25,27 @@ export default function RootLayout({ children }) {
 
   const router = useRouter()
   const pathname = usePathname()
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
     const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/forgot' || pathname.toLowerCase() === '/signup';
-  
+
+    // Mobile detection
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
     if (!tokenData?.accessToken && !isAuthPage) {
       router.push('/Login');
       return;
     }
-  
+
     // Set token to axios defaults
     axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData?.accessToken}`;
-  
+
     // Axios response interceptor
     const interceptor = axios.interceptors.response.use(
       response => response,
@@ -45,17 +54,17 @@ export default function RootLayout({ children }) {
           try {
             const storedToken = JSON.parse(localStorage.getItem('camrilla_token'));
             const refreshToken = storedToken?.refreshToken;
-    
+
             if (!refreshToken) throw new Error("No refresh token");
-    
+
             const axiosInstance = axios.create(); // no headers
             const res = await axiosInstance.post('https://newapi.camrilla.com/user/update-access-token', {
               refreshToken: refreshToken,
             });
-    
+
             const newAccessToken = res.data?.data?.token?.accessToken;
             const newRefreshToken = res.data?.data?.token?.refreshToken;
-    
+
             if (newAccessToken && newRefreshToken) {
               localStorage.setItem('camrilla_token', JSON.stringify({
                 accessToken: newAccessToken,
@@ -77,10 +86,11 @@ export default function RootLayout({ children }) {
         return Promise.reject(error);
       }
     );
-    
-  
+
+
     return () => {
       axios.interceptors.response.eject(interceptor);
+      window.removeEventListener('resize', checkMobile);
     };
   }, [pathname, router]);
 
@@ -89,10 +99,10 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en"
-    className="light-style layout-wide customizer-hide">
+      className="light-style layout-wide customizer-hide">
       <head>
-      <link rel="icon" type="image/png" href="/images/logo.png" />
-      <title>Camrilla | Made business easy</title>
+        <link rel="icon" type="image/png" href="/images/logo.png" />
+        <title>Camrilla | Made business easy</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
@@ -153,12 +163,14 @@ export default function RootLayout({ children }) {
 
         <Script src="/assets/js/pages-auth.js" />
 
-        <Script src="/assets/js/pages-profile-user.js"/>
+        <Script src="/assets/js/pages-profile-user.js" />
 
         <Script src="/assets/js/pages-auth.js" />
         <Script src="/assets//js/pages-pricing.js" />
 
-        {isAuthPage ? (
+        {isMobile ? (
+          <MobileFallbackPage />
+        ) : isAuthPage ? (
           <>{children}</>
         ) : (
           <div className="layout-wrapper layout-content-navbar">
