@@ -93,3 +93,6 @@ h2#fc-dom-86 {
     transform: translateX(0) !important;
   }
 }
+.app-calendar-wrapper .fc-toolbar h2 {
+  margin-left: 20px !important;
+}

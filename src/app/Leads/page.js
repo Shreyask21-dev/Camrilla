@@ -5,6 +5,35 @@ import DatePicker from 'react-datepicker'
 
 export default function Page() {
 
+    const [dateRangeFilter, setDateRangeFilter] = useState('all');
+
+    const isWithinSelectedRange = (timestamp) => {
+        const now = new Date();
+        const date = new Date(timestamp);
+
+        if (dateRangeFilter === 'last28') {
+            const past = new Date(now);
+            past.setDate(past.getDate() - 28);
+            return date >= past && date <= now;
+        }
+
+        if (dateRangeFilter === 'lastMonth') {
+            const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const end = new Date(now.getFullYear(), now.getMonth(), 0);
+            end.setHours(23, 59, 59, 999);
+            return date >= start && date <= end;
+        }
+
+        if (dateRangeFilter === 'lastYear') {
+            const start = new Date(now.getFullYear() - 1, 0, 1);
+            const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+            return date >= start && date <= end;
+        }
+
+        return true; // 'all' or no filter
+    };
+
+
     const [showAssignmentModal, setShowAssignmentModal] = useState(false);
     const [assignmentForm, setAssignmentForm] = useState({
         customerName: '',
@@ -103,12 +132,7 @@ export default function Page() {
         };
 
         axios.put(`https://newapi.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
-        // , {
-        //     headers: {
-        //         Authorization: `Bearer ${accessToken}`,
-        //         'Content-Type': 'application/json',
-        //     }
-        // }
+
             .then(response => {
                 console.log('Lead Updated:', response.data);
                 // Close Modal
@@ -137,12 +161,7 @@ export default function Page() {
         const { accessToken } = JSON.parse(camrillaToken);
 
         axios.post('https://newapi.camrilla.com/lead-manager/lead', newLead)
-        // , {
-        //     headers: {
-        //         Authorization: `Bearer ${accessToken}`,
-        //         'Content-Type': 'application/json',
-        //     }
-        // }
+
             .then(response => {
                 console.log('Lead Added:', response.data);
                 // Close Modal
@@ -178,12 +197,8 @@ export default function Page() {
         const { accessToken } = JSON.parse(camrillaToken);
 
         axios.get('https://newapi.camrilla.com/lead-manager/lead')
-        // , {
-        //     headers: {
-        //         Authorization: `Bearer ${accessToken}`
-        //     }
-        // }
             .then(response => {
+                console.log(response.data.data)
                 setLeads(response.data.data);
                 setLoading(false);
             })
@@ -263,9 +278,7 @@ export default function Page() {
 
         try {
             const res = await axios.post('https://newapi.camrilla.com/order/assignment', payload);
-            // , {
-            //     headers: { Authorization: `Bearer ${accessToken}` }
-            // }
+
             if (res.data.code === 0) {
                 alert('Assignment Created Successfully');
                 setShowAssignmentModal(false);
@@ -294,12 +307,6 @@ export default function Page() {
 
         try {
             const response = await axios.delete(`https://newapi.camrilla.com/lead-manager/lead/${selectedLead.id}`);
-
-            // , {
-            //     headers: {
-            //         Authorization: `Bearer ${accessToken}`,
-            //     }
-            // }
 
             console.log('Lead deleted:', response.data);
 
@@ -405,11 +412,13 @@ export default function Page() {
                                             aria-expanded="false">
                                             <i class="ri-more-2-line ri-20px"></i>
                                         </button>
-                                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="meetingSchedule">
-                                            <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                                        <div className="dropdown-menu dropdown-menu-end" aria-labelledby="meetingSchedule">
+                                            <button className={`dropdown-item ${dateRangeFilter === 'last28' ? 'active' : ''}`} onClick={() => setDateRangeFilter('last28')}>Last 28 Days</button>
+                                            <button className={`dropdown-item ${dateRangeFilter === 'lastMonth' ? 'active' : ''}`} onClick={() => setDateRangeFilter('lastMonth')}>Last Month</button>
+                                            <button className={`dropdown-item ${dateRangeFilter === 'lastYear' ? 'active' : ''}`} onClick={() => setDateRangeFilter('lastYear')}>Last Year</button>
+                                            <button className={`dropdown-item ${dateRangeFilter === 'all' ? 'active' : ''}`} onClick={() => setDateRangeFilter('all')}>View All</button>
                                         </div>
+
                                     </div>
                                 </div>
 
@@ -420,9 +429,11 @@ export default function Page() {
                                     ) : (
                                         <div className="d-flex flex-column gap-4">
                                             {leads.filter((lead) => {
-                                                if (selectedTypes.includes('all')) return true;
-                                                return selectedTypes.includes(lead.assignmentType);
+                                                const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
+                                                const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
+                                                return typeMatch && dateMatch;
                                             })
+                                                .sort((a, b) => new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime))
                                                 .map((lead) => {
                                                     const assignmentDate = new Date(lead.assignmentDateTime);
                                                     const leadCreatedDate = new Date(lead.leadDate);
@@ -432,72 +443,49 @@ export default function Page() {
                                                     const year = assignmentDate.getFullYear();
 
                                                     return (
-                                                        <div key={lead.id} className="d-flex align-items-center justify-content-between flex-nowrap border-bottom pb-3">
-
-                                                            {/* Date */}
-                                                            <div className="text-center" style={{ minWidth: '60px' }}>
+                                                        <div key={lead.id} className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3" style={{}}>
+                                                            {/* Date Column */}
+                                                            <div className="text-center border border-top-0 border-bottom-0 border-start-0" style={{ minWidth: '80px' }}>
                                                                 <small className="text-muted">{month}</small>
                                                                 <h3 className="mb-0">{day}</h3>
                                                                 <small className="text-muted">{year}</small>
                                                             </div>
 
-                                                            {/* Name | Phone | Email in one line */}
-                                                            <div className="d-flex align-items-center gap-1" style={{ minWidth: '180px' }}>
-                                                                <strong>{lead.customerName}</strong>
-                                                                <span className="text-muted">|</span>
-                                                                <strong>{lead.customerMobile}</strong>
-                                                                <span className="text-muted">|</span>
-                                                                <strong>{lead.customerEmail}</strong>
+                                                            {/* Info Column */}
+                                                            <div className="flex-grow-1">
+                                                                <strong className="d-block mb-1">{lead.customerName}</strong>
+                                                                <div className="text-muted small mb-1">
+                                                                    {lead.customerEmail || '-'} | {lead.customerMobile || '-'}
+                                                                </div>
+                                                                <div className="text-muted small">
+                                                                    <strong>{lead.assignmentType || '-'}</strong><br />
+                                                                    <span>Amount: ₹{lead.totalAmount || 0}</span><br />
+                                                                    <span>Lead Date: {leadCreatedDate.toLocaleDateString()}</span>
+                                                                </div>
                                                             </div>
 
-                                                            {/* Assignment Type */}
-                                                            <div style={{ minWidth: '80px' }}>
-                                                                <strong>{lead.assignmentType}</strong>
-                                                            </div>
-
-                                                            {/* Total Amount */}
-                                                            <div style={{ minWidth: '70px' }}>
-                                                                <strong>₹{lead.totalAmount}</strong>
-                                                            </div>
-
-                                                            {/* Lead Date */}
-                                                            <div style={{ minWidth: '100px' }}>
-                                                                <strong>{leadCreatedDate.toLocaleDateString()}</strong>
-                                                            </div>
-
-                                                            <div className='text-center my-2'>
-                                                                <span className={`badge rounded-pill ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
+                                                            {/* Status + Action Buttons Column */}
+                                                            <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '140px' }}>
+                                                                <span className={`badge rounded-pill text-uppercase ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
                                                                     lead.status === 'CONVERTED' ? 'bg-label-success' :
                                                                         lead.status === 'NEW' ? 'bg-label-primary' :
-                                                                            'bg-label-secondary'
-                                                                    }`}>
+                                                                            'bg-label-secondary'}`}>
                                                                     {lead.status}
                                                                 </span>
-                                                            </div>
 
-                                                            {/* Status Badge */}
-                                                            <div className='d-flex flex-wrap justify-content-center align-items-center gap-2'>
-
-                                                                {lead.status === 'CONVERTED' && (
-                                                                    <button
-                                                                        className="btn btn-sm btn-outline-warning"
-                                                                        onClick={() => openAssignmentModal(lead)}
-                                                                    >
-                                                                        <i className="bi bi-plus-lg"></i> {/* Bootstrap Plus Icon */}
+                                                                <div className="d-flex gap-2">
+                                                                    {lead.status === 'CONVERTED' && (
+                                                                        <button className="btn btn-sm btn-outline-warning" onClick={() => openAssignmentModal(lead)}>
+                                                                            <i className="bi bi-plus-lg"></i>
+                                                                        </button>
+                                                                    )}
+                                                                    <button className="btn btn-sm btn-outline-dark" onClick={() => openEditLeadModal(lead)}>
+                                                                        <i className="ri-pencil-line"></i>
                                                                     </button>
-                                                                )}
-
-                                                                <button
-                                                                    className="btn btn-sm btn-outline-dark"
-                                                                    onClick={() => openEditLeadModal(lead)}
-                                                                >
-                                                                    <i className="ri-pencil-line"></i> {/* Remixicon Pencil */}
-                                                                </button>
-
+                                                                </div>
                                                             </div>
-
-
                                                         </div>
+
 
                                                     );
                                                 })}

@@ -86,6 +86,11 @@ export default function Page() {
                                     ><i class="ri-lock-line me-2"></i>Security</a
                                     >
                                 </li>
+                                <li className="nav-item">
+                                    <a className="nav-link" href="/Transactions"
+                                    ><i className="ri-lock-line me-2"></i>Transactions</a
+                                    >
+                                </li>
 
                             </ul>
                         </div>
@@ -289,7 +294,7 @@ export default function Page() {
                     </div>
                 </div>
 
-                <div className="card p-3" style={{height:"100vh", overflowY:"scroll"}} >
+                {/* <div className="card p-3" style={{height:"100vh", overflowY:"scroll"}} >
 
                     {paymentHistory.length > 0 && (
                         <div className="col-md-12 mt-4">
@@ -325,7 +330,7 @@ export default function Page() {
                         </div>
                     )}
 
-                </div>
+                </div> */}
 
 
             </div>

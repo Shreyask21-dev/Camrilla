@@ -41,13 +41,6 @@ export default function Page() {
         }
       );
 
-      // ,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${accessToken}`,
-      //     },
-      //   }
-
       console.log('Password Changed Successfully:', response.data);
       alert('Password updated successfully!');
       setCurrentPassword('');
@@ -74,6 +67,11 @@ export default function Page() {
                 <li class="nav-item">
                   <Link class="nav-link active" href="/Security"
                   ><i class="ri-lock-line me-2"></i> Security</Link>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link " href="/Transactions"
+                  ><i className="ri-lock-line me-2"></i>Transactions</a
+                  >
                 </li>
               </ul>
             </div>

@@ -59,11 +59,6 @@ export default function AssignmentPage() {
                 }
             });
 
-            // ,
-            //     headers: {
-            //         Authorization: `Bearer ${accessToken}`
-            //     }
-
             setAssignments(response.data.data); // save your data here
             console.log('Assignments fetched:', response.data);
         } catch (error) {
@@ -119,63 +114,12 @@ export default function AssignmentPage() {
     };
 
     const handleAddPayment = async (assignment) => {
-        // const totalAmount = prompt("Enter Total Amount:", assignment.totalAmount || 0);
-        // if (totalAmount === null) return; // user cancelled
-
-        // const paymentNote = prompt("Enter Payment Note:", "Good Payment Note");
-        // if (paymentNote === null) return; // user cancelled
 
         setPaymentAssignment(assignment);
         setPaymentAmount(assignment.totalAmount || '');
         setPaymentNote('');
         setShowPaymentModal(true);
 
-        // const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
-        // const accessToken = tokenData?.accessToken;
-        // if (!accessToken) {
-        //     alert('Access Token not found');
-        //     return;
-        // }
-
-        // try {
-        //     // Step 1: Update Assignment with new Total Amount
-        //     await axios.put(`https://newapi.camrilla.com/order/assignment/${assignment.id}`, {
-        //         customerName: assignment.customerName,
-        //         customerMobile: assignment.customerMobile,
-        //         customerEmail: assignment.customerEmail,
-        //         customerAddress: assignment.customerAddress,
-        //         assignmentAddress: assignment.assignmentAddress,
-        //         assignmentName: assignment.assignmentName,
-        //         assignmentDateTime: assignment.assignmentDateTime,
-        //         assignmentStatus: assignment.assignmentStatus || "Completed",
-        //         contactPerson1Name: assignment.contactPerson1Name || "",
-        //         contactPerson1Mobile: assignment.contactPerson1Mobile || "",
-        //         contactPerson2Name: assignment.contactPerson2Name || "",
-        //         contactPerson2Mobile: assignment.contactPerson2Mobile || "",
-        //         assignToName: assignment.assignToName || "Me",
-        //         assignToHandle: assignment.assignToHandle || "MeTo",
-        //         assignmentNote: assignment.assignmentNote || "",
-        //         totalAmount: Number(totalAmount),
-        //         reminderBeforedays: assignment.reminderBeforedays || 0,
-        //         reminderDate: assignment.reminderDate || ""
-        //     });
-
-
-        //     // Step 2: Add a Transaction with receivedPayment = 0
-        //     await axios.post(`https://newapi.camrilla.com/order/assignment/${assignment.id}/transaction`, {
-        //         receivedPayment: 0,
-        //         receivedDate: Date.now(),
-        //         paymentNote: paymentNote
-        //     });
-
-
-
-        //     alert('Payment added successfully');
-        //     fetchAssignments(startOfMonth, endOfMonth); // refresh assignments
-        // } catch (error) {
-        //     console.error('Error during Add Payment:', error);
-        //     alert('Failed to add payment');
-        // }
     };
 
     const submitPayment = async () => {
@@ -223,12 +167,6 @@ export default function AssignmentPage() {
 
         try {
             await axios.delete(`https://newapi.camrilla.com/order/assignment/${assignmentId}`);
-
-            // , {
-            //     headers: {
-            //         Authorization: `Bearer ${accessToken}`
-            //     }
-            // }
 
             alert('Assignment deleted successfully');
             fetchAssignments(startOfMonth, endOfMonth); // Refresh after delete
@@ -330,66 +268,54 @@ export default function AssignmentPage() {
 
                                 <div className="card-body mt-4">
                                     <div className="d-flex flex-column gap-4">
-                                        {filteredAssignments.map((assignment, index) => {
-                                            const date = new Date(assignment.assignmentDateTime);
+                                        {[...filteredAssignments].sort((a, b) => new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime))
+                                            .map((assignment, index) => {
+                                                const date = new Date(assignment.assignmentDateTime);
 
-                                            return (
-                                                <div key={index} className="d-flex align-items-center justify-content-between flex-nowrap border-bottom pb-3">
-                                                    {/* Date */}
-                                                    <div className="text-center" style={{ minWidth: '20px' }}>
-                                                        <small className="text-muted">{date.toLocaleString('default', { month: 'short' })}</small>
-                                                        <h3 className="mb-0">{date.getDate()}</h3>
-                                                        <small className="text-muted">{date.getFullYear()}</small>
-                                                    </div>
-
-                                                    {/* Name | Phone | Email */}
-                                                    <div className="d-flex align-items-center gap-1" style={{ minWidth: '180px' }}>
-                                                        <strong>{assignment.customerName || '-'}</strong>
-                                                        <span className="text-muted">|</span>
-                                                        <strong>{assignment.customerMobile || '-'}</strong>
-                                                        <span className="text-muted">|</span>
-                                                        <strong>{assignment.customerEmail || '-'}</strong>
-                                                    </div>
-
-                                                    {/* Assignment Name */}
-                                                    <div style={{ minWidth: '80px' }}>
-                                                        <strong>{assignment.assignmentName || '-'}</strong>
-                                                    </div>
-
-                                                    {/* Venue */}
-                                                    <div style={{ minWidth: '80px' }}>
-                                                        <strong>{assignment.assignmentAddress || '-'}</strong>
-                                                    </div>
-
-
-
-                                                    {/* Edit Button */}
-                                                    {/* Action Buttons */}
-                                                    <div className="d-flex flex-column gap-2" style={{ minWidth: '100px' }}>
-                                                        <div className='d-flex justify-content-center align-items-center gap-2'>
-                                                            <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditAssignment(assignment)}>
-                                                                <i className="bi bi-pencil-fill"></i>
-                                                            </button>
-                                                            <button className="btn btn-sm btn-outline-success" onClick={() => handleAddPayment(assignment)}>
-                                                                <i className="bi bi-currency-rupee"></i>
-                                                            </button>
+                                                return (
+                                                    <div key={index} className="border border-top-0 border-start-0 border-end-0 rounded p-3 pb-4 d-flex gap-4" style={{  }}>
+                                                        {/* Date Column */}
+                                                        <div className="text-center border border-top-0 border-bottom-0 border-start-0 " style={{ minWidth: '80px' }}>
+                                                            <small className="text-muted">{date.toLocaleString('default', { month: 'short' })}</small>
+                                                            <h3 className="mb-0">{date.getDate()}</h3>
+                                                            <small className="text-muted">{date.getFullYear()}</small>
                                                         </div>
 
-                                                        <div className='d-flex justify-content-center align-items-center gap-2'>
-                                                            <button className="btn btn-sm btn-outline-info" onClick={() => handleAddNote(assignment)}>
-                                                                <i className="bi bi-journals"></i>
-                                                            </button>
-                                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAssignment(assignment.id)}>
-                                                                <i className="bi bi-trash-fill"></i>
-                                                            </button>
+                                                        {/* Info Column */}
+                                                        <div className="flex-grow-1">
+                                                            <strong className="d-block mb-1">{assignment.customerName || '-'}</strong>
+                                                            <div className="text-muted small mb-1">
+                                                                {assignment.customerEmail || '-'} | {assignment.customerMobile || '-'}
+                                                            </div>
+                                                            <div className="text-muted small">
+                                                                <strong>{assignment.assignmentName || '-'}</strong><br />
+                                                                <span>{assignment.assignmentAddress || '-'}</span>
+                                                            </div>
                                                         </div>
 
+                                                        {/* Action Buttons Column */}
+                                                        <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '120px' }}>
+                                                            <div className="d-flex gap-2">
+                                                                <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditAssignment(assignment)}>
+                                                                    <i className="bi bi-pencil-fill"></i>
+                                                                </button>
+                                                                <button className="btn btn-sm btn-outline-success" onClick={() => handleAddPayment(assignment)}>
+                                                                    <i className="bi bi-currency-rupee"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div className="d-flex gap-2">
+                                                                <button className="btn btn-sm btn-outline-info" onClick={() => handleAddNote(assignment)}>
+                                                                    <i className="bi bi-journals"></i>
+                                                                </button>
+                                                                <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAssignment(assignment.id)}>
+                                                                    <i className="bi bi-trash-fill"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
-
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
                                     </div>
                                 </div>
 

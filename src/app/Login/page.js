@@ -6,6 +6,8 @@ import Link from 'next/link'
 
 export default function Page() {
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const router = useRouter()
 
   const [email, setEmail] = useState('')
@@ -100,7 +102,7 @@ export default function Page() {
                     <div className="input-group input-group-merge">
                       <div className="form-floating form-floating-outline">
                         <input
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           id="password"
                           className="form-control"
                           placeholder="********"
@@ -110,7 +112,12 @@ export default function Page() {
                         />
                         <label htmlFor="password">Password</label>
                       </div>
-                      <span className="input-group-text cursor-pointer"><i className="ri-eye-off-line"></i></span>
+                      <span
+                        className="input-group-text cursor-pointer"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                      >
+                        <i className={showPassword ? "ri-eye-line" : "ri-eye-off-line"}></i>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -127,7 +134,7 @@ export default function Page() {
               </form>
 
               <p className="text-center">
-                <span>New on our platform?</span>
+                <span>New on our platform? </span>
                 <Link href="/Signup">
                   <span>Create an account</span>
                 </Link>

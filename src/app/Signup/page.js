@@ -86,7 +86,7 @@ export default function Page() {
         } catch (error) {
             
             console.error('Signup error:', JSON.stringify(error.response?.data))
-            setErrorMsg(error.response?.data?.message || 'Something went wrong. Please try again later.')
+            setErrorMsg(error.response?.data?.message || 'The email ID provided is already associated with an existing account. Please try using a different email address.')
         }
 
     }
@@ -226,7 +226,7 @@ export default function Page() {
 
 
                             <p className="text-center">
-                                <span>Already have an account?</span>
+                                <span>Already have an account? </span>
                                 <Link href="/Login">
                                     <span>Sign in instead</span>
                                 </Link>
