@@ -14,8 +14,39 @@ import { useMemo } from 'react';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
+import useUserPlan from './hooks/useUserPlan';
 
 export default function Home() {
+
+  const planInfo = useUserPlan();
+
+  const getExpiryMessage = () => {
+    if (!planInfo?.endDate) return null;
+    const end = new Date(planInfo.endDate);
+    const now = new Date();
+    const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24)); // days
+    if (diff <= 5) {
+      return `⚠️ Your plan expires in ${diff} day${diff !== 1 ? 's' : ''}`;
+    }
+    return null;
+  };
+
+  const isBasicPlan = planInfo?.planName?.toLowerCase() === 'basic';
+  const isProfessionalPlan = planInfo?.planName?.toLowerCase() === 'professional';
+
+  const showFeedbackMessage = () => {
+    if (!planInfo || !planInfo.planName || !planInfo.endDate) return false;
+
+    const now = new Date();
+    const end = new Date(planInfo.endDate);
+    const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+
+    const isBasic = planInfo.planName.toLowerCase() === 'basic';
+    const isProfessional = planInfo.planName.toLowerCase() === 'professional';
+
+    return isProfessional && diff > 5;
+  };
+
 
   const [selectedCard, setSelectedCard] = useState(null); // 'total', 'received', 'due', etc.
   const [showListModal, setShowListModal] = useState(false);
@@ -227,7 +258,36 @@ export default function Home() {
   return (
     <div>
       <div className="container-xxl flex-grow-1 container-p-y">
-        <div className="row g-6">
+
+        {/* Expiry message */}
+        {!isBasicPlan && getExpiryMessage() && (
+          <div className="alert alert-warning text-center py-2 mb-0" role="alert">
+            {getExpiryMessage()}
+          </div>
+        )}
+
+        {/* Motivational subscribe message */}
+        {isBasicPlan && (
+          <div className="alert alert-info text-center py-2 mb-0" role="alert">
+            🚀 Unlock the full potential of Camrilla –{' '}
+            <a href="/Subscriptions" className="text-decoration-underline fw-bold">
+              Upgrade to PRO now
+            </a>{' '}
+            and elevate your business!
+          </div>
+        )}
+
+        {showFeedbackMessage() && (
+          <div className="alert alert-success text-center py-2 mb-0" role="alert">
+            🌟 Enjoying Camrilla Pro? We would love your feedback!{' '}
+            <a href="/Feedback" className="text-decoration-underline fw-bold">
+              Write to us
+            </a>.
+          </div>
+        )}
+
+
+        <div className="row g-6 mt-1">
           <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('total')}>
             <div className="card card-border-shadow-primary h-100">
               <div className="card-body">
