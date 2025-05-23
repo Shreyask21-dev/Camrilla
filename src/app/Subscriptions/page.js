@@ -182,7 +182,7 @@ export default function Page() {
     return (
         <div>
             <Script
-                src="http://checkout.razorpay.com/v1/checkout.js"
+                src="https://checkout.razorpay.com/v1/checkout.js"
                 strategy="afterInteractive"
                 onLoad={() => {
                     console.log("Razorpay script loaded!");
