@@ -5,6 +5,7 @@ import DatePicker from 'react-datepicker'
 import AddEventModal from './AddEventModal';
 import EditEventModalAssignments from './EditEventModalAssignments';
 import AddNoteModal from './AddNoteModal';
+import TransactionModal from './TransactionModal';
 
 export default function AssignmentPage() {
 
@@ -273,7 +274,7 @@ export default function AssignmentPage() {
                                                 const date = new Date(assignment.assignmentDateTime);
 
                                                 return (
-                                                    <div key={index} className="border border-top-0 border-start-0 border-end-0 rounded p-3 pb-4 d-flex gap-4" style={{  }}>
+                                                    <div key={index} className="border border-top-0 border-start-0 border-end-0 rounded p-3 pb-4 d-flex gap-4" style={{}}>
                                                         {/* Date Column */}
                                                         <div className="text-center border border-top-0 border-bottom-0 border-start-0 " style={{ minWidth: '80px' }}>
                                                             <small className="text-muted">{date.toLocaleString('default', { month: 'short' })}</small>
@@ -355,39 +356,12 @@ export default function AssignmentPage() {
             />
 
             {showPaymentModal && (
-                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">Add/Edit Payment</h5>
-                                <button type="button" className="btn-close" onClick={() => setShowPaymentModal(false)}></button>
-                            </div>
-                            <div className="modal-body">
-                                <div className="mb-3">
-                                    <label className="form-label">Total Amount</label>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        value={paymentAmount}
-                                        onChange={(e) => setPaymentAmount(e.target.value)}
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Payment Note</label>
-                                    <textarea
-                                        className="form-control"
-                                        value={paymentNote}
-                                        onChange={(e) => setPaymentNote(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-secondary" onClick={() => setShowPaymentModal(false)}>Cancel</button>
-                                <button className="btn btn-primary" onClick={submitPayment}>Submit</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <TransactionModal
+                    show={showPaymentModal}
+                    handleClose={() => setShowPaymentModal(false)}
+                    assignment={paymentAssignment}
+                    refresh={() => fetchAssignments(startOfMonth, endOfMonth)}
+                />
             )}
 
 

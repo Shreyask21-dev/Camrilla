@@ -80,6 +80,7 @@ export default function Home() {
       });
 
       if (response.data.code === 0 && response.data.message === 'Success') {
+        console.log(response.data.data)
         const mappedEvents = response.data.data.map(item => ({
           id: item.id,
           title: item.assignmentName || 'No Title',
@@ -145,6 +146,7 @@ export default function Home() {
       if (selectedCard === 'total') return true;
       if (selectedCard === 'received') return received > 0;
       if (selectedCard === 'due') return totalAmount - received > 0;
+      if (selectedCard === 'payment') return totalAmount > 0; // ✅ include all paid assignments
       return false;
     });
   }, [selectedCard, allEvents]);
@@ -162,53 +164,53 @@ export default function Home() {
     const thisWeekStart = dayjs().startOf('week');
     const lastWeekStart = dayjs().subtract(1, 'week').startOf('week');
     const lastWeekEnd = thisWeekStart;
-  
+
     let totalPayment = 0;
     let duePayment = 0;
     let receivedPayment = 0;
-  
+
     let lastWeekTotal = 0;
     let thisWeekTotal = 0;
-  
+
     let lastWeekReceived = 0;
     let thisWeekReceived = 0;
-  
+
     let lastWeekDue = 0;
     let thisWeekDue = 0;
-  
+
     const assignmentsCount = allEvents.length;
-  
+
     allEvents.forEach(event => {
       const assignment = event.extendedProps || {};
       const totalAmount = assignment.totalAmount || 0;
       const transactions = assignment.transactions || [];
       const assignmentDate = dayjs(assignment.assignmentDateTime);
-  
+
       const received = transactions.reduce((sum, t) => sum + (t.receivedPayment || 0), 0);
       const due = Math.max(totalAmount - received, 0);
-  
+
       totalPayment += totalAmount;
       receivedPayment += received;
       duePayment += due;
-  
+
       if (assignmentDate.isBetween(lastWeekStart, lastWeekEnd, null, '[)')) {
         lastWeekTotal += 1;
         lastWeekReceived += received;
         lastWeekDue += due;
       }
-  
+
       if (assignmentDate.isAfter(thisWeekStart)) {
         thisWeekTotal += 1;
         thisWeekReceived += received;
         thisWeekDue += due;
       }
     });
-  
+
     const calcPercent = (thisVal, lastVal) => {
       if (lastVal === 0) return thisVal > 0 ? 100 : 0;
       return +(((thisVal - lastVal) / lastVal) * 100).toFixed(1);
     };
-  
+
     return {
       assignmentsCount,
       totalPaymentSum: totalPayment,
@@ -220,7 +222,6 @@ export default function Home() {
       receivedGrowthPercent: calcPercent(thisWeekReceived, lastWeekReceived)
     };
   }, [allEvents]);
-  
 
 
   return (
@@ -241,12 +242,12 @@ export default function Home() {
                 <h6 className="mb-0 fw-normal">Total assignment</h6>
                 <p className="mb-0">
                   <span className="me-1 fw-medium">{assignmentGrowthPercent}%</span>
-                  <small className="text-muted">than last week</small>
+                  <small className="text-muted">than last month</small>
                 </p>
               </div>
             </div>
           </div>
-          <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('total')}>
+          <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('payment')}>
             <div className="card card-border-shadow-warning h-100">
               <div className="card-body">
                 <div className="d-flex align-items-center mb-2">
@@ -260,7 +261,7 @@ export default function Home() {
                 <h6 className="mb-0 fw-normal">Total Payment</h6>
                 <p className="mb-0">
                   <span className="me-1 fw-medium">{paymentGrowthPercent > 0 ? '+' : ''}{paymentGrowthPercent}%</span>
-                  <small className="text-muted">than last week</small>
+                  <small className="text-muted">than last month</small>
                 </p>
               </div>
             </div>
@@ -279,7 +280,7 @@ export default function Home() {
                 <h6 className="mb-0 fw-normal">Due Payment </h6>
                 <p className="mb-0">
                   <span className="me-1 fw-medium">{dueGrowthPercent > 0 ? '+' : ''}{dueGrowthPercent}%</span>
-                  <small className="text-muted">than last week</small>
+                  <small className="text-muted">than last month</small>
                 </p>
               </div>
             </div>
@@ -298,7 +299,7 @@ export default function Home() {
                 <h6 className="mb-0 fw-normal">Recieved Payment</h6>
                 <p className="mb-0">
                   <span className="me-1 fw-medium">{receivedGrowthPercent > 0 ? '+' : ''}{receivedGrowthPercent}%</span>
-                  <small className="text-muted">than last week</small>
+                  <small className="text-muted">than last month</small>
                 </p>
               </div>
             </div>
@@ -561,17 +562,117 @@ export default function Home() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ul className="list-group">
-            {filteredAssignments.map((event, i) => {
-              const a = event.extendedProps;
-              return (
-                <li className="list-group-item" key={i}>
-                  <strong>{a.assignmentName}</strong> - ₹{a.totalAmount} - {a.assignmentStatus}
-                </li>
-              );
-            })}
-          </ul>
+          <div className="table-responsive">
+            <table className="table table-bordered  align-middle">
+              <thead>
+                <tr>
+                  {selectedCard === 'total' && (
+                    <>
+                      <th>Client Info</th>
+                      <th>Contact</th>
+                      <th>Amount & Assignee</th>
+                    </>
+                  )}
+                  {selectedCard === 'payment' && (
+                    <>
+                      <th>Client & Assignment</th>
+                      <th>Total Amount</th>
+                      <th>Received</th>
+                      <th>Remaining</th>
+                      <th>Contact Info</th>
+                    </>
+                  )}
+                  {selectedCard === 'received' && (
+                    <>
+                      <th>Client & Assignment</th>
+                      <th>Received Amount</th>
+                      <th>Date</th>
+                      <th>Phone</th>
+                    </>
+                  )}
+                  {selectedCard === 'due' && (
+                    <>
+                      <th>Client</th>
+                      <th>Assignment</th>
+                      <th>Due Payment</th>
+                      <th>Phone</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAssignments.map((event, i) => {
+                  const a = event.extendedProps;
+                  const received = (a.transactions || []).reduce((sum, t) => sum + (t.receivedPayment || 0), 0);
+                  const due = (a.totalAmount || 0) - received;
+
+                  return (
+                    <tr key={i}>
+                      {selectedCard === 'total' && (
+                        <>
+                          <td>
+                            <strong>{a.customerName}</strong><br />
+                            <small>{a.assignmentName}</small><br />
+                            <small>{a.assignmentAddress}</small>
+                          </td>
+                          <td>
+                            <div>{a.customerMobile}</div>
+                            <div>{a.customerEmail}</div>
+                            <div>{a.customerAddress}</div>
+                          </td>
+                          <td>
+                            ₹{a.totalAmount}<br />
+                            <small>{a.assignToName} - {a.assignToHandle}</small>
+                          </td>
+                        </>
+                      )}
+
+                      {selectedCard === 'payment' && (
+                        <>
+                          <td>
+                            <strong>{a.customerName}</strong><br />
+                            <small>{a.assignmentName}</small>
+                          </td>
+                          <td>₹{a.totalAmount}</td>
+                          <td>₹{received}</td>
+                          <td>₹{a.totalAmount - received}</td>
+                          <td>
+                            <div>{a.customerMobile}</div>
+                            <div>{a.customerEmail || '—'}</div>
+                          </td>
+                        </>
+                      )}
+
+                      {selectedCard === 'due' && (
+                        <>
+                          <td>{a.customerName}</td>
+                          <td>{a.assignmentName}</td>
+                          <td>₹{due}</td>
+                          <td>{a.customerMobile}</td>
+                        </>
+                      )}
+
+                      {selectedCard === 'received' && (
+                        <>
+                          <td>
+                            <strong>{a.customerName}</strong><br />
+                            <small>{a.assignmentName}</small>
+                          </td>
+                          <td>₹{received}</td>
+                          <td>{a.transactions?.[0]?.receivedDate ? new Date(a.transactions[0].receivedDate).toLocaleString() : '—'}</td>
+                          <td>{a.customerMobile}</td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Modal.Body>
+
+
+
       </Modal>
 
 

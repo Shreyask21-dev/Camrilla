@@ -252,6 +252,9 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         setEditingTransaction(txn);
     };
 
+    const totalPaid = transactions.reduce((sum, txn) => sum + Number(txn.receivedPayment || 0), 0);
+    const remaining = (formData.totalAmount || 0) - totalPaid;
+
 
 
     return (
@@ -491,6 +494,13 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                             </tbody>
                         </Table>
                         <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Total Amount</Form.Label>
+                                <Form.Control value={formData.totalAmount || 0} disabled />
+                                <Form.Text className="text-muted">
+                                    Total Paid: ₹{totalPaid} | Remaining: ₹{remaining}
+                                </Form.Text>
+                            </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Received Payment</Form.Label>
                                 <Form.Control value={newTransaction.receivedPayment} onChange={(e) => setNewTransaction({ ...newTransaction, receivedPayment: e.target.value })} type="number" />
