@@ -16,38 +16,6 @@ export default function Page() {
 
     const [AppliedCouponData, setAppliedCouponData] = useState(null);
 
-    // useEffect(() => {
-    //     const fetchPlans = async () => {
-    //         try {
-    //             const userDataString = localStorage.getItem('userData');
-    //             const tokenDataString = localStorage.getItem('camrilla_token');
-
-    //             if (!userDataString || !tokenDataString) {
-    //                 console.error('Missing userData or camrilla_token');
-    //                 return;
-    //             }
-
-    //             const userData = JSON.parse(userDataString);
-    //             const tokenData = JSON.parse(tokenDataString);
-
-    //             const accessToken = tokenData.accessToken;
-    //             const countryCode = userData.country;
-
-    //             const response = await axios.get(`https://api.camrilla.com/admin/plan-master/${countryCode}`);
-
-    //             console.log('Plans API Response:', response.data);
-
-    //             setPlans(response.data.data || []);
-    //         } catch (error) {
-    //             console.error('Error fetching plans:', error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-
-    //     fetchPlans();
-    // }, []);
-
     useEffect(() => {
         const fetchPlans = async () => {
             try {
@@ -227,8 +195,7 @@ export default function Page() {
                         <div className="container py-12">
                             <h4 className="text-center mb-2 mt-0 mt-md-4">Pricing Plans</h4>
                             <p className="text-center mb-2">
-                                All plans include 40+ advanced tools and features to boost your product. Choose the best plan to
-                                fit your needs.
+                                Your Journey Begins Here—Subscribe Now & Maximize Your Potential! Exclusive Access Awaits—One Click to Unlock Unlimited Possibilities!
                             </p>
 
                             <div className="pricing-plans row mx-4 gy-3 px-lg-12">

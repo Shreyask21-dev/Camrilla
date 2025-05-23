@@ -120,8 +120,8 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
         <Modal show={show} onHide={handleClose} size="lg">
             <Modal.Header closeButton>
                 <Modal.Title>Update Assignment</Modal.Title>
-                <Button variant="danger" style={{marginLeft:"20px"}} onClick={handleDelete}>
-                <i class="bi bi-trash-fill"></i> &nbsp;Assignment
+                <Button variant="danger" style={{ marginLeft: "20px" }} onClick={handleDelete}>
+                    <i class="bi bi-trash-fill"></i> &nbsp;Assignment
                 </Button>
             </Modal.Header>
             <Modal.Body>
@@ -206,7 +206,13 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
                                 name="assignToName"
                                 value="Me"
                                 checked={formData.assignToName === 'Me'}
-                                onChange={(e) => setFormData(prev => ({ ...prev, assignToName: 'Me', assignToHandle: 'MeTo' }))}
+                                onChange={(e) =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        assignToName: 'Me',
+                                        assignToHandle: 'MeTo'
+                                    }))
+                                }
                             />
                             <Form.Check
                                 type="radio"
@@ -214,10 +220,33 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
                                 name="assignToName"
                                 value="Other"
                                 checked={formData.assignToName === 'Other'}
-                                onChange={(e) => setFormData(prev => ({ ...prev, assignToName: 'Other', assignToHandle: 'OtherTo' }))}
+                                onChange={(e) =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        assignToName: 'Other',
+                                        assignToHandle: prev.assignToHandle || ''
+                                    }))
+                                }
                             />
+
+                            {formData.assignToName === 'Other' && (
+                                <Form.Group className="mt-3">
+                                    <Form.Label>Other Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={formData.assignToHandle}
+                                        onChange={(e) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                assignToHandle: e.target.value
+                                            }))
+                                        }
+                                    />
+                                </Form.Group>
+                            )}
                         </Form>
                     </Tab>
+
                 </Tabs>
             </Modal.Body>
             <Modal.Footer>

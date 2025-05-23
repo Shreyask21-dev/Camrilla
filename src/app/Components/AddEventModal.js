@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 
-export default function AddEventModal({ show, handleClose, allEvents, selectedDate, refreshEvents, preFilledDate  }) {
+export default function AddEventModal({ show, handleClose, allEvents, selectedDate, refreshEvents, preFilledDate }) {
+
+    const [customAssignToHandle, setCustomAssignToHandle] = useState('');
+
     const [key, setKey] = useState('customer');
     const [formData, setFormData] = useState({
         customerName: '',
@@ -45,6 +48,11 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
     };
 
     const handleSubmit = async () => {
+
+        if (formData.assignTo === 'Other' && !customAssignToHandle.trim()) {
+            return alert("Please enter a name for 'Assign To'");
+        }
+
         const dateTime = new Date(`${formData.assignmentDate}T${formData.assignmentTime}`);
         const accessToken = JSON.parse(localStorage.getItem('camrilla_token'))?.accessToken;
         if (!accessToken) return alert('Missing access token');
@@ -63,7 +71,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
             contactPerson2Name: '',
             contactPerson2Mobile: '',
             assignToName: formData.assignTo,
-            assignToHandle: formData.assignTo === 'Me' ? 'MeTo' : 'OtherTo',
+            assignToHandle: formData.assignTo === 'Me' ? 'MeTo' : customAssignToHandle,
             assignmentNote: '',
             totalAmount: 0,
             reminderBeforedays: 1,
@@ -91,27 +99,60 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
 
     useEffect(() => {
         if (show) {
-          setFormData({
-            customerName: '',
-            customerMobile: '',
-            customerEmail: '',
-            customerAddress: '',
-            assignmentName: '',
-            assignmentAddress: '',
-            contactPerson1Mobile: '',
-            assignmentDate: preFilledDate || '',
-            assignmentTime: '',
-            assignTo: 'Me',
-            assignToName: 'Me',
-            assignToHandle: 'MeTo',
-          });
-          setShowOtherInput(false);
-          setCustomAssignmentName('');
-          setKey('customer'); // reset to first tab
+            setFormData({
+                customerName: '',
+                customerMobile: '',
+                customerEmail: '',
+                customerAddress: '',
+                assignmentName: '',
+                assignmentAddress: '',
+                contactPerson1Mobile: '',
+                assignmentDate: preFilledDate || '',
+                assignmentTime: '',
+                assignTo: 'Me',
+                assignToName: 'Me',
+                assignToHandle: 'MeTo',
+            });
+            setShowOtherInput(false);
+            setCustomAssignmentName('');
+            setKey('customer'); // reset to first tab
         }
-      }, [show, preFilledDate]);
-      
-      
+    }, [show, preFilledDate]);
+
+    const validateCustomerTab = () => {
+        const { customerName, customerMobile, customerEmail, customerAddress } = formData;
+        return customerName && customerMobile && customerEmail && customerAddress;
+    };
+
+    const validateAssignmentTab = () => {
+        const { assignmentName, assignmentAddress, contactPerson1Mobile, assignmentDate, assignmentTime } = formData;
+        const assignmentValid = showOtherInput ? customAssignmentName : assignmentName;
+        return assignmentValid && assignmentAddress && contactPerson1Mobile && assignmentDate && assignmentTime;
+    };
+
+    const handleTabSelect = (selectedKey) => {
+        const tabOrder = ['customer', 'assignment', 'assignto'];
+        const currentIndex = tabOrder.indexOf(key);
+        const selectedIndex = tabOrder.indexOf(selectedKey);
+
+        if (selectedIndex <= currentIndex) {
+            // Allow going backward
+            setKey(selectedKey);
+        } else {
+            // Validate before moving forward
+            if (key === 'customer' && validateCustomerTab()) {
+                setKey('assignment');
+            } else if (key === 'assignment' && validateAssignmentTab()) {
+                setKey('assignto');
+            } else {
+                alert("Please complete all required fields before proceeding.");
+            }
+        }
+    };
+
+
+
+
 
     return (
         <Modal show={show} onHide={handleClose} size="lg">
@@ -119,7 +160,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
                 <Modal.Title>Add Event</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
+                <Tabs activeKey={key} onSelect={handleTabSelect} className="mb-3">
                     <Tab eventKey="customer" title="Customer">
                         <Form>
                             <Form.Group className="mb-3">
@@ -166,10 +207,6 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
                                 <Form.Label>Alternate Contact</Form.Label>
                                 <Form.Control name="contactPerson1Mobile" onChange={handleInputChange} />
                             </Form.Group>
-                            {/* <Form.Group className="mb-3">
-                <Form.Label>Date</Form.Label>
-                <Form.Control type="date" name="assignmentDate" onChange={handleInputChange} />
-              </Form.Group> */}
                             <Form.Control
                                 type="date"
                                 name="assignmentDate"
@@ -200,6 +237,16 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
                                 checked={formData.assignTo === 'Other'}
                                 onChange={handleInputChange}
                             />
+                            {formData.assignTo === 'Other' && (
+                                <Form.Group className="mt-2">
+                                    <Form.Label>Enter Other Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={customAssignToHandle}
+                                        onChange={(e) => setCustomAssignToHandle(e.target.value)}
+                                    />
+                                </Form.Group>
+                            )}
                         </Form>
                     </Tab>
                 </Tabs>
@@ -209,7 +256,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
                 {key === 'assignto' ? (
                     <Button variant="primary" onClick={handleSubmit}>Submit</Button>
                 ) : (
-                    <Button variant="primary" onClick={handleNextTab}>Next</Button>
+                    <Button variant="primary" onClick={handleNextTab} disabled={(key === 'customer' && !validateCustomerTab()) || (key === 'assignment' && !validateAssignmentTab())}>Next</Button>
                 )}
             </Modal.Footer>
         </Modal>

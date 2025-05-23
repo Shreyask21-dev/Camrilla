@@ -7,7 +7,12 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
     const [formData, setFormData] = useState({});
     const [functions, setFunctions] = useState([]);
     const [transactions, setTransactions] = useState([]);
-    const [newFunction, setNewFunction] = useState({ functionName: '', functionDateTime: '', assingTo: 'Me' });
+    const [newFunction, setNewFunction] = useState({
+        functionName: '',
+        functionDateTime: '',
+        assingTo: 'Me',
+        assignToHandle: 'MeTo',
+    });
     const [newTransaction, setNewTransaction] = useState({ receivedPayment: '', receivedDate: '', paymentNote: '' });
     const [showOtherInput, setShowOtherInput] = useState(false);
     const [customAssignmentName, setCustomAssignmentName] = useState('');
@@ -142,13 +147,25 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 //     headers: { Authorization: `Bearer ${token}` }
                 // }
 
-                const newFunctionWithId = response.data || {
-                    ...newFunction,
-                    functionDateTime,
-                    id: Date.now() // Fallback ID if response doesn't include one
+                const apiData = response.data;
+
+                // Fallback structure if API response is missing expected fields
+                const newFunctionWithId = {
+                    id: apiData?.id || Date.now(),
+                    functionName: apiData?.functionName || newFunction.functionName,
+                    functionDateTime: apiData?.functionDateTime || functionDateTime,
+                    assingTo: apiData?.assingTo || newFunction.assingTo || 'Me',
                 };
 
                 setFunctions(prevFunctions => [...prevFunctions, newFunctionWithId]);
+
+                // const newFunctionWithId = response.data || {
+                //     ...newFunction,
+                //     functionDateTime,
+                //     id: Date.now() // Fallback ID if response doesn't include one
+                // };
+
+                // setFunctions(prevFunctions => [...prevFunctions, newFunctionWithId]);
                 alert('Function added');
             }
             setNewFunction({ functionName: '', functionDateTime: '', assingTo: 'Me' });
@@ -199,10 +216,19 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 // }
 
                 // Assuming the API returns the created transaction with an ID
-                const newTransactionWithId = response.data || {
-                    ...newTransaction,
-                    receivedDate,
-                    id: Date.now() // Fallback ID if response doesn't include one
+
+                // const newTransactionWithId = response.data || {
+                //     ...newTransaction,
+                //     receivedDate,
+                //     id: Date.now() // Fallback ID if response doesn't include one
+                // };
+                const apiData = response.data;
+
+                const newTransactionWithId = {
+                    id: apiData?.id || Date.now(),
+                    receivedPayment: apiData?.receivedPayment || newTransaction.receivedPayment || '—',
+                    receivedDate: apiData?.receivedDate || receivedDate,
+                    paymentNote: apiData?.paymentNote || newTransaction.paymentNote || '',
                 };
 
                 setTransactions(prevTransactions => [...prevTransactions, newTransactionWithId]);
@@ -315,7 +341,13 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                                 name="assignToName"
                                 value="Me"
                                 checked={formData.assignToName === 'Me'}
-                                onChange={(e) => setFormData(prev => ({ ...prev, assignToName: 'Me', assignToHandle: 'MeTo' }))}
+                                onChange={() =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        assignToName: 'Me',
+                                        assignToHandle: 'MeTo',
+                                    }))
+                                }
                             />
                             <Form.Check
                                 type="radio"
@@ -323,8 +355,29 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                                 name="assignToName"
                                 value="Other"
                                 checked={formData.assignToName === 'Other'}
-                                onChange={(e) => setFormData(prev => ({ ...prev, assignToName: 'Other', assignToHandle: 'OtherTo' }))}
+                                onChange={() =>
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        assignToName: 'Other',
+                                        assignToHandle: prev.assignToHandle || '', // preserve if already typed
+                                    }))
+                                }
                             />
+                            {formData.assignToName === 'Other' && (
+                                <Form.Group className="mt-3">
+                                    <Form.Label>Other Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={formData.assignToHandle}
+                                        onChange={(e) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                assignToHandle: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                </Form.Group>
+                            )}
                         </Form>
                     </Tab>
                     <Tab eventKey="functions" title="Functions">
@@ -334,6 +387,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                                     <th>Function Name</th>
                                     <th>Date</th>
                                     <th>Assigned To</th>
+                                    <th>Assigned Name</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -341,8 +395,9 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                                 {functions.map((func, idx) => (
                                     <tr key={idx}>
                                         <td>{func.functionName}</td>
-                                        <td>{new Date(func.functionDateTime).toLocaleDateString()}</td>
+                                        <td>{isNaN(new Date(func.functionDateTime)) ? 'Invalid date' : new Date(func.functionDateTime).toLocaleDateString()}</td>
                                         <td>{func.assingTo}</td>
+                                        <td>{func.assignToHandle || '—'}</td>
                                         {/* <td><Button size="sm" variant="danger" onClick={() => handleDeleteFunction(func.id)}>Delete</Button></td> */}
                                         <td>
                                             <Button size="sm" variant="warning" onClick={() => handleEditFunction(func)}>Edit</Button>{' '}
@@ -360,6 +415,50 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                             <Form.Group className="mb-3">
                                 <Form.Label>Function Date</Form.Label>
                                 <Form.Control type="date" value={newFunction.functionDateTime} onChange={(e) => setNewFunction({ ...newFunction, functionDateTime: e.target.value })} />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Assign To</Form.Label>
+                                <Form.Check
+                                    type="radio"
+                                    label="Me"
+                                    name="assingTo"
+                                    value="Me"
+                                    checked={newFunction.assingTo === 'Me'}
+                                    onChange={() =>
+                                        setNewFunction((prev) => ({
+                                            ...prev,
+                                            assingTo: 'Me',
+                                            assignToHandle: 'MeTo',
+                                        }))
+                                    }
+                                />
+                                <Form.Check
+                                    type="radio"
+                                    label="Other"
+                                    name="assingTo"
+                                    value="Other"
+                                    checked={newFunction.assingTo === 'Other'}
+                                    onChange={() =>
+                                        setNewFunction((prev) => ({
+                                            ...prev,
+                                            assingTo: 'Other',
+                                            assignToHandle: '',
+                                        }))
+                                    }
+                                />
+                                {newFunction.assingTo === 'Other' && (
+                                    <Form.Control
+                                        className="mt-2"
+                                        placeholder="Enter name"
+                                        value={newFunction.assignToHandle}
+                                        onChange={(e) =>
+                                            setNewFunction((prev) => ({
+                                                ...prev,
+                                                assignToHandle: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                )}
                             </Form.Group>
                             <Button variant="primary" onClick={handleAddOrUpdateFunction}>
                                 {editingFunction ? "Update Function" : "Add Function"}
@@ -380,7 +479,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                                 {transactions.map((txn, idx) => (
                                     <tr key={idx}>
                                         <td>{txn.receivedPayment}</td>
-                                        <td>{new Date(txn.receivedDate).toLocaleDateString()}</td>
+                                        <td>{txn.receivedDate && !isNaN(new Date(txn.receivedDate)) ? new Date(txn.receivedDate).toLocaleDateString() : '—'}</td>
                                         <td>{txn.paymentNote}</td>
                                         {/* <td><Button size="sm" variant="danger" onClick={() => handleDeleteTransaction(txn.id)}>Delete</Button></td> */}
                                         <td>
