@@ -96,3 +96,37 @@ h2#fc-dom-86 {
 .app-calendar-wrapper .fc-toolbar h2 {
   margin-left: 20px !important;
 }
+
+
+/* 24 May 2025 */
+.react-datepicker__day.has-lead {
+  position: relative;
+}
+
+.react-datepicker__day.has-lead::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: #007bff; 
+  border-radius: 50%;
+}
+
+.react-datepicker__day.has-assignment {
+  position: relative;
+}
+
+.react-datepicker__day.has-assignment::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; /* adjust for spacing */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: #007bff; /* Blue dot */
+  border-radius: 50%;
+}

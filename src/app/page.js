@@ -105,9 +105,6 @@ export default function Home() {
           startDate,
           endDate,
         },
-        // headers: {
-        //   Authorization: `Bearer ${accessToken}`,
-        // },
       });
 
       if (response.data.code === 0 && response.data.message === 'Success') {
@@ -254,6 +251,18 @@ export default function Home() {
     };
   }, [allEvents]);
 
+  const hasAssignmentOnDate = (date) => {
+    return allEvents.some(a => {
+      console.log(a)
+      const aDate = new Date(a.start);
+      return (
+        aDate.getFullYear() === date.getFullYear() &&
+        aDate.getMonth() === date.getMonth() &&
+        aDate.getDate() === date.getDate()
+      );
+    });
+  };
+
 
   return (
     <div>
@@ -394,6 +403,7 @@ export default function Home() {
                           calendarApi.gotoDate(date);
                         }}
                         onMonthChange={handleMonthChange}
+                        dayClassName={(date) => hasAssignmentOnDate(date) ? 'has-assignment' : undefined}
                       />
 
                     </div>
@@ -468,7 +478,6 @@ export default function Home() {
                       }}
 
                     />
-
 
                   </div>
                 </div>
@@ -588,8 +597,6 @@ export default function Home() {
 
             </div>
           </div>
-
-
 
         </div>
 
@@ -731,11 +738,7 @@ export default function Home() {
           </div>
         </Modal.Body>
 
-
-
       </Modal>
-
-
 
     </div>
   );

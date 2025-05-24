@@ -177,6 +177,16 @@ export default function AssignmentPage() {
         }
     };
 
+    const hasAssignmentOnDate = (date) => {
+        return assignments.some(a => {
+            const aDate = new Date(a.assignmentDateTime);
+            return (
+                aDate.getFullYear() === date.getFullYear() &&
+                aDate.getMonth() === date.getMonth() &&
+                aDate.getDate() === date.getDate()
+            );
+        });
+    };
 
     return (
         <div>
@@ -205,6 +215,7 @@ export default function AssignmentPage() {
                                             selected={currentDate}
                                             onMonthChange={handleMonthChange}
                                             onChange={date => setCurrentDate(date)}
+                                            dayClassName={(date) => hasAssignmentOnDate(date) ? 'has-assignment' : undefined}
                                         />
                                     </div>
 

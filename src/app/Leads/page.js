@@ -5,6 +5,8 @@ import DatePicker from 'react-datepicker'
 
 export default function Page() {
 
+    const [calendarDate, setCalendarDate] = useState(new Date());
+
     const [dateRangeFilter, setDateRangeFilter] = useState('all');
 
     const isWithinSelectedRange = (timestamp) => {
@@ -33,6 +35,13 @@ export default function Page() {
         return true; // 'all' or no filter
     };
 
+    const isInSelectedMonth = (timestamp) => {
+        const date = new Date(timestamp);
+        return (
+            date.getMonth() === calendarDate.getMonth() &&
+            date.getFullYear() === calendarDate.getFullYear()
+        );
+    };
 
     const [showAssignmentModal, setShowAssignmentModal] = useState(false);
     const [assignmentForm, setAssignmentForm] = useState({
@@ -324,6 +333,18 @@ export default function Page() {
         }
     };
 
+    const hasLeadOnDate = (date) => {
+        return leads.some(lead => {
+            const leadDate = new Date(lead.assignmentDateTime);
+            return (
+                leadDate.getDate() === date.getDate() &&
+                leadDate.getMonth() === date.getMonth() &&
+                leadDate.getFullYear() === date.getFullYear()
+            );
+        });
+    };
+
+
 
 
 
@@ -352,6 +373,11 @@ export default function Page() {
                                     <div style={{ transform: "scale(1.2)", transformOrigin: "top center", marginBottom: "20%", margintop: "10%" }}>
                                         <DatePicker
                                             inline
+                                            selected={calendarDate}
+                                            onChange={(date) => setCalendarDate(date)}
+                                            onMonthChange={(date) => setCalendarDate(date)}
+                                            onYearChange={(date) => setCalendarDate(date)}
+                                            dayClassName={(date) => hasLeadOnDate(date) ? 'has-lead' : undefined}
                                         />
 
                                     </div>
@@ -430,7 +456,8 @@ export default function Page() {
                                         <div className="d-flex flex-column gap-4">
                                             {leads.filter((lead) => {
                                                 const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
-                                                const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
+                                                // const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
+                                                const dateMatch = isWithinSelectedRange(lead.assignmentDateTime) && isInSelectedMonth(lead.assignmentDateTime);
                                                 return typeMatch && dateMatch;
                                             })
                                                 .sort((a, b) => new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime))
