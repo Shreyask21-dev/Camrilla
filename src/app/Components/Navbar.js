@@ -22,11 +22,22 @@ export default function Navbar() {
         router.push('/Login') // redirect to login page
     }
 
+    // useEffect(() => {
+    //     const data = localStorage.getItem('userData')
+    //     console.log(JSON.parse(data))
+    //     setUserData(JSON.parse(data))
+    // }, [])
+
     useEffect(() => {
-        const data = localStorage.getItem('userData')
-        console.log(JSON.parse(data))
-        setUserData(JSON.parse(data))
-    }, [])
+        const data = localStorage.getItem('userData');
+        const parsedData = JSON.parse(data);
+        console.log('Parsed User Data:', parsedData);
+        if (parsedData) {
+        setUserData(parsedData);
+        } else {
+        setUserData({ name: '', email: '' });
+        }
+    }, []);
 
     return (
         <div>
@@ -79,14 +90,14 @@ export default function Navbar() {
 
                         <li className="nav-item navbar-dropdown dropdown-user dropdown">
                             <a className="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                                <AvatarInitials name={userData.name} />
+                                <AvatarInitials name={userData?.name || 'Guest'} />
                             </a>
                             <ul className="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a className="dropdown-item" href="pages-account-settings-account.html">
                                         <div className="d-flex">
                                             <div className="flex-shrink-0 me-2">
-                                                <AvatarInitials name={userData.name} />
+                                                <AvatarInitials name={userData?.name || 'Guest'} />
                                             </div>
                                             <div className="flex-grow-1">
                                                 <span className="fw-medium d-block small">{userData.name}</span>
