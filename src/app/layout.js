@@ -23,79 +23,162 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({ children }) {
 
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const router = useRouter()
   const pathname = usePathname()
   const [isMobile, setIsMobile] = useState(false);
+
+  // useEffect(() => {
+  //   const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
+  //   const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/forgot' || pathname.toLowerCase() === '/signup';
+
+  //   // Mobile detection
+  //   const checkMobile = () => {
+  //     setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+  //   };
+  //   checkMobile();
+  //   window.addEventListener('resize', checkMobile);
+
+  //   if (!tokenData?.accessToken && !isAuthPage) {
+  //     router.push('/Login');
+  //     return;
+  //   }
+
+  //   // Set token to axios defaults
+  //   axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData?.accessToken}`;
+
+  //   // Axios response interceptor
+  //   const interceptor = axios.interceptors.response.use(
+  //     response => response,
+  //     async error => {
+  //       if (error.response && error.response.status === 401) {
+  //         try {
+  //           const storedToken = JSON.parse(localStorage.getItem('camrilla_token'));
+  //           const refreshToken = storedToken?.refreshToken;
+
+  //           if (!refreshToken) throw new Error("No refresh token");
+
+  //           const axiosInstance = axios.create(); // no headers
+  //           const res = await axiosInstance.post('https://api.camrilla.com/user/update-access-token', {
+  //             refreshToken: refreshToken,
+  //           });
+
+  //           const newAccessToken = res.data?.data?.token?.accessToken;
+  //           const newRefreshToken = res.data?.data?.token?.refreshToken;
+
+  //           if (newAccessToken && newRefreshToken) {
+  //             localStorage.setItem('camrilla_token', JSON.stringify({
+  //               accessToken: newAccessToken,
+  //               refreshToken: newRefreshToken
+  //             }));
+  //             axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+  //             error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
+  //             console.log("🔄 Access token refreshed");
+  //             return axios(error.config);
+  //           } else {
+  //             throw new Error("Token refresh failed");
+  //           }
+  //         } catch (refreshError) {
+  //           console.error("🚫 Token refresh failed", refreshError);
+  //           localStorage.clear();
+  //           router.push('/Login');
+  //         }
+  //       }
+  //       return Promise.reject(error);
+  //     }
+  //   );
+
+
+  //   return () => {
+  //     axios.interceptors.response.eject(interceptor);
+  //     window.removeEventListener('resize', checkMobile);
+  //   };
+  // }, [pathname, router]);
+
 
   useEffect(() => {
     const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
     const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/forgot' || pathname.toLowerCase() === '/signup';
 
-    // Mobile detection
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+      setIsMobile(window.innerWidth < 768);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    if (!tokenData?.accessToken && !isAuthPage) {
-      router.push('/Login');
-      return;
-    }
-
-    // Set token to axios defaults
-    axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData?.accessToken}`;
-
-    // Axios response interceptor
-    const interceptor = axios.interceptors.response.use(
-      response => response,
-      async error => {
-        if (error.response && error.response.status === 401) {
-          try {
-            const storedToken = JSON.parse(localStorage.getItem('camrilla_token'));
-            const refreshToken = storedToken?.refreshToken;
-
-            if (!refreshToken) throw new Error("No refresh token");
-
-            const axiosInstance = axios.create(); // no headers
-            const res = await axiosInstance.post('https://api.camrilla.com/user/update-access-token', {
-              refreshToken: refreshToken,
-            });
-
-            const newAccessToken = res.data?.data?.token?.accessToken;
-            const newRefreshToken = res.data?.data?.token?.refreshToken;
-
-            if (newAccessToken && newRefreshToken) {
-              localStorage.setItem('camrilla_token', JSON.stringify({
-                accessToken: newAccessToken,
-                refreshToken: newRefreshToken
-              }));
-              axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-              error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
-              console.log("🔄 Access token refreshed");
-              return axios(error.config);
-            } else {
-              throw new Error("Token refresh failed");
-            }
-          } catch (refreshError) {
-            console.error("🚫 Token refresh failed", refreshError);
-            localStorage.clear();
-            router.push('/Login');
-          }
-        }
-        return Promise.reject(error);
+    const runAuthLogic = async () => {
+      if (!tokenData?.accessToken && !isAuthPage) {
+        router.push('/Login');
+        setLoading(false);
+        return;
       }
-    );
 
+      if (tokenData?.accessToken) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData.accessToken}`;
+      }
 
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-      window.removeEventListener('resize', checkMobile);
+      const interceptor = axios.interceptors.response.use(
+        response => response,
+        async error => {
+          if (error.response && error.response.status === 401) {
+            try {
+              const storedToken = JSON.parse(localStorage.getItem('camrilla_token'));
+              const refreshToken = storedToken?.refreshToken;
+
+              if (!refreshToken) throw new Error("No refresh token");
+
+              const axiosInstance = axios.create();
+              const res = await axiosInstance.post('https://api.camrilla.com/user/update-access-token', {
+                refreshToken: refreshToken,
+              });
+
+              const newAccessToken = res.data?.data?.token?.accessToken;
+              const newRefreshToken = res.data?.data?.token?.refreshToken;
+
+              if (newAccessToken && newRefreshToken) {
+                localStorage.setItem('camrilla_token', JSON.stringify({
+                  accessToken: newAccessToken,
+                  refreshToken: newRefreshToken
+                }));
+                axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+                error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                return axios(error.config);
+              } else {
+                throw new Error("Token refresh failed");
+              }
+            } catch (refreshError) {
+              console.error("Token refresh failed", refreshError);
+              localStorage.clear();
+              router.push('/Login');
+            }
+          }
+          return Promise.reject(error);
+        }
+      );
+
+      setAuthChecked(true);
+      setLoading(false);
+
+      return () => {
+        axios.interceptors.response.eject(interceptor);
+        window.removeEventListener('resize', checkMobile);
+      };
     };
+
+    runAuthLogic();
+
   }, [pathname, router]);
 
 
   const isAuthPage = pathname === '/Login' || pathname === '/Forgot' || pathname === '/Signup'
+
+  if (loading) {
+    return (
+      <div className="preloader">Loading...</div> // You can style this later
+    );
+  }
 
   return (
     <html lang="en"

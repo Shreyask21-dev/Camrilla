@@ -130,3 +130,12 @@ h2#fc-dom-86 {
   background-color: #007bff; /* Blue dot */
   border-radius: 50%;
 }
+
+.preloader {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  font-size: 20px;
+}

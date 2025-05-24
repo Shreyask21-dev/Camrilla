@@ -55,27 +55,16 @@ export default function Navbar() {
 
                     <div className="navbar-nav align-items-center">
                         <div className="nav-item navbar-search-wrapper mb-0">
-                            {/* <a className="nav-item nav-link search-toggler fw-normal px-0" href="javascript:void(0);">
-                                <i className="ri-search-line ri-22px scaleX-n1-rtl me-3"></i>
-                                <span className="d-none d-md-inline-block text-muted">Search (Ctrl+/)</span>
-                            </a> */}
-                            {/* <input
-                                type="text"
-                                className="form-control search-input container-xxl border-0 "
-                                placeholder="Search..."
-                                aria-label="Search..."
-                                onChange={handleSearchChange}
-                                
-                            /> */}
+                           
 
-                            <div className="position-relative" style={{ width: '100%' }}>
+                            <div className="position-relative border border-top-0 border-start-0 border-end-0 " style={{ width: "67.5vw" }}>
                                 <i
-                                    className="ri-search-line position-absolute text-muted"
+                                    className="ri-search-line position-absolute text-muted "
                                     style={{ top: '50%', left: '0px', transform: 'translateY(-50%)' }}
                                 ></i>
                                 <input
                                     type="text"
-                                    className="form-control ps-5"
+                                    className="form-control ps-5 border-0"
                                     placeholder="Search..."
                                     aria-label="Search..."
                                     onChange={handleSearchChange}
