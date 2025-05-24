@@ -1,9 +1,19 @@
 'use client';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link';
+import AvatarInitials from './AvatarInitials';
+import useSearchStore from '../store/searchStore'; // adjust the path 
 
 export default function Navbar() {
+
+    const { setSearchTerm } = useSearchStore();
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const [userData, setUserData] = useState({})
 
     const router = useRouter()
 
@@ -11,6 +21,12 @@ export default function Navbar() {
         localStorage.clear() // clears all keys; use removeItem if you want to keep some
         router.push('/Login') // redirect to login page
     }
+
+    useEffect(() => {
+        const data = localStorage.getItem('userData')
+        console.log(JSON.parse(data))
+        setUserData(JSON.parse(data))
+    }, [])
 
     return (
         <div>
@@ -28,63 +44,53 @@ export default function Navbar() {
 
                     <div className="navbar-nav align-items-center">
                         <div className="nav-item navbar-search-wrapper mb-0">
-                            <a className="nav-item nav-link search-toggler fw-normal px-0" href="javascript:void(0);">
+                            {/* <a className="nav-item nav-link search-toggler fw-normal px-0" href="javascript:void(0);">
                                 <i className="ri-search-line ri-22px scaleX-n1-rtl me-3"></i>
                                 <span className="d-none d-md-inline-block text-muted">Search (Ctrl+/)</span>
-                            </a>
+                            </a> */}
+                            {/* <input
+                                type="text"
+                                className="form-control search-input container-xxl border-0 "
+                                placeholder="Search..."
+                                aria-label="Search..."
+                                onChange={handleSearchChange}
+                                
+                            /> */}
+
+                            <div className="position-relative" style={{ width: '100%' }}>
+                                <i
+                                    className="ri-search-line position-absolute text-muted"
+                                    style={{ top: '50%', left: '0px', transform: 'translateY(-50%)' }}
+                                ></i>
+                                <input
+                                    type="text"
+                                    className="form-control ps-5"
+                                    placeholder="Search..."
+                                    aria-label="Search..."
+                                    onChange={handleSearchChange}
+                                />
+                            </div>
+
                         </div>
                     </div>
 
 
                     <ul className="navbar-nav flex-row align-items-center ms-auto">
 
-                       
-
-                        <li className="nav-item dropdown-style-switcher dropdown me-1 me-xl-0">
-                            <a
-                                className="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow"
-                                href="javascript:void(0);"
-                                data-bs-toggle="dropdown">
-                                <i className="ri-22px"></i>
-                            </a>
-                            <ul className="dropdown-menu dropdown-menu-end dropdown-styles">
-                                <li>
-                                    <a className="dropdown-item" href="javascript:void(0);" data-theme="light">
-                                        <span className="align-middle"><i className="ri-sun-line ri-22px me-3"></i>Light</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="dropdown-item" href="javascript:void(0);" data-theme="dark">
-                                        <span className="align-middle"><i className="ri-moon-clear-line ri-22px me-3"></i>Dark</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="dropdown-item" href="javascript:void(0);" data-theme="system">
-                                        <span className="align-middle"><i className="ri-computer-line ri-22px me-3"></i>System</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-
                         <li className="nav-item navbar-dropdown dropdown-user dropdown">
                             <a className="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                                <div className="avatar avatar-online">
-                                    <img src="/assets/img/avatars/1.png" alt className="rounded-circle" />
-                                </div>
+                                <AvatarInitials name={userData.name} />
                             </a>
                             <ul className="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a className="dropdown-item" href="pages-account-settings-account.html">
                                         <div className="d-flex">
                                             <div className="flex-shrink-0 me-2">
-                                                <div className="avatar avatar-online">
-                                                    <img src="/assets/img/avatars/1.png" alt className="rounded-circle" />
-                                                </div>
+                                                <AvatarInitials name={userData.name} />
                                             </div>
                                             <div className="flex-grow-1">
-                                                <span className="fw-medium d-block small">John Doe</span>
-                                                <small className="text-muted">Admin</small>
+                                                <span className="fw-medium d-block small">{userData.name}</span>
+                                                <small className="text-muted">{userData.email}</small>
                                             </div>
                                         </div>
                                     </a>
@@ -102,7 +108,7 @@ export default function Navbar() {
                                         <i className="ri-settings-4-line ri-22px me-3"></i><span className="align-middle">Settings</span>
                                     </Link>
                                 </li>
-                                
+
                                 <li>
                                     <div className="dropdown-divider"></div>
                                 </li>

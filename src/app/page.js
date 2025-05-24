@@ -15,8 +15,11 @@ import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 import useUserPlan from './hooks/useUserPlan';
+import useSearchStore from './store/searchStore'; // adjust as needed
 
 export default function Home() {
+
+  const { searchTerm } = useSearchStore();
 
   const planInfo = useUserPlan();
 
@@ -81,11 +84,44 @@ export default function Home() {
     fetchOrders(date);
   };
 
+  // useEffect(() => {
+  //   const activeNames = Object.keys(assignmentFilters).filter(key => assignmentFilters[key]);
+  //   const filtered = allEvents.filter(ev => activeNames.includes(ev.title));
+  //   setCalendarEvents(filtered);
+  // }, [assignmentFilters, allEvents]);
+
   useEffect(() => {
     const activeNames = Object.keys(assignmentFilters).filter(key => assignmentFilters[key]);
-    const filtered = allEvents.filter(ev => activeNames.includes(ev.title));
+
+    const matchesSearch = (event) => {
+      const e = event.extendedProps;
+
+      const text = searchTerm.toLowerCase();
+
+      return (
+        event.title?.toLowerCase().includes(text) ||
+        e.customerName?.toLowerCase().includes(text) ||
+        e.customerMobile?.toLowerCase().includes(text) ||
+        e.customerEmail?.toLowerCase().includes(text) ||
+        e.customerAddress?.toLowerCase().includes(text) ||
+        e.assignmentAddress?.toLowerCase().includes(text) ||
+        e.assignmentName?.toLowerCase().includes(text) ||
+        e.assignmentNote?.toLowerCase().includes(text) ||
+        e.assignToName?.toLowerCase().includes(text) ||
+        e.assignToHandle?.toLowerCase().includes(text) ||
+        e.contactPerson1Mobile?.toLowerCase().includes(text) ||
+        e.contactPerson2Mobile?.toLowerCase().includes(text) ||
+        (e.functions || []).some(f => f.functionName?.toLowerCase().includes(text)) ||
+        (e.transactions || []).some(t => t.paymentNote?.toLowerCase().includes(text))
+      );
+    };
+
+    const filtered = allEvents.filter(ev =>
+      activeNames.includes(ev.title) && (!searchTerm || matchesSearch(ev))
+    );
+
     setCalendarEvents(filtered);
-  }, [assignmentFilters, allEvents]);
+  }, [assignmentFilters, allEvents, searchTerm]);
 
   const fetchOrders = async (date) => {
     const startDate = startOfMonth(date).getTime();
@@ -253,7 +289,6 @@ export default function Home() {
 
   const hasAssignmentOnDate = (date) => {
     return allEvents.some(a => {
-      console.log(a)
       const aDate = new Date(a.start);
       return (
         aDate.getFullYear() === date.getFullYear() &&

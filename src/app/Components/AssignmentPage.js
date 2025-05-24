@@ -6,8 +6,12 @@ import AddEventModal from './AddEventModal';
 import EditEventModalAssignments from './EditEventModalAssignments';
 import AddNoteModal from './AddNoteModal';
 import TransactionModal from './TransactionModal';
+import useSearchStore from '../store/searchStore'; // adjust path if needed
+
 
 export default function AssignmentPage() {
+
+    const { searchTerm } = useSearchStore();
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentAssignment, setPaymentAssignment] = useState(null);
@@ -87,12 +91,38 @@ export default function AssignmentPage() {
         return Array.from(new Set(names));
     }, [assignments]);
 
+    // const filteredAssignments = useMemo(() => {
+    //     if (selectedAssignmentNames.includes("All")) {
+    //         return assignments;
+    //     }
+    //     return assignments.filter(a => selectedAssignmentNames.includes(a.assignmentName));
+    // }, [assignments, selectedAssignmentNames]);
+
     const filteredAssignments = useMemo(() => {
-        if (selectedAssignmentNames.includes("All")) {
-            return assignments;
-        }
-        return assignments.filter(a => selectedAssignmentNames.includes(a.assignmentName));
-    }, [assignments, selectedAssignmentNames]);
+        const filterByName = selectedAssignmentNames.includes("All")
+            ? assignments
+            : assignments.filter(a => selectedAssignmentNames.includes(a.assignmentName));
+
+        const text = searchTerm.toLowerCase();
+
+        const matchesSearch = (assignment) => {
+            return (
+                assignment.customerName?.toLowerCase().includes(text) ||
+                assignment.customerMobile?.toLowerCase().includes(text) ||
+                assignment.customerEmail?.toLowerCase().includes(text) ||
+                assignment.customerAddress?.toLowerCase().includes(text) ||
+                assignment.assignmentName?.toLowerCase().includes(text) ||
+                assignment.assignmentAddress?.toLowerCase().includes(text) ||
+                assignment.assignmentNote?.toLowerCase().includes(text) ||
+                assignment.assignToName?.toLowerCase().includes(text) ||
+                assignment.assignToHandle?.toLowerCase().includes(text) ||
+                (assignment.functions || []).some(f => f.functionName?.toLowerCase().includes(text)) ||
+                (assignment.transactions || []).some(t => t.paymentNote?.toLowerCase().includes(text))
+            );
+        };
+
+        return filterByName.filter(a => !searchTerm || matchesSearch(a));
+    }, [assignments, selectedAssignmentNames, searchTerm]);
 
     const handleFilterChange = (name) => {
         if (name === "All") {

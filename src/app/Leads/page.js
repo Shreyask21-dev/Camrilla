@@ -2,8 +2,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import DatePicker from 'react-datepicker'
+import useSearchStore from '../store/searchStore'; // adjust path if needed
 
 export default function Page() {
+
+    const { searchTerm } = useSearchStore();
 
     const [calendarDate, setCalendarDate] = useState(new Date());
 
@@ -454,68 +457,86 @@ export default function Page() {
                                         <p>Loading leads...</p>
                                     ) : (
                                         <div className="d-flex flex-column gap-4">
-                                            {leads.filter((lead) => {
-                                                const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
-                                                // const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
-                                                const dateMatch = isWithinSelectedRange(lead.assignmentDateTime) && isInSelectedMonth(lead.assignmentDateTime);
-                                                return typeMatch && dateMatch;
-                                            })
-                                                .sort((a, b) => new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime))
-                                                .map((lead) => {
-                                                    const assignmentDate = new Date(lead.assignmentDateTime);
-                                                    const leadCreatedDate = new Date(lead.leadDate);
+                                            {
+                                                // leads.filter((lead) => {
+                                                //     const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
+                                                //     const dateMatch = isWithinSelectedRange(lead.assignmentDateTime) && isInSelectedMonth(lead.assignmentDateTime);
+                                                //     return typeMatch && dateMatch;
+                                                // })
+                                                leads
+                                                    .filter((lead) => {
+                                                        const text = searchTerm.toLowerCase();
 
-                                                    const day = assignmentDate.getDate();
-                                                    const month = assignmentDate.toLocaleString('default', { month: 'short' });
-                                                    const year = assignmentDate.getFullYear();
+                                                        const matchesSearch =
+                                                            lead.customerName?.toLowerCase().includes(text) ||
+                                                            lead.customerMobile?.toLowerCase().includes(text) ||
+                                                            lead.customerEmail?.toLowerCase().includes(text) ||
+                                                            lead.customerAddress?.toLowerCase().includes(text) ||
+                                                            lead.assignmentType?.toLowerCase().includes(text) ||
+                                                            lead.status?.toLowerCase().includes(text) ||
+                                                            String(lead.totalAmount).includes(text);
 
-                                                    return (
-                                                        <div key={lead.id} className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3" style={{}}>
-                                                            {/* Date Column */}
-                                                            <div className="text-center border border-top-0 border-bottom-0 border-start-0" style={{ minWidth: '80px' }}>
-                                                                <small className="text-muted">{month}</small>
-                                                                <h3 className="mb-0">{day}</h3>
-                                                                <small className="text-muted">{year}</small>
-                                                            </div>
+                                                        const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
+                                                        const dateMatch = isWithinSelectedRange(lead.assignmentDateTime) && isInSelectedMonth(lead.assignmentDateTime);
 
-                                                            {/* Info Column */}
-                                                            <div className="flex-grow-1">
-                                                                <strong className="d-block mb-1">{lead.customerName}</strong>
-                                                                <div className="text-muted small mb-1">
-                                                                    {lead.customerEmail || '-'} | {lead.customerMobile || '-'}
+                                                        return typeMatch && dateMatch && (!searchTerm || matchesSearch);
+                                                    })
+                                                    .sort((a, b) => new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime))
+                                                    .map((lead) => {
+                                                        const assignmentDate = new Date(lead.assignmentDateTime);
+                                                        const leadCreatedDate = new Date(lead.leadDate);
+
+                                                        const day = assignmentDate.getDate();
+                                                        const month = assignmentDate.toLocaleString('default', { month: 'short' });
+                                                        const year = assignmentDate.getFullYear();
+
+                                                        return (
+                                                            <div key={lead.id} className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3" style={{}}>
+                                                                {/* Date Column */}
+                                                                <div className="text-center border border-top-0 border-bottom-0 border-start-0" style={{ minWidth: '80px' }}>
+                                                                    <small className="text-muted">{month}</small>
+                                                                    <h3 className="mb-0">{day}</h3>
+                                                                    <small className="text-muted">{year}</small>
                                                                 </div>
-                                                                <div className="text-muted small">
-                                                                    <strong>{lead.assignmentType || '-'}</strong><br />
-                                                                    <span>Amount: ₹{lead.totalAmount || 0}</span><br />
-                                                                    <span>Lead Date: {leadCreatedDate.toLocaleDateString()}</span>
+
+                                                                {/* Info Column */}
+                                                                <div className="flex-grow-1">
+                                                                    <strong className="d-block mb-1">{lead.customerName}</strong>
+                                                                    <div className="text-muted small mb-1">
+                                                                        {lead.customerEmail || '-'} | {lead.customerMobile || '-'}
+                                                                    </div>
+                                                                    <div className="text-muted small">
+                                                                        <strong>{lead.assignmentType || '-'}</strong><br />
+                                                                        <span>Amount: ₹{lead.totalAmount || 0}</span><br />
+                                                                        <span>Lead Date: {leadCreatedDate.toLocaleDateString()}</span>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
 
-                                                            {/* Status + Action Buttons Column */}
-                                                            <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '140px' }}>
-                                                                <span className={`badge rounded-pill text-uppercase ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
-                                                                    lead.status === 'CONVERTED' ? 'bg-label-success' :
-                                                                        lead.status === 'NEW' ? 'bg-label-primary' :
-                                                                            'bg-label-secondary'}`}>
-                                                                    {lead.status}
-                                                                </span>
+                                                                {/* Status + Action Buttons Column */}
+                                                                <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '140px' }}>
+                                                                    <span className={`badge rounded-pill text-uppercase ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
+                                                                        lead.status === 'CONVERTED' ? 'bg-label-success' :
+                                                                            lead.status === 'NEW' ? 'bg-label-primary' :
+                                                                                'bg-label-secondary'}`}>
+                                                                        {lead.status}
+                                                                    </span>
 
-                                                                <div className="d-flex gap-2">
-                                                                    {lead.status === 'CONVERTED' && (
-                                                                        <button className="btn btn-sm btn-outline-warning" onClick={() => openAssignmentModal(lead)}>
-                                                                            <i className="bi bi-plus-lg"></i>
+                                                                    <div className="d-flex gap-2">
+                                                                        {lead.status === 'CONVERTED' && (
+                                                                            <button className="btn btn-sm btn-outline-warning" onClick={() => openAssignmentModal(lead)}>
+                                                                                <i className="bi bi-plus-lg"></i>
+                                                                            </button>
+                                                                        )}
+                                                                        <button className="btn btn-sm btn-outline-dark" onClick={() => openEditLeadModal(lead)}>
+                                                                            <i className="ri-pencil-line"></i>
                                                                         </button>
-                                                                    )}
-                                                                    <button className="btn btn-sm btn-outline-dark" onClick={() => openEditLeadModal(lead)}>
-                                                                        <i className="ri-pencil-line"></i>
-                                                                    </button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
 
 
-                                                    );
-                                                })}
+                                                        );
+                                                    })}
                                         </div>
                                     )}
                                 </div>
