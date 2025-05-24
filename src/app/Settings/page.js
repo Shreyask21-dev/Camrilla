@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
+import { lookup } from 'country-data';
 
 export default function Page() {
 
@@ -68,6 +69,20 @@ export default function Page() {
 
         fetchUserPlan();
     }, []);
+
+    const getCountryDetails = (countryCode) => {
+        try {
+            const countries = lookup?.countries?.({ alpha2: countryCode }) || [];
+            const country = countries.length > 0 ? countries[0] : null;
+            return country ? { name: country.name, phoneCode: country.callingCodes?.[0] || '' } : { name: '', phoneCode: '' };
+        } catch (e) {
+            console.error('Error in getCountryDetails:', e);
+            return { name: '', phoneCode: '' };
+        }
+    };
+
+
+    const { name: countryName, phoneCode } = getCountryDetails(userData.country || '');
 
     return (
         <div>
@@ -139,17 +154,6 @@ export default function Page() {
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
-                                                <input
-                                                    type="text"
-                                                    class="form-control"
-                                                    id="organization"
-                                                    name="organization"
-                                                    value="Pixinvent" />
-                                                <label for="organization">Organization</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
                                             <div class="input-group input-group-merge">
                                                 <div class="form-floating form-floating-outline">
                                                     <input
@@ -157,24 +161,29 @@ export default function Page() {
                                                         id="phoneNumber"
                                                         name="phoneNumber"
                                                         className="form-control"
-                                                        value={userData.mobile || ''}
+                                                        // value={userData.mobile || ''}
+                                                        value={`${phoneCode} ${userData.mobile || ''}`}
                                                         readOnly
                                                     />
                                                     <label for="phoneNumber">Phone Number</label>
                                                 </div>
-                                                <span class="input-group-text">US (+1)</span>
                                             </div>
                                         </div>
 
-                                        <div className="col-md-6">
-                                            <div className="form-floating form-floating-outline">
-                                                <select id="country" className="select2 form-select" defaultValue={userData.country || ''} disabled>
-                                                    <option value="IN">India</option>
-                                                    <option value="US">United States</option>
-                                                    <option value="CA">Canada</option>
-                                                    {/* ... Add others */}
-                                                </select>
-                                                <label htmlFor="country">Country</label>
+                                        <div class="col-md-6">
+                                            <div class="input-group input-group-merge">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        type="text"
+                                                        id="country"
+                                                        name="country"
+                                                        className="form-control"
+                                                        // value={userData.country || ''}
+                                                        value={countryName}
+                                                        readOnly
+                                                    />
+                                                    <label for="country">Country</label>
+                                                </div>
                                             </div>
                                         </div>
                                         {/* Language */}
@@ -193,16 +202,37 @@ export default function Page() {
                                         </div>
 
                                         <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
-                                                <select id="currency" class="select2 form-select">
-                                                    <option value="inr" selected>INR</option>
-                                                    <option value="euro">Euro</option>
-                                                    <option value="pound">Pound</option>
-                                                    <option value="bitcoin">Bitcoin</option>
-                                                </select>
-                                                <label for="currency">Currency</label>
+                                            <div class="input-group input-group-merge">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        type="text"
+                                                        id="currency"
+                                                        name="currency"
+                                                        className="form-control"
+                                                        value={userData.currency || ''}
+                                                        readOnly
+                                                    />
+                                                    <label for="currency">Currency</label>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <div class="col-md-6">
+                                            <div class="input-group input-group-merge">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input
+                                                        type="text"
+                                                        id="timeZone"
+                                                        name="timeZone"
+                                                        className="form-control"
+                                                        value={userData.userTimeZone || ''}
+                                                        readOnly
+                                                    />
+                                                    <label for="timeZone">Time Zone</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <h5 className="mb-4">Your Current Plan Details</h5>
                                         {planInfo && (<>
                                             <div class="col-md-6">
@@ -231,32 +261,36 @@ export default function Page() {
                                                     <label for="Status">Status</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-floating form-floating-outline">
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        id="startDate"
-                                                        name="startDate"
-                                                        value={new Date(planInfo.startDate).toLocaleDateString()}
-                                                        readOnly
-                                                    />
-                                                    <label for="startDate">Start Date</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-floating form-floating-outline">
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        id="endDate"
-                                                        name="endDate"
-                                                        value={new Date(planInfo.endDate).toLocaleDateString()}
-                                                        readOnly
-                                                    />
-                                                    <label for="startDate">End Date</label>
-                                                </div>
-                                            </div>
+                                            {planInfo.planName === 'Professional' &&
+                                                <>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating form-floating-outline">
+                                                            <input
+                                                                className="form-control"
+                                                                type="text"
+                                                                id="startDate"
+                                                                name="startDate"
+                                                                value={new Date(planInfo.startDate).toLocaleDateString()}
+                                                                readOnly
+                                                            />
+                                                            <label for="startDate">Start Date</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating form-floating-outline">
+                                                            <input
+                                                                className="form-control"
+                                                                type="text"
+                                                                id="endDate"
+                                                                name="endDate"
+                                                                value={new Date(planInfo.endDate).toLocaleDateString()}
+                                                                readOnly
+                                                            />
+                                                            <label for="startDate">End Date</label>
+                                                        </div>
+                                                    </div>
+                                                </>}
+
                                         </>
                                         )}
                                     </div>
@@ -266,45 +300,6 @@ export default function Page() {
                         </div>
                     </div>
                 </div>
-
-                {/* <div className="card p-3" style={{height:"100vh", overflowY:"scroll"}} >
-
-                    {paymentHistory.length > 0 && (
-                        <div className="col-md-12 mt-4">
-                            <h5 className="mb-3">Payment History</h5>
-                            <div className="table-responsive">
-                                <table className="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Plan</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                            <th>Currency</th>
-                                            <th>Order ID</th>
-                                            <th>Coupon Code</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {paymentHistory.map((txn, index) => (
-                                            <tr key={index}>
-                                                <td>{new Date(txn.paymentDate).toLocaleDateString()}</td>
-                                                <td>{txn.planName}</td>
-                                                <td>{txn.amount}</td>
-                                                <td>{txn.paymentStatus}</td>
-                                                <td>{txn.currency}</td>
-                                                <td>{txn.orderId}</td>
-                                                <td>{txn.discountCouponCode || '—'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-
-                </div> */}
-
 
             </div>
 

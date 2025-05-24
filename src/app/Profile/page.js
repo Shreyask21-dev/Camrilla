@@ -36,27 +36,33 @@ export default function Page() {
                 const accessToken = tokenData.accessToken;
 
                 // Calculate start and end date in milliseconds
-                const endDate = Date.now();
-                const startDate = new Date();
-                startDate.setFullYear(startDate.getFullYear() - 1);
-                const startDateMs = startDate.getTime();
+                // const endDate = Date.now();
+                // const startDate = new Date();
+                // startDate.setFullYear(startDate.getFullYear() - 1);
+                // const startDateMs = startDate.getTime();
 
-                // API endpoints
-                const assignmentURL = `https://api.camrilla.com/order/assignment?startDate=${startDateMs}&endDate=${endDate}`;
+                // Get the current date
+                const currentDate = new Date();
+                // Calculate the start date of the current year
+                const startDate = new Date(currentDate.getFullYear(), 0, 1); // January 1st of the current year
+                const startDateMs = startDate.getTime(); // Start date in milliseconds
+                // Calculate the end date of the current year
+                const endDate = new Date(currentDate.getFullYear(), 11, 31, 23, 59, 59, 999); // December 31st of the current year
+                const endDateMs = endDate.getTime(); // End date in milliseconds
+                console.log("Start Date (Unix Time in ms):", startDateMs);
+                console.log("End Date (Unix Time in ms):", endDateMs);
+
+                // API endpoints${startDateMs}${endDate}
+                const assignmentURL = `https://api.camrilla.com/order/assignment?startDate=${startDateMs}&endDate=${endDateMs}`;
                 const leadsURL = `https://api.camrilla.com/lead-manager/lead`;
 
                 // Fetch both APIs together
                 const [assignmentsRes, leadsRes] = await Promise.all([
                     axios.get(assignmentURL),
-                    // , {
-                    //     headers: { Authorization: `Bearer ${accessToken}` }
-                    // }
                     axios.get(leadsURL),
-                    // , {
-                    //     headers: { Authorization: `Bearer ${accessToken}` }
-                    // }
                 ]);
 
+                console.log(assignmentsRes.data)
                 setAssignments(assignmentsRes.data.data || []);
                 setLeads(leadsRes.data.data || []);
             } catch (error) {
@@ -167,11 +173,11 @@ export default function Page() {
                                 <ul class="list-unstyled mb-0 mt-3 pt-1">
                                     <li class="d-flex align-items-center mb-4">
                                         <i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Assignments:</span>
-                                        <span>{userData.assignmentCount || 0}</span>
+                                        <span>{userData.totalAssignment || 0}</span>
                                     </li>
                                     <li class="d-flex align-items-center">
                                         <i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Leads:</span>
-                                        <span>{userData.leadCount || 0}</span>
+                                        <span>{userData.totalLeads || 0}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -185,9 +191,9 @@ export default function Page() {
                             <div className="col-lg-12 col-xl-6">
                                 <div className="card card-action mb-6">
                                     <div className="card-header align-items-center">
-                                        <h5 className="card-action-title mb-0">Assignments</h5>
+                                        <h5 className="card-action-title mb-0">Current Year Assignments</h5>
                                     </div>
-                                    <div className="card-body">
+                                    <div className="card-body" style={{height: "425px",overflowY: "scroll"}}>
                                         <ul className="list-unstyled mb-0">
                                             {assignments.length > 0 ? (
                                                 assignments.map((assignment, index) => {
@@ -230,9 +236,9 @@ export default function Page() {
                             <div className="col-lg-12 col-xl-6">
                                 <div className="card card-action mb-6">
                                     <div className="card-header align-items-center">
-                                        <h5 className="card-action-title mb-0">Leads</h5>
+                                        <h5 className="card-action-title mb-0">All Leads</h5>
                                     </div>
-                                    <div className="card-body">
+                                    <div className="card-body"  style={{height: "425px",overflowY: "scroll"}}>
                                         <ul className="list-unstyled mb-0">
                                             {leads.length > 0 ? (
                                                 leads.map((lead, index) => {
