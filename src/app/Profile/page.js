@@ -102,12 +102,7 @@ export default function Page() {
                                 <img src="/assets/img/pages/profile-banner.png" alt="Banner image" class="rounded-top" />
                             </div>
                             <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
-                                <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                                    <img
-                                        src="/assets/img/avatars/1.png"
-                                        alt="user image"
-                                        class="d-block h-auto ms-0 ms-sm-5 rounded-4 user-profile-img" />
-                                </div>
+                                
                                 <div class="flex-grow-1 mt-4 mt-sm-12">
                                     <div
                                         class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
