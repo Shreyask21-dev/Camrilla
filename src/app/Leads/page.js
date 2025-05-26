@@ -5,7 +5,15 @@ import DatePicker from 'react-datepicker'
 import useSearchStore from '../store/searchStore'; // adjust path if needed
 import config from '../config/config';
 
+const normalize = (str) => str?.trim().toLowerCase();
+
+const bootstrapColors = [
+    'success', 'warning', 'info', 'danger', 'dark', 'primary', 'secondary'
+];
+
 export default function Page() {
+
+    const [assignmentTypeColorMap, setAssignmentTypeColorMap] = useState(new Map());
 
     const { searchTerm } = useSearchStore();
 
@@ -213,6 +221,24 @@ export default function Page() {
             .then(response => {
                 console.log(response.data.data)
                 setLeads(response.data.data);
+
+                const rawLeads = response.data.data;
+                setLeads(rawLeads);
+
+                const nameMap = new Map();
+                let index = 0;
+
+                rawLeads.forEach(lead => {
+                    const name = lead.assignmentType?.trim();
+                    const normalized = normalize(name);
+
+                    if (name && !nameMap.has(normalized)) {
+                        nameMap.set(normalized, bootstrapColors[index % bootstrapColors.length]);
+                        index++;
+                    }
+                });
+
+                setAssignmentTypeColorMap(nameMap);
                 setLoading(false);
             })
             .catch(error => {
@@ -348,11 +374,6 @@ export default function Page() {
         });
     };
 
-
-
-
-
-
     return (
         <div>
             <div className="container-xxl flex-grow-1 container-p-y">
@@ -408,7 +429,7 @@ export default function Page() {
 
                                 {/* Dynamic Assignment Types */}
                                 <div className="app-calendar-events-filter text-heading">
-                                    {uniqueAssignmentTypes.map((type, index) => (
+                                    {/* {uniqueAssignmentTypes.map((type, index) => (
                                         <div className="form-check mb-4 ms-3" key={index}>
                                             <input
                                                 className="form-check-input"
@@ -421,7 +442,29 @@ export default function Page() {
                                                 {type}
                                             </label>
                                         </div>
-                                    ))}
+                                    ))} */}
+                                    {uniqueAssignmentTypes.map((type, index) => {
+                                        const color = assignmentTypeColorMap.get(normalize(type)) || 'secondary';
+                                        return (
+                                            <div className="form-check mb-4 ms-3 d-flex align-items-center gap-2" key={index}>
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id={`filter-${type}`}
+                                                    checked={selectedTypes.includes(type)}
+                                                    onChange={() => handleTypeChange(type)}
+                                                    style={{
+                                                        backgroundColor: selectedTypes.includes(type)
+                                                            ? `var(--bs-${color})`
+                                                            : 'transparent',
+                                                        borderColor: `var(--bs-${color})`
+                                                    }}
+                                                />
+                                                <label className="form-check-label" htmlFor={`filter-${type}`}>{type}</label>
+                                            </div>
+                                        );
+                                    })}
+
                                 </div>
                             </div>
                         </div>
@@ -433,21 +476,49 @@ export default function Page() {
                                 <div class="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
                                     <h5 class="card-title m-0 me-2  py-1">Leads Captured</h5>
                                     <div class="dropdown">
-                                        <button
-                                            class="btn btn-text-secondary rounded-pill text-muted border-0 p-1"
-                                            type="button"
-                                            id="meetingSchedule"
-                                            data-bs-toggle="dropdown"
-                                            aria-haspopup="true"
-                                            aria-expanded="false">
-                                            <i class="ri-more-2-line ri-20px"></i>
-                                        </button>
-                                        <div className="dropdown-menu dropdown-menu-end" aria-labelledby="meetingSchedule">
-                                            <button className={`dropdown-item ${dateRangeFilter === 'last28' ? 'active' : ''}`} onClick={() => setDateRangeFilter('last28')}>Last 28 Days</button>
-                                            <button className={`dropdown-item ${dateRangeFilter === 'lastMonth' ? 'active' : ''}`} onClick={() => setDateRangeFilter('lastMonth')}>Last Month</button>
-                                            <button className={`dropdown-item ${dateRangeFilter === 'lastYear' ? 'active' : ''}`} onClick={() => setDateRangeFilter('lastYear')}>Last Year</button>
-                                            <button className={`dropdown-item ${dateRangeFilter === 'all' ? 'active' : ''}`} onClick={() => setDateRangeFilter('all')}>View All</button>
+
+                                        <div className="d-flex gap-3 mb-0 flex-wrap mt-3">
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="dateRange"
+                                                    id="range-all"
+                                                    checked={dateRangeFilter === 'all'}
+                                                    onChange={() => setDateRangeFilter('all')}
+                                                />
+                                                <label className="form-check-label" htmlFor="range-all">View All</label>
+                                            </div>
+
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="dateRange"
+                                                    id="range-28"
+                                                    checked={dateRangeFilter === 'last28'}
+                                                    onChange={() => setDateRangeFilter('last28')}
+                                                />
+                                                <label className="form-check-label" htmlFor="range-28">Last 28 Days</label>
+                                            </div>
+
+
+
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="dateRange"
+                                                    id="range-year"
+                                                    checked={dateRangeFilter === 'lastYear'}
+                                                    onChange={() => setDateRangeFilter('lastYear')}
+                                                />
+                                                <label className="form-check-label" htmlFor="range-year">Last Year</label>
+                                            </div>
+
+
                                         </div>
+
 
                                     </div>
                                 </div>
@@ -507,7 +578,12 @@ export default function Page() {
                                                                         {lead.customerEmail || '-'} | {lead.customerMobile || '-'}
                                                                     </div>
                                                                     <div className="text-muted small">
-                                                                        <strong>{lead.assignmentType || '-'}</strong><br />
+                                                                        {/* <strong>{lead.assignmentType || '-'}</strong><br /> */}
+                                                                        <span
+                                                                            className={`badge bg-${assignmentTypeColorMap.get(normalize(lead.assignmentType)) || 'secondary'}`}
+                                                                        >
+                                                                            {lead.assignmentType || '-'}
+                                                                        </span>
                                                                         <span>Amount: ₹{lead.totalAmount || 0}</span><br />
                                                                         <span>Lead Date: {leadCreatedDate.toLocaleDateString()}</span>
                                                                     </div>

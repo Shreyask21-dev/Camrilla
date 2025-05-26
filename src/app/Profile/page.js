@@ -14,7 +14,7 @@ export default function Page() {
     const [assignments, setAssignments] = useState([]);
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     const fetchUserPlan = async () => {
         const tokenData = localStorage.getItem('camrilla_token');
         if (!tokenData) return;
@@ -121,22 +121,56 @@ export default function Page() {
                             <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
 
                                 <div class="flex-grow-1 mt-4 mt-sm-12">
+
                                     <div
                                         class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
                                         <div class="user-profile-info">
-                                            <h4 class="mb-2">{userData.name || 'John Doe'}</h4>
-                                            <ul
-                                                class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
+                                            <div style={{ display: "flex" }}>
 
-                                                <li class="list-inline-item">
-                                                    <i class="ri-map-pin-line me-2 ri-24px"></i><span class="fw-medium">{countryName || 'Country'}</span>
-                                                </li>
+                                                <div
+                                                    style={{
+                                                        width: '68px',
+                                                        height: '68px',
+                                                        backgroundColor: '#7367F0',
+                                                        color: 'white',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '30px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        borderRadius: '8px',
+                                                        marginRight: '12px'
+                                                    }}
+                                                >
+                                                    {(() => {
+                                                        const name = userData.name || 'John Doe';
+                                                        const parts = name.trim().split(/\s+/);
+                                                        return parts.map(p => p[0]).slice(0, 3).join('').toUpperCase();
+                                                    })()}
+                                                </div>
 
-                                            </ul>
+                                                <div>
+
+                                                    <h4 class="mb-2">{userData.name || 'John Doe'}</h4>
+                                                    <ul
+                                                        class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
+
+                                                        <li class="list-inline-item">
+                                                            <i class="ri-map-pin-line me-2 ri-24px"></i><span class="fw-medium">{countryName || 'Country'}</span>
+                                                        </li>
+
+                                                    </ul>
+
+                                                </div>
+                                            </div>
+
                                         </div>
-                                        <Link href="/Subscriptions" class="btn btn-primary">
-                                            <i class="ri-user-follow-line ri-16px me-2"></i>Subscribe Now
-                                        </Link>
+
+                                        {planInfo?.planName != 'Professional' &&
+                                            <Link href="/Subscriptions" class="btn btn-primary">
+                                                <i class="ri-user-follow-line ri-16px me-2"></i>Subscribe Now
+                                            </Link>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -148,7 +182,7 @@ export default function Page() {
                     <div class="col-xl-4 col-lg-5 col-md-5">
 
                         <div class="card mb-6">
-                            <div class="card-body" style={{height: "283px"}}>
+                            <div class="card-body" style={{ height: "283px" }}>
                                 <small class="card-text text-uppercase text-muted small">About</small>
                                 <ul class="list-unstyled my-3 py-1">
                                     <li class="d-flex align-items-center mb-4">
@@ -183,7 +217,7 @@ export default function Page() {
 
                             <div className="col-lg-12 col-xl-6">
                                 <div class="card mb-6">
-                                    <div class="card-body" style={{height: "283px"}}>
+                                    <div class="card-body" style={{ height: "283px" }}>
                                         <small class="card-text text-uppercase text-muted small">Contacts</small>
                                         <ul class="list-unstyled my-3 py-1">
                                             <li class="d-flex align-items-center mb-4">
@@ -212,7 +246,7 @@ export default function Page() {
 
                             <div className="col-lg-12 col-xl-6">
                                 <div class="card mb-6">
-                                    <div class="card-body" style={{height: "283px"}}>
+                                    <div class="card-body" style={{ height: "283px" }}>
                                         <small class="card-text text-uppercase text-muted small">Plan Details</small>
                                         <ul class="list-unstyled my-3 py-1">
                                             <li class="d-flex align-items-center mb-4">

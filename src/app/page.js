@@ -18,7 +18,15 @@ import useUserPlan from './hooks/useUserPlan';
 import useSearchStore from './store/searchStore'; // adjust as needed
 import config from './config/config';
 
+const normalize = (str) => str?.trim().toLowerCase();
+
+const bootstrapColors = [
+  'warning', 'info', 'success', 'danger', 'primary', 'secondary', 'dark'
+];
+
 export default function Home() {
+
+  const [assignmentColorMap, setAssignmentColorMap] = useState(new Map());
 
   const { searchTerm } = useSearchStore();
 
@@ -85,14 +93,15 @@ export default function Home() {
     fetchOrders(date);
   };
 
-  // useEffect(() => {
-  //   const activeNames = Object.keys(assignmentFilters).filter(key => assignmentFilters[key]);
-  //   const filtered = allEvents.filter(ev => activeNames.includes(ev.title));
-  //   setCalendarEvents(filtered);
-  // }, [assignmentFilters, allEvents]);
-
   useEffect(() => {
-    const activeNames = Object.keys(assignmentFilters).filter(key => assignmentFilters[key]);
+    // const activeNames = Object.keys(assignmentFilters).filter(key => assignmentFilters[key]);
+    const activeNormalizedNames = Object.keys(assignmentFilters)
+      .filter(key => assignmentFilters[key])
+      .map(name => normalize(name));
+
+    const filtered = allEvents.filter(ev =>
+      activeNormalizedNames.includes(normalize(ev.title)) && (!searchTerm || matchesSearch(ev))
+    );
 
     const matchesSearch = (event) => {
       const e = event.extendedProps;
@@ -117,9 +126,9 @@ export default function Home() {
       );
     };
 
-    const filtered = allEvents.filter(ev =>
-      activeNames.includes(ev.title) && (!searchTerm || matchesSearch(ev))
-    );
+    // const filtered = allEvents.filter(ev =>
+    //   activeNames.includes(ev.title) && (!searchTerm || matchesSearch(ev))
+    // );
 
     setCalendarEvents(filtered);
   }, [assignmentFilters, allEvents, searchTerm]);
@@ -146,26 +155,88 @@ export default function Home() {
 
       if (response.data.code === 0 && response.data.message === 'Success') {
         console.log(response.data.data)
-        const mappedEvents = response.data.data.map(item => ({
-          id: item.id,
-          title: item.assignmentName || 'No Title',
-          start: new Date(item.assignmentDateTime),
-          end: new Date(item.assignmentDateTime),
-          extendedProps: {
-            ...item,
-          },
-        }));
+
+        const nameMap = new Map();
+        let index = 0;
+
+        response.data.data.forEach(item => {
+          const rawName = item.assignmentName?.trim() || 'No Title';
+          const normalized = normalize(rawName);
+          if (!nameMap.has(normalized)) {
+            nameMap.set(normalized, {
+              original: rawName,
+              color: bootstrapColors[index % bootstrapColors.length],
+            });
+            index++;
+          }
+        });
+
+        // const mappedEvents = response.data.data.map(item => ({
+        //   id: item.id,
+        //   title: item.assignmentName || 'No Title',
+        //   start: new Date(item.assignmentDateTime),
+        //   end: new Date(item.assignmentDateTime),
+        //   extendedProps: {
+        //     ...item,
+        //   },
+        // }));
+
+        const mappedEvents = response.data.data.map(item => {
+          const rawName = item.assignmentName?.trim() || 'No Title';
+          const normalized = normalize(rawName);
+          const color = nameMap.get(normalized)?.color || 'secondary';
+
+          return {
+            id: item.id,
+            title: rawName,
+            start: new Date(item.assignmentDateTime),
+            end: new Date(item.assignmentDateTime),
+            backgroundColor: `var(--bs-${color})`,
+            borderColor: `var(--bs-${color})`,
+            textColor: '#fff',
+            extendedProps: {
+              ...item,
+            },
+          };
+        });
+
 
         // Create a filter map with all assignment names selected
-        const uniqueAssignments = [...new Set(mappedEvents.map(ev => ev.title))];
-        const filterMap = {};
-        uniqueAssignments.forEach(name => {
-          filterMap[name] = true;
-        });
+        // const uniqueAssignments = [...new Set(mappedEvents.map(ev => ev.title))];
+        // const filterMap = {};
+        // uniqueAssignments.forEach(name => {
+        //   filterMap[name] = true;
+        // });
 
         setAllEvents(mappedEvents);         // store full list
         setCalendarEvents(mappedEvents);    // show all events initially
-        setAssignmentFilters(filterMap);    // update filters
+        // setAssignmentFilters(filterMap);    // update filters
+
+
+
+        mappedEvents.forEach(event => {
+          const rawName = event.title?.trim();
+          if (!rawName) return;
+
+          const normalized = normalize(rawName);
+          if (!nameMap.has(normalized)) {
+            nameMap.set(normalized, {
+              original: rawName,
+              color: bootstrapColors[index % bootstrapColors.length],
+            });
+            index++;
+          }
+        });
+
+        const filterMap = {};
+        nameMap.forEach((val, key) => {
+          filterMap[val.original] = true;
+        });
+
+        setAssignmentFilters(filterMap); // 👈 Update filters
+        setAssignmentColorMap(nameMap); // 👈 New state (see next step)
+        setAllEvents(mappedEvents);
+        setCalendarEvents(mappedEvents);
       } else {
         console.warn('API response was not successful:', response.data.message);
       }
@@ -469,7 +540,35 @@ export default function Home() {
                     <label className="form-check-label" htmlFor="selectAll">View All</label>
                   </div>
 
-                  {Object.keys(assignmentFilters).map((name, idx) => (
+                  {Object.keys(assignmentFilters).map((name, idx) => {
+                    const normalized = normalize(name);
+                    const color = assignmentColorMap.get(normalized)?.color || 'secondary';
+
+                    return (
+                      <div className="form-check mb-2 ms-3 d-flex align-items-center gap-2" key={idx}>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`filter-${idx}`}
+                          checked={assignmentFilters[name]}
+                          onChange={(e) => {
+                            const updatedFilters = { ...assignmentFilters, [name]: e.target.checked };
+                            setAssignmentFilters(updatedFilters);
+                          }}
+                          style={{
+                            backgroundColor: assignmentFilters[name]
+                              ? `var(--bs-${color})`
+                              : 'transparent',
+                            borderColor: `var(--bs-${color})`
+                          }}
+                        />
+                        <label className="form-check-label" htmlFor={`filter-${idx}`}>{name}</label>
+                      </div>
+                    );
+                  })}
+
+
+                  {/* {Object.keys(assignmentFilters).map((name, idx) => (
                     <div className="form-check mb-2 ms-3" key={idx}>
                       <input
                         className="form-check-input"
@@ -483,7 +582,7 @@ export default function Home() {
                       />
                       <label className="form-check-label" htmlFor={`filter-${name}`}>{name}</label>
                     </div>
-                  ))}
+                  ))} */}
 
                 </div>
               </div>
