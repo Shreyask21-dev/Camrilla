@@ -11,6 +11,71 @@ import config from '../config/config';
 
 export default function AssignmentPage() {
 
+    const [planInfo, setPlanInfo] = useState(null);
+
+    useEffect(() => {
+        const fetchUserPlan = async () => {
+            const tokenData = localStorage.getItem('camrilla_token');
+            if (!tokenData) return;
+
+            try {
+                const { accessToken } = JSON.parse(tokenData);
+                const res = await fetch(`${config.BASE_URL}user-plan`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                const json = await res.json();
+                if (json.code === 0) {
+                    console.log(json.data.userPlanDetails)
+                    setPlanInfo(json.data.userPlanDetails);
+                }
+            } catch (err) {
+                console.error("Error fetching user plan:", err);
+            }
+        };
+
+        fetchUserPlan();
+    }, []);
+
+    const [allAssignments, setAllAssignments] = useState([]);
+
+    useEffect(() => {
+        const fetchAllAssignments = async () => {
+            if (!planInfo?.startDate || !planInfo?.endDate) return;
+
+            try {
+                const tokenData = localStorage.getItem('camrilla_token');
+                const accessToken = JSON.parse(tokenData)?.accessToken;
+                if (!accessToken) return;
+
+                const response = await axios.get(`${config.BASE_URL}order/assignment`, {
+                    params: {
+                        startDate: new Date(planInfo.startDate).getTime(),
+                        endDate: new Date(planInfo.endDate).getTime()
+                    },
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                console.log(response.data.data)
+
+                setAllAssignments(response.data.data || []);
+            } catch (error) {
+                console.error('Error fetching all assignments:', error);
+            }
+        };
+
+        fetchAllAssignments();
+    }, [planInfo]);
+
+
+    const bootstrapColors = [
+        'warning', 'info', 'success', 'danger', 'dark', 'primary', 'secondary',
+    ];
+
     const { searchTerm } = useSearchStore();
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -82,26 +147,39 @@ export default function AssignmentPage() {
         newEnd.setHours(23, 59, 59, 999); // <--- Add this!
         setStartOfMonth(newStart);
         setEndOfMonth(newEnd);
+        setTimeFilter("All"); // 👈 Reset time filter back to All
     };
 
     const [selectedAssignmentNames, setSelectedAssignmentNames] = useState(["All"]);
 
-    const uniqueAssignmentNames = useMemo(() => {
-        const names = assignments.map(item => item.assignmentName).filter(Boolean);
-        return Array.from(new Set(names));
-    }, [assignments]);
+    const normalize = (str) => str?.trim().toLowerCase();
 
-    // const filteredAssignments = useMemo(() => {
-    //     if (selectedAssignmentNames.includes("All")) {
-    //         return assignments;
-    //     }
-    //     return assignments.filter(a => selectedAssignmentNames.includes(a.assignmentName));
-    // }, [assignments, selectedAssignmentNames]);
+    const uniqueAssignmentNames = useMemo(() => {
+        const nameMap = new Map();
+
+        allAssignments.forEach(item => {
+            const rawName = item.assignmentName;
+            if (!rawName) return;
+
+            const normalized = normalize(rawName);
+            if (!nameMap.has(normalized)) {
+                nameMap.set(normalized, rawName.trim());
+            }
+        });
+
+        return Array.from(nameMap.values());
+    }, [allAssignments]);
+
+    const [timeFilter, setTimeFilter] = useState("All");
 
     const filteredAssignments = useMemo(() => {
         const filterByName = selectedAssignmentNames.includes("All")
             ? assignments
-            : assignments.filter(a => selectedAssignmentNames.includes(a.assignmentName));
+            : assignments.filter(a =>
+                selectedAssignmentNames
+                    .map(normalize)
+                    .includes(normalize(a.assignmentName))
+            );
 
         const text = searchTerm.toLowerCase();
 
@@ -123,6 +201,7 @@ export default function AssignmentPage() {
 
         return filterByName.filter(a => !searchTerm || matchesSearch(a));
     }, [assignments, selectedAssignmentNames, searchTerm]);
+
 
     const handleFilterChange = (name) => {
         if (name === "All") {
@@ -218,6 +297,54 @@ export default function AssignmentPage() {
         });
     };
 
+    const handleTimeFilterChange = (filterType) => {
+        const now = new Date();
+        let startDate, endDate;
+
+        if (filterType === "CurrentYear") {
+            startDate = new Date(now.getFullYear(), 0, 1);
+            endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        } else if (filterType === "LastYear") {
+            startDate = new Date(now.getFullYear() - 1, 0, 1);
+            endDate = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+        } else if (filterType === "LastMonth") {
+            const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            startDate = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth(), 1);
+            endDate = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 0, 23, 59, 59, 999);
+        } else {
+            // Default "All" case: fetch very wide range
+            startDate = new Date(2000, 0, 1);
+            endDate = new Date(2100, 11, 31, 23, 59, 59, 999);
+        }
+
+        setTimeFilter(filterType);
+        setStartOfMonth(startDate);
+        setEndOfMonth(endDate);
+    };
+
+    // // Create a mapping of assignment name to a consistent color
+    const assignmentColorMap = useMemo(() => {
+        const map = new Map();
+        let index = 0;
+
+        allAssignments.forEach(item => {
+            const rawName = item.assignmentName?.trim();
+            if (!rawName) return;
+
+            const normalized = normalize(rawName);
+
+            if (!map.has(normalized)) {
+                const color = bootstrapColors[index % bootstrapColors.length];
+                map.set(normalized, color);
+                index++;
+            }
+        });
+
+        return map;
+    }, [allAssignments]);
+
+
+
     return (
         <div>
             <div className="container-xxl flex-grow-1 container-p-y">
@@ -269,16 +396,23 @@ export default function AssignmentPage() {
                                 </div>
 
                                 {uniqueAssignmentNames.map((name, idx) => (
-                                    <div key={idx} className="form-check mb-3 ms-3">
+                                    <div key={idx} className="form-check mb-3 ms-3 d-flex align-items-center gap-2">
                                         <input
-                                            className="form-check-input"
+                                            className={`form-check-input`}
                                             type="checkbox"
                                             id={`assignment-${idx}`}
                                             checked={selectedAssignmentNames.includes(name)}
                                             onChange={() => handleFilterChange(name)}
+                                            style={{
+                                                backgroundColor: selectedAssignmentNames.includes(name)
+                                                    ? `var(--bs-${assignmentColorMap.get(normalize(name))})`
+                                                    : 'transparent',
+                                                borderColor: `var(--bs-${assignmentColorMap.get(normalize(name))})`
+                                            }}
                                         />
                                         <label className="form-check-label" htmlFor={`assignment-${idx}`}>
                                             {name}
+                                            {/* <span className={`badge bg-${assignmentColorMap[name]}`}>{name}</span> */}
                                         </label>
                                     </div>
                                 ))}
@@ -291,20 +425,54 @@ export default function AssignmentPage() {
                                 <div class="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
                                     <h5 class="card-title m-0 me-2  py-1">Assignments</h5>
                                     <div class="dropdown">
-                                        <button
-                                            class="btn btn-text-secondary rounded-pill text-muted border-0 p-1"
-                                            type="button"
-                                            id="meetingSchedule"
-                                            data-bs-toggle="dropdown"
-                                            aria-haspopup="true"
-                                            aria-expanded="false">
-                                            <i class="ri-more-2-line ri-20px"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="meetingSchedule">
-                                            <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-                                            <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                                        <div className="d-flex flex-wrap align-items-center gap-3">
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="timeFilter"
+                                                    id="filterAll"
+                                                    checked={timeFilter === "All"}
+                                                    onChange={() => handleTimeFilterChange("All")}
+                                                />
+                                                <label className="form-check-label" htmlFor="filterAll">All</label>
+                                            </div>
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="timeFilter"
+                                                    id="filterCurrentYear"
+                                                    checked={timeFilter === "CurrentYear"}
+                                                    onChange={() => handleTimeFilterChange("CurrentYear")}
+                                                />
+                                                <label className="form-check-label" htmlFor="filterCurrentYear">Current Year</label>
+                                            </div>
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="timeFilter"
+                                                    id="filterLastYear"
+                                                    checked={timeFilter === "LastYear"}
+                                                    onChange={() => handleTimeFilterChange("LastYear")}
+                                                />
+                                                <label className="form-check-label" htmlFor="filterLastYear">Last Year</label>
+                                            </div>
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="timeFilter"
+                                                    id="filterLastMonth"
+                                                    checked={timeFilter === "LastMonth"}
+                                                    onChange={() => handleTimeFilterChange("LastMonth")}
+                                                />
+                                                <label className="form-check-label" htmlFor="filterLastMonth">Last Month</label>
+                                            </div>
                                         </div>
+
+
                                     </div>
                                 </div>
 
@@ -330,8 +498,14 @@ export default function AssignmentPage() {
                                                                 {assignment.customerEmail || '-'} | {assignment.customerMobile || '-'}
                                                             </div>
                                                             <div className="text-muted small">
-                                                                <strong>{assignment.assignmentName || '-'}</strong><br />
-                                                                <span>{assignment.assignmentAddress || '-'}</span>
+                                                                {/* <strong>{assignment.assignmentName || '-'}</strong> */}
+                                                                <strong>
+                                                                    <span className={`badge bg-${assignmentColorMap.get(normalize(assignment.assignmentName)) || 'secondary'}`}>
+                                                                        {assignment.assignmentName || '-'}
+                                                                    </span>
+                                                                </strong>
+                                                                &nbsp;
+                                                                <span>- {assignment.assignmentAddress || '-'}</span>
                                                             </div>
                                                         </div>
 
