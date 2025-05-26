@@ -17,6 +17,7 @@ dayjs.extend(isBetween);
 import useUserPlan from './hooks/useUserPlan';
 import useSearchStore from './store/searchStore'; // adjust as needed
 import config from './config/config';
+import BasicPlanNotice from './Components/BasicPlanNotice';
 
 const normalize = (str) => str?.trim().toLowerCase();
 
@@ -26,6 +27,10 @@ const bootstrapColors = [
 
 export default function Home() {
 
+  const handleCloseBasicModal = () => {
+    setShowBasicModal(false);
+    localStorage.setItem('basic_plan_notice_last_shown', Date.now().toString());
+  };
   const [assignmentColorMap, setAssignmentColorMap] = useState(new Map());
 
   const { searchTerm } = useSearchStore();
@@ -45,6 +50,21 @@ export default function Home() {
 
   const isBasicPlan = planInfo?.planName?.toLowerCase() === 'basic';
   const isProfessionalPlan = planInfo?.planName?.toLowerCase() === 'professional';
+
+  const [showBasicModal, setShowBasicModal] = useState(false);
+
+  useEffect(() => {
+    if (isBasicPlan) {
+      const lastShown = localStorage.getItem('basic_plan_notice_last_shown');
+      const now = Date.now();
+
+      const TEN_MINUTES = 10 * 60 * 1000;
+
+      if (!lastShown || now - parseInt(lastShown, 10) > TEN_MINUTES) {
+        setShowBasicModal(true);
+      }
+    }
+  }, [isBasicPlan]);
 
   const showFeedbackMessage = () => {
     if (!planInfo || !planInfo.planName || !planInfo.endDate) return false;
@@ -373,6 +393,11 @@ export default function Home() {
 
   return (
     <div>
+
+      {isBasicPlan && (
+        <BasicPlanNotice show={showBasicModal} handleClose={handleCloseBasicModal} />
+      )}
+
       <div className="container-xxl flex-grow-1 container-p-y">
 
         {/* Expiry message */}
