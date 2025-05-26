@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Script from 'next/script'; // For Razorpay script
+import config from '../config/config';
 
 export default function Page() {
 
@@ -28,7 +29,7 @@ export default function Page() {
                 const tokenData = JSON.parse(tokenDataString);
                 const accessToken = tokenData.accessToken;
 
-                const response = await axios.get('https://api.camrilla.com/user-plan', {
+                const response = await axios.get(`${config.BASE_URL}user-plan`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -85,7 +86,7 @@ export default function Page() {
             }
 
             const response = await axios.post(
-                'https://api.camrilla.com/initiate-payment-request',
+                `${config.BASE_URL}initiate-payment-request`,
                 payload,
                 {
                     headers: {
@@ -124,7 +125,7 @@ export default function Page() {
                 console.log('Payment Success Response:', response);
 
                 try {
-                    await axios.post('https://api.camrilla.com/update-payment-response', {
+                    await axios.post(`${config.BASE_URL}update-payment-response`, {
                         orderId: paymentData.camrillaOrderId
                     });
                     alert('Payment successful and updated!');
@@ -159,7 +160,7 @@ export default function Page() {
             const tokenData = JSON.parse(tokenDataString);
             const accessToken = tokenData.accessToken;
 
-            const response = await axios.get(`https://api.camrilla.com/admin/discount-coupon/validate/${code}`, {
+            const response = await axios.get(`${config.BASE_URL}admin/discount-coupon/validate/${code}`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 }
@@ -194,14 +195,14 @@ export default function Page() {
                     <div className="pb-sm-12 pb-2 rounded-top">
                         <div className="container py-12">
                             <h4 className="text-center mb-2 mt-0 mt-md-4">Pricing Plans</h4>
-                            <p className="text-center mb-2">
-                                Your Journey Begins Here—Subscribe Now & Maximize Your Potential! Exclusive Access Awaits—One Click to Unlock Unlimited Possibilities!
+                            <p className="text-center my-4">
+                                Your Journey Begins Here—Subscribe Now & Maximize Your Potential! Exclusive Access <br />Awaits—One Click to Unlock Unlimited Possibilities!
                             </p>
 
-                            <div className="pricing-plans row mx-4 gy-3 px-lg-12">
+                            <div className="pricing-plans row mx-4 gy-3 px-lg-12 mt-5">
                                 {plans.length > 0 ? (
                                     plans.map((plan, index) => {
-                                        // Parse feature array from JSON string
+                                        
                                         const features = JSON.parse(plan.feature);
 
                                         return (
@@ -220,12 +221,7 @@ export default function Page() {
                                                         <div className="text-center">
                                                             <div className="d-flex justify-content-center">
                                                                 <sup className="h6 pricing-currency mt-2 mb-0 me-1 text-body">{plan.currency}</sup>
-                                                                {/* <h1 className="mb-0 text-primary">{plan.finalAmount}</h1> */}
                                                                 <h1 className="mb-0 text-primary">
-                                                                    {/* {appliedCoupon
-                                                                        ? (plan.finalAmount * (1 - appliedCoupon.discountValue / 100)).toFixed(2)
-                                                                        : plan.finalAmount} */}
-
                                                                     {appliedCoupons[plan.id]
                                                                         ? (plan.finalAmount * (1 - appliedCoupons[plan.id].discountValue / 100)).toFixed(2)
                                                                         : plan.finalAmount}
@@ -239,17 +235,13 @@ export default function Page() {
                                                                 <li key={idx} className="mb-4">{feature}</li>
                                                             ))}
                                                         </ul>
-                                                        {/* {!(plan.planName === 'Basic' &&
-                                                            plan.monthlyAmount === 0.0 &&
-                                                            plan.monthlyDisscountedAmount === 0.0 &&
-                                                            plan.finalAmount === 0.0) && ( */}
 
-                                                        {!( // hide if:
+                                                        {!( 
                                                             (plan.planName === 'Basic' &&
                                                                 plan.monthlyAmount === 0.0 &&
                                                                 plan.monthlyDisscountedAmount === 0.0 &&
                                                                 plan.finalAmount === 0.0) ||
-                                                            (activePlan?.planId === plan.id) // also hide if it's the current active plan
+                                                            (activePlan?.planId === plan.id) 
                                                         ) && (
                                                                 <div className="coupon-section mb-4 text-center">
                                                                     <input
@@ -278,14 +270,7 @@ export default function Page() {
                                                                     )}
                                                                 </div>
                                                             )}
-                                                        {/* 
-                                                        <button
-                                                            onClick={() => initiatePayment(plan.id)}
-                                                            className={`btn ${index === 1 ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
-                                                        >
-                                                            {index === 0 ? 'Your Current Plan' : 'Upgrade'}
-                                                        </button>
-*/}
+                                                        
 
                                                         {!(plan.planName === 'Basic' &&
                                                             plan.monthlyAmount === 0.0 &&

@@ -3,15 +3,39 @@ import React, { useState, useEffect } from 'react';
 import { getName } from 'country-list';
 import axios from 'axios'; // import axios
 import Link from 'next/link';
+import config from '../config/config';
 
 export default function Page() {
 
     const [userData, setUserData] = useState({});
     const [countryName, setCountryName] = useState('');
+    const [planInfo, setPlanInfo] = useState(null);
 
     const [assignments, setAssignments] = useState([]);
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
+
+
+    const fetchUserPlan = async () => {
+        const tokenData = localStorage.getItem('camrilla_token');
+        if (!tokenData) return;
+
+        try {
+            const { accessToken } = JSON.parse(tokenData);
+            const res = await fetch(`${config.BASE_URL}user-plan`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            const json = await res.json();
+            if (json.code === 0) {
+                setPlanInfo(json.data.userPlanDetails);
+            }
+        } catch (err) {
+            console.error("Error fetching user plan:", err);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,12 +59,6 @@ export default function Page() {
 
                 const accessToken = tokenData.accessToken;
 
-                // Calculate start and end date in milliseconds
-                // const endDate = Date.now();
-                // const startDate = new Date();
-                // startDate.setFullYear(startDate.getFullYear() - 1);
-                // const startDateMs = startDate.getTime();
-
                 // Get the current date
                 const currentDate = new Date();
                 // Calculate the start date of the current year
@@ -53,8 +71,8 @@ export default function Page() {
                 console.log("End Date (Unix Time in ms):", endDateMs);
 
                 // API endpoints${startDateMs}${endDate}
-                const assignmentURL = `https://api.camrilla.com/order/assignment?startDate=${startDateMs}&endDate=${endDateMs}`;
-                const leadsURL = `https://api.camrilla.com/lead-manager/lead`;
+                const assignmentURL = `${config.BASE_URL}order/assignment?startDate=${startDateMs}&endDate=${endDateMs}`;
+                const leadsURL = `${config.BASE_URL}lead-manager/lead`;
 
                 // Fetch both APIs together
                 const [assignmentsRes, leadsRes] = await Promise.all([
@@ -73,6 +91,7 @@ export default function Page() {
         };
 
         fetchData();
+        fetchUserPlan();
     }, []);
 
     if (loading) {
@@ -89,7 +108,6 @@ export default function Page() {
         return { month, day, year };
     };
 
-
     return (
         <div>
 
@@ -102,7 +120,7 @@ export default function Page() {
                                 <img src="/assets/img/pages/profile-banner.png" alt="Banner image" class="rounded-top" />
                             </div>
                             <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
-                                
+
                                 <div class="flex-grow-1 mt-4 mt-sm-12">
                                     <div
                                         class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
@@ -117,9 +135,9 @@ export default function Page() {
 
                                             </ul>
                                         </div>
-                                        <a href="javascript:void(0)" class="btn btn-primary">
-                                            <i class="ri-user-follow-line ri-16px me-2"></i>Connected
-                                        </a>
+                                        <Link href="/Subscriptions" class="btn btn-primary">
+                                            <i class="ri-user-follow-line ri-16px me-2"></i>Subscribe Now
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -131,7 +149,7 @@ export default function Page() {
                     <div class="col-xl-4 col-lg-5 col-md-5">
 
                         <div class="card mb-6">
-                            <div class="card-body">
+                            <div class="card-body" style={{height: "283px"}}>
                                 <small class="card-text text-uppercase text-muted small">About</small>
                                 <ul class="list-unstyled my-3 py-1">
                                     <li class="d-flex align-items-center mb-4">
@@ -142,39 +160,20 @@ export default function Page() {
                                         <i class="ri-flag-2-line ri-24px"></i><span class="fw-medium mx-2">Country:</span>
                                         <span>{countryName || 'Country'}</span>
                                     </li>
+                                    <li class="d-flex align-items-center mb-4">
+                                        <i class="ri-cash-line ri-24px"></i><span class="fw-medium mx-2">Currency:</span>
+                                        <span>{userData.currency || 'INR'}</span>
+                                    </li>
+                                    <li class="d-flex align-items-center mb-4">
+                                        <i class="ri-global-line ri-24px"></i><span class="fw-medium mx-2">Time Zone:</span>
+                                        <span>{userData.userTimeZone || 'Asia'}</span>
+                                    </li>
                                     <li class="d-flex align-items-center mb-2">
                                         <i class="ri-translate-2 ri-24px"></i><span class="fw-medium mx-2">Languages:</span>
                                         <span>English</span>
                                     </li>
                                 </ul>
-                                <small class="card-text text-uppercase text-muted small">Contacts</small>
-                                <ul class="list-unstyled my-3 py-1">
-                                    <li class="d-flex align-items-center mb-4">
-                                        <i class="ri-phone-line ri-24px"></i><span class="fw-medium mx-2">Contact:</span>
-                                        <span>{userData.mobile || '(123) 456-7890'}</span>
-                                    </li>
-                                    <li class="d-flex align-items-center mb-2">
-                                        <i class="ri-mail-open-line ri-24px"></i><span class="fw-medium mx-2">Email:</span>
-                                        <span>{userData.email || 'john.doe@example.com'}</span>
-                                    </li>
-                                </ul>
 
-                            </div>
-                        </div>
-
-                        <div class="card mb-6">
-                            <div class="card-body">
-                                <small class="card-text text-uppercase text-muted small">Overview</small>
-                                <ul class="list-unstyled mb-0 mt-3 pt-1">
-                                    <li class="d-flex align-items-center mb-4">
-                                        <i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Assignments:</span>
-                                        <span>{userData.totalAssignment || 0}</span>
-                                    </li>
-                                    <li class="d-flex align-items-center">
-                                        <i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Leads:</span>
-                                        <span>{userData.totalLeads || 0}</span>
-                                    </li>
-                                </ul>
                             </div>
                         </div>
 
@@ -184,89 +183,57 @@ export default function Page() {
                         <div class="row">
 
                             <div className="col-lg-12 col-xl-6">
-                                <div className="card card-action mb-6">
-                                    <div className="card-header align-items-center">
-                                        <h5 className="card-action-title mb-0">Current Year Assignments</h5>
-                                    </div>
-                                    <div className="card-body" style={{height: "425px",overflowY: "scroll"}}>
-                                        <ul className="list-unstyled mb-0">
-                                            {assignments.length > 0 ? (
-                                                assignments.map((assignment, index) => {
-
-                                                    const { month, day, year } = formatDateParts(assignment.assignmentDateTime);
-
-                                                    return (
-                                                        <li key={index} className="mb-4">
-                                                            <div className="d-flex align-items-center">
-                                                                <div className="d-flex align-items-center">
-                                                                    <div className="avatar me-2 text-center bg-primary text-white rounded-circle d-flex flex-column justify-content-center align-items-center" style={{ width: '60px', height: '60px', fontSize: '10px' }}>
-                                                                        <div>{month}</div>
-                                                                        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{day}</div>
-                                                                        <div>{year}</div>
-                                                                    </div>
-                                                                    <div className="me-2">
-                                                                        <h6 className="mb-1">{assignment.assignmentName || 'No Title'}</h6>
-                                                                        <small>{assignment.customerName || 'No Client'}</small>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="ms-auto">
-                                                                    <Link href='/Assignments' >
-                                                                        <button className="btn btn-outline-primary btn-icon">
-                                                                            <i className="ri-user-add-line ri-22px"></i>
-                                                                        </button>
-                                                                    </Link>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    )
-                                                })
-                                            ) : (
-                                                <li>No Assignments Found</li>
-                                            )}
+                                <div class="card mb-6">
+                                    <div class="card-body" style={{height: "283px"}}>
+                                        <small class="card-text text-uppercase text-muted small">Contacts</small>
+                                        <ul class="list-unstyled my-3 py-1">
+                                            <li class="d-flex align-items-center mb-4">
+                                                <i class="ri-phone-line ri-24px"></i><span class="fw-medium mx-2">Contact:</span>
+                                                <span>{userData.mobile || '(123) 456-7890'}</span>
+                                            </li>
+                                            <li class="d-flex align-items-center mb-2">
+                                                <i class="ri-mail-open-line ri-24px"></i><span class="fw-medium mx-2">Email:</span>
+                                                <span>{userData.email || 'john.doe@example.com'}</span>
+                                            </li>
+                                        </ul>
+                                        <small class="card-text text-uppercase text-muted small">Overview</small>
+                                        <ul class="list-unstyled mb-0 mt-3 pt-1">
+                                            <li class="d-flex align-items-center mb-4">
+                                                <i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Assignments:</span>
+                                                <span>{userData.totalAssignment || 0}</span>
+                                            </li>
+                                            <li class="d-flex align-items-center">
+                                                <i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Leads:</span>
+                                                <span>{userData.totalLeads || 0}</span>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="col-lg-12 col-xl-6">
-                                <div className="card card-action mb-6">
-                                    <div className="card-header align-items-center">
-                                        <h5 className="card-action-title mb-0">All Leads</h5>
-                                    </div>
-                                    <div className="card-body"  style={{height: "425px",overflowY: "scroll"}}>
-                                        <ul className="list-unstyled mb-0">
-                                            {leads.length > 0 ? (
-                                                leads.map((lead, index) => {
-
-                                                    const { month, day, year } = formatDateParts(lead.leadDate);
-
-                                                    return (
-                                                        <li key={index} className="mb-4">
-                                                            <div className="d-flex align-items-center">
-                                                                <div className="d-flex align-items-center">
-                                                                    <div className="avatar me-2 text-center bg-primary text-white rounded-circle d-flex flex-column justify-content-center align-items-center" style={{ width: '60px', height: '60px', fontSize: '10px' }}>
-                                                                        <div>{month}</div>
-                                                                        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{day}</div>
-                                                                        <div>{year}</div>
-                                                                    </div>
-                                                                    <div className="me-2">
-                                                                        <h6 className="mb-1">{lead.customerName || 'No Lead Name'}</h6>
-                                                                        <small>{lead.status || 'No Status'}</small>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="ms-auto">
-                                                                    <a href="javascript:;" className="badge bg-label-primary rounded-pill">
-                                                                        {lead.assignmentType || 'Lead'}
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    )
-                                                })
-                                            ) : (
-                                                <li>No Leads Found</li>
-                                            )}
+                                <div class="card mb-6">
+                                    <div class="card-body" style={{height: "283px"}}>
+                                        <small class="card-text text-uppercase text-muted small">Plan Details</small>
+                                        <ul class="list-unstyled my-3 py-1">
+                                            <li class="d-flex align-items-center mb-4">
+                                                <i class="ri-file-list-2-line ri-24px"></i><span class="fw-medium mx-2">Plan :</span>
+                                                <span>{planInfo?.planName}</span>
+                                            </li>
+                                            <li class="d-flex align-items-center mb-4">
+                                                <i class="ri-flag-line ri-24px"></i><span class="fw-medium mx-2">Status:</span>
+                                                <span>{planInfo?.planStatus}</span>
+                                            </li>
+                                            <li class="d-flex align-items-center mb-4">
+                                                <i class="ri-calendar-line ri-24px"></i><span class="fw-medium mx-2">Starts :</span>
+                                                <span>{new Date(planInfo?.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                            </li>
+                                            <li class="d-flex align-items-center">
+                                                <i class="ri-calendar-line ri-24px"></i><span class="fw-medium mx-2">Ends:</span>
+                                                <span>{new Date(planInfo?.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                            </li>
                                         </ul>
+
                                     </div>
                                 </div>
                             </div>

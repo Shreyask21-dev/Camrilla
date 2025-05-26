@@ -4,6 +4,7 @@ import axios from 'axios'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import countries from 'world-countries'
+import config from '../config/config'
 
 export default function Page() {
 
@@ -75,7 +76,7 @@ export default function Page() {
 
         try {
             console.log('Payload:', payload)
-            const res = await axios.post('https://api.camrilla.com/user/register', payload)
+            const res = await axios.post(`${config.BASE_URL}user/register`, payload)
             if (res.data.code === 0) {
                 setSuccessMsg('🎉 Registration successful! Redirecting to login...')
                 setTimeout(() => router.push('/Login'), 2000)

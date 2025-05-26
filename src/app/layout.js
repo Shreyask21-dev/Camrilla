@@ -9,6 +9,7 @@ import Navbar from "./Components/Navbar";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import MobileFallbackPage from './Components/MobileFallbackPage';
+import config from "./config/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,7 +62,7 @@ export default function RootLayout({ children }) {
   //           if (!refreshToken) throw new Error("No refresh token");
 
   //           const axiosInstance = axios.create(); // no headers
-  //           const res = await axiosInstance.post('https://api.camrilla.com/user/update-access-token', {
+  //           const res = await axiosInstance.post('${config.BASE_URL}user/update-access-token', {
   //             refreshToken: refreshToken,
   //           });
 
@@ -130,7 +131,7 @@ export default function RootLayout({ children }) {
               if (!refreshToken) throw new Error("No refresh token");
 
               const axiosInstance = axios.create();
-              const res = await axiosInstance.post('https://api.camrilla.com/user/update-access-token', {
+              const res = await axiosInstance.post(`${config.BASE_URL}user/update-access-token`, {
                 refreshToken: refreshToken,
               });
 

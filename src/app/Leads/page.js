@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import DatePicker from 'react-datepicker'
 import useSearchStore from '../store/searchStore'; // adjust path if needed
+import config from '../config/config';
 
 export default function Page() {
 
@@ -143,7 +144,7 @@ export default function Page() {
             assignmentDateTime: new Date(selectedLead.assignmentDateTime).getTime(), // back to timestamp
         };
 
-        axios.put(`https://api.camrilla.com/lead-manager/lead/${selectedLead.id}`, body)
+        axios.put(`${config.BASE_URL}lead-manager/lead/${selectedLead.id}`, body)
 
             .then(response => {
                 console.log('Lead Updated:', response.data);
@@ -172,7 +173,7 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.post('https://api.camrilla.com/lead-manager/lead', newLead)
+        axios.post(`${config.BASE_URL}lead-manager/lead`, newLead)
 
             .then(response => {
                 console.log('Lead Added:', response.data);
@@ -208,7 +209,7 @@ export default function Page() {
 
         const { accessToken } = JSON.parse(camrillaToken);
 
-        axios.get('https://api.camrilla.com/lead-manager/lead')
+        axios.get(`${config.BASE_URL}lead-manager/lead`)
             .then(response => {
                 console.log(response.data.data)
                 setLeads(response.data.data);
@@ -289,7 +290,7 @@ export default function Page() {
         };
 
         try {
-            const res = await axios.post('https://api.camrilla.com/order/assignment', payload);
+            const res = await axios.post(`${config.BASE_URL}order/assignment`, payload);
 
             if (res.data.code === 0) {
                 alert('Assignment Created Successfully');
@@ -318,7 +319,7 @@ export default function Page() {
         const { accessToken } = JSON.parse(camrillaToken);
 
         try {
-            const response = await axios.delete(`https://api.camrilla.com/lead-manager/lead/${selectedLead.id}`);
+            const response = await axios.delete(`${config.BASE_URL}lead-manager/lead/${selectedLead.id}`);
 
             console.log('Lead deleted:', response.data);
 

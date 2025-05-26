@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
+import config from '../config/config';
 
 export default function AddEventModal({ show, handleClose, allEvents, selectedDate, refreshEvents, preFilledDate }) {
 
@@ -83,7 +84,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
         // }
 
         try {
-            const res = await axios.post('https://api.camrilla.com/order/assignment', payload);
+            const res = await axios.post(`${config.BASE_URL}order/assignment`, payload);
             if (res.data.code === 0) {
                 alert('Assignment created successfully');
                 handleClose();

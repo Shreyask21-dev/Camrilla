@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { lookup } from 'country-data';
+import config from '../config/config';
 
 export default function Page() {
 
@@ -14,7 +15,7 @@ export default function Page() {
 
             try {
                 const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch('https://api.camrilla.com/payment-history', {
+                const res = await fetch(`${config.BASE_URL}payment-history`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -52,7 +53,7 @@ export default function Page() {
 
             try {
                 const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch('https://api.camrilla.com/user-plan', {
+                const res = await fetch(`${config.BASE_URL}user-plan`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }

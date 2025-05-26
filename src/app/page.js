@@ -16,6 +16,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 import useUserPlan from './hooks/useUserPlan';
 import useSearchStore from './store/searchStore'; // adjust as needed
+import config from './config/config';
 
 export default function Home() {
 
@@ -136,7 +137,7 @@ export default function Home() {
     }
 
     try {
-      const response = await axios.get(`https://api.camrilla.com/order/assignment`, {
+      const response = await axios.get(`${config.BASE_URL}order/assignment`, {
         params: {
           startDate,
           endDate,

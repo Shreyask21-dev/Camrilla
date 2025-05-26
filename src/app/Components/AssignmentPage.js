@@ -7,7 +7,7 @@ import EditEventModalAssignments from './EditEventModalAssignments';
 import AddNoteModal from './AddNoteModal';
 import TransactionModal from './TransactionModal';
 import useSearchStore from '../store/searchStore'; // adjust path if needed
-
+import config from '../config/config';
 
 export default function AssignmentPage() {
 
@@ -57,7 +57,7 @@ export default function AssignmentPage() {
             const startMillis = startDate.getTime();
             const endMillis = endDate.getTime();
 
-            const response = await axios.get(`https://api.camrilla.com/order/assignment`, {
+            const response = await axios.get(`${config.BASE_URL}order/assignment`, {
                 params: {
                     startDate: startMillis,
                     endDate: endMillis
@@ -164,12 +164,12 @@ export default function AssignmentPage() {
         }
 
         try {
-            await axios.put(`https://api.camrilla.com/order/assignment/${paymentAssignment.id}`, {
+            await axios.put(`${config.BASE_URL}order/assignment/${paymentAssignment.id}`, {
                 ...paymentAssignment,
                 totalAmount: Number(paymentAmount)
             });
 
-            await axios.post(`https://api.camrilla.com/order/assignment/${paymentAssignment.id}/transaction`, {
+            await axios.post(`${config.BASE_URL}order/assignment/${paymentAssignment.id}/transaction`, {
                 receivedPayment: 0,
                 receivedDate: Date.now(),
                 paymentNote
@@ -197,7 +197,7 @@ export default function AssignmentPage() {
         }
 
         try {
-            await axios.delete(`https://api.camrilla.com/order/assignment/${assignmentId}`);
+            await axios.delete(`${config.BASE_URL}order/assignment/${assignmentId}`);
 
             alert('Assignment deleted successfully');
             fetchAssignments(startOfMonth, endOfMonth); // Refresh after delete

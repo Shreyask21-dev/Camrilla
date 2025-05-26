@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
+import config from '../config/config';
 
 export default function AddNoteModal({ show, handleClose, assignmentData, refreshEvents }) {
   const [note, setNote] = useState('');
@@ -20,7 +21,7 @@ export default function AddNoteModal({ show, handleClose, assignmentData, refres
     }
 
     try {
-      await axios.put(`https://api.camrilla.com/order/assignment/${assignmentData.id}`, {
+      await axios.put(`${config.BASE_URL}order/assignment/${assignmentData.id}`, {
         customerName: assignmentData.customerName,
         customerMobile: assignmentData.customerMobile,
         customerEmail: assignmentData.customerEmail,

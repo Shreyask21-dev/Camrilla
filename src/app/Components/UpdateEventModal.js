@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Button, Tab, Tabs } from 'react-bootstrap';
 import axios from 'axios';
+import config from '../config/config';
 
 export default function UpdateEventModal({ show, handleClose, eventData, refreshEvents, selectedDate, allEvents }) {
     const [formData, setFormData] = useState({});
@@ -77,7 +78,7 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
         // }
 
         try {
-            const res = await axios.put(`https://api.camrilla.com/order/assignment/${eventData.id}`, payload);
+            const res = await axios.put(`${config.BASE_URL}order/assignment/${eventData.id}`, payload);
             if (res.data.code === 0) {
                 alert('Updated successfully');
                 handleClose();
@@ -101,7 +102,7 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
         //     headers: { Authorization: `Bearer ${token}` },
         // }
         try {
-            const res = await axios.delete(`https://api.camrilla.com/order/assignment/${eventData.id}`);
+            const res = await axios.delete(`${config.BASE_URL}order/assignment/${eventData.id}`);
             if (res.data.code === 0) {
                 alert('Deleted successfully');
                 handleClose();

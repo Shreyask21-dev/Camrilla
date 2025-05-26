@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import config from '../config/config'
 
 export default function Page() {
 
@@ -18,7 +19,7 @@ export default function Page() {
     e.preventDefault()
 
     try {
-      const response = await axios.post('https://api.camrilla.com/user/login', {
+      const response = await axios.post(`${config.BASE_URL}user/login`, {
         email,
         password
       })

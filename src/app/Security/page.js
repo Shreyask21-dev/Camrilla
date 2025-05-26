@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import config from '../config/config';
 
 export default function Page() {
 
@@ -33,7 +34,7 @@ export default function Page() {
 
     try {
       const response = await axios.post(
-        'https://api.camrilla.com/user/reset-password',
+        `${config.BASE_URL}user/reset-password`,
         {
           email: email,
           oldPassword: currentPassword,

@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react'
+import config from '../config/config';
 
 export default function Page() {
 
@@ -13,7 +14,7 @@ export default function Page() {
 
             try {
                 const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch('https://api.camrilla.com/payment-history', {
+                const res = await fetch(`${config.BASE_URL}payment-history`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -91,7 +92,7 @@ export default function Page() {
                                                                 <td>{formatDate(txn.paymentDate)}</td>
                                                                 <td>{txn.planName}</td>
                                                                 <td>{txn.amount}</td>
-                                                                <td>{txn.paymentStatus}</td>
+                                                                <td className={txn.paymentStatus === 'SUCCESS' ? 'text-success' : 'text-danger'}>{txn.paymentStatus}</td>
                                                                 <td>{txn.currency}</td>
                                                                 <td>{txn.orderId}</td>
                                                             </tr>

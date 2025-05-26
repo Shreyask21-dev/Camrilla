@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Button, Tab, Tabs, Table } from 'react-bootstrap';
 import axios from 'axios';
+import config from '../config/config';
 
 export default function EditEventModalAssignments({ show, handleClose, eventData, refreshEvents, selectedDate, allEvents }) {
     const [key, setKey] = useState('customer');
@@ -72,7 +73,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         // }
 
         try {
-            await axios.put(`https://api.camrilla.com/order/assignment/${eventData.id}`, payload);
+            await axios.put(`${config.BASE_URL}order/assignment/${eventData.id}`, payload);
             alert('Assignment updated');
             handleClose();
             refreshEvents(selectedDate);
@@ -87,7 +88,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
     // }
     const handleDeleteFunction = async (functionId) => {
 
-        await axios.delete(`https://api.camrilla.com/order/assignment/${eventData.id}/function/${functionId}`);
+        await axios.delete(`${config.BASE_URL}order/assignment/${eventData.id}/function/${functionId}`);
         // Update local state immediately to reflect deletion in the table
         setFunctions(prevFunctions => prevFunctions.filter(func => func.id !== functionId));
         alert("Function deleted successfully");
@@ -95,7 +96,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
     };
 
     const handleDeleteTransaction = async (transactionId) => {
-        await axios.delete(`https://api.camrilla.com/order/assignment/${eventData.id}/transaction/${transactionId}`);
+        await axios.delete(`${config.BASE_URL}order/assignment/${eventData.id}/transaction/${transactionId}`);
         // , {
         //     headers: { Authorization: `Bearer ${token}` },
         // }
@@ -106,7 +107,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
 
     const handleDeleteAssignment = async () => {
         if (!window.confirm('Delete this assignment?')) return;
-        await axios.delete(`https://api.camrilla.com/order/assignment/${eventData.id}`);
+        await axios.delete(`${config.BASE_URL}order/assignment/${eventData.id}`);
         alert('Assignment deleted');
         // , {
         //     headers: { Authorization: `Bearer ${token}` },
@@ -121,7 +122,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         try {
             if (editingFunction) {
                 // Update existing function
-                await axios.put(`https://api.camrilla.com/order/assignment/${eventData.id}/function/${editingFunction.id}`, {
+                await axios.put(`${config.BASE_URL}order/assignment/${eventData.id}/function/${editingFunction.id}`, {
                     ...newFunction,
                     functionDateTime,
                 });
@@ -139,7 +140,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
 
             } else {
                 // Add new function
-                const response = await axios.post(`https://api.camrilla.com/order/assignment/${eventData.id}/function`, {
+                const response = await axios.post(`${config.BASE_URL}order/assignment/${eventData.id}/function`, {
                     ...newFunction,
                     functionDateTime,
                 });
@@ -190,7 +191,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         const receivedDate = new Date(newTransaction.receivedDate).getTime();
         try {
             if (editingTransaction) {
-                await axios.put(`https://api.camrilla.com/order/assignment/${eventData.id}/transaction/${editingTransaction.id}`, {
+                await axios.put(`${config.BASE_URL}order/assignment/${eventData.id}/transaction/${editingTransaction.id}`, {
                     ...newTransaction,
                     receivedDate,
                 });
@@ -207,7 +208,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
                 );
                 alert('Transaction updated');
             } else {
-                const response = await axios.post(`https://api.camrilla.com/order/assignment/${eventData.id}/transaction`, {
+                const response = await axios.post(`${config.BASE_URL}order/assignment/${eventData.id}/transaction`, {
                     ...newTransaction,
                     receivedDate,
                 });

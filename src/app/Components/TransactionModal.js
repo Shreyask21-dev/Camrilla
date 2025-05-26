@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Form, Button, Table } from 'react-bootstrap';
 import axios from 'axios';
+import config from '../config/config';
 
 export default function TransactionModal({ show, handleClose, assignment, refresh }) {
     const [transactions, setTransactions] = useState([]);
@@ -20,7 +21,7 @@ export default function TransactionModal({ show, handleClose, assignment, refres
 
         try {
             if (editingTransaction) {
-                await axios.put(`https://api.camrilla.com/order/assignment/${assignment.id}/transaction/${editingTransaction.id}`, {
+                await axios.put(`${config.BASE_URL}order/assignment/${assignment.id}/transaction/${editingTransaction.id}`, {
                     ...newTransaction,
                     receivedDate,
                 });
@@ -33,7 +34,7 @@ export default function TransactionModal({ show, handleClose, assignment, refres
                 );
                 alert('Transaction updated');
             } else {
-                const response = await axios.post(`https://api.camrilla.com/order/assignment/${assignment.id}/transaction`, {
+                const response = await axios.post(`${config.BASE_URL}order/assignment/${assignment.id}/transaction`, {
                     ...newTransaction,
                     receivedDate,
                 });
@@ -67,7 +68,7 @@ export default function TransactionModal({ show, handleClose, assignment, refres
     };
 
     const handleDeleteTransaction = async (transactionId) => {
-        await axios.delete(`https://api.camrilla.com/order/assignment/${assignment.id}/transaction/${transactionId}`);
+        await axios.delete(`${config.BASE_URL}order/assignment/${assignment.id}/transaction/${transactionId}`);
         setTransactions(prev => prev.filter(txn => txn.id !== transactionId));
         alert('Transaction deleted');
         refresh();

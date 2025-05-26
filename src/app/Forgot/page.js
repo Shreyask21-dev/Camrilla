@@ -3,6 +3,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import config from '../config/config';
 
 export default function Page() {
 
@@ -13,7 +14,7 @@ export default function Page() {
     // const handleSubmit = async (e) => {
     //     e.preventDefault();
     //     try {
-    //         const response = await axios.post('https://api.camrilla.com/user/forget-password', {
+    //         const response = await axios.post('${config.BASE_URL}user/forget-password', {
     //             email: email,
     //         });
     //         console.log('Success:', response.data);
@@ -28,7 +29,7 @@ export default function Page() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('https://api.camrilla.com/n/api/auth/reset-password', {
+            const response = await axios.post(`${config.BASE_URL}n/api/auth/reset-password`, {
                 email: email,
             });
             console.log('Success:', response.data);
