@@ -14,8 +14,7 @@ export default function Page() {
     const [assignments, setAssignments] = useState([]);
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
-
-
+    
     const fetchUserPlan = async () => {
         const tokenData = localStorage.getItem('camrilla_token');
         if (!tokenData) return;
