@@ -184,12 +184,12 @@ export default function Page() {
                                                 data-bs-toggle="collapse"
                                                 data-bs-target="#accordionPayment-3"
                                                 aria-controls="accordionPayment-3">
-                                                I'm facing issues while making a payment. What should I do?
+                                                I am facing issues while making a payment. What should I do?
                                             </button>
                                         </h2>
                                         <div id="accordionPayment-3" class="accordion-collapse collapse">
                                             <div class="accordion-body">
-                                                If you're facing any technical issues during payment, please reach out via our <a href="javascript:void(0);">support portal</a>, or email us at <a href="mailto:support@camrilla.com">support@camrilla.com</a>.
+                                                If you are facing any technical issues during payment, please reach out via our <a href="javascript:void(0);">support portal</a>, or email us at <a href="mailto:support@camrilla.com">support@camrilla.com</a>.
                                             </div>
                                         </div>
                                     </div>
@@ -202,12 +202,12 @@ export default function Page() {
                                                 data-bs-toggle="collapse"
                                                 data-bs-target="#accordionPayment-4"
                                                 aria-controls="accordionPayment-4">
-                                                What happens if I don't renew my subscription?
+                                                What happens if I do not renew my subscription?
                                             </button>
                                         </h2>
                                         <div id="accordionPayment-4" class="accordion-collapse collapse">
                                             <div class="accordion-body">
-                                                If your subscription isn't renewed before the expiry date, access to premium features will be paused. Your data remains safe and can be reactivated anytime by resubscribing.
+                                                If your subscription is not renewed before the expiry date, access to premium features will be paused. Your data remains safe and can be reactivated anytime by resubscribing.
                                             </div>
                                         </div>
                                     </div>
@@ -389,7 +389,7 @@ export default function Page() {
                                         </h2>
                                         <div id="accordionPlan-2" class="accordion-collapse collapse">
                                             <div class="accordion-body">
-                                                You can upgrade your plan at any time to access more features. However, downgrading to a lower plan is not supported once you've upgraded.
+                                                You can upgrade your plan at any time to access more features. However, downgrading to a lower plan is not supported once you have upgraded.
                                             </div>
                                         </div>
                                     </div>
