@@ -202,13 +202,23 @@ export default function Page() {
                             <div className="pricing-plans row mx-4 gy-3 px-lg-12 mt-5">
                                 {plans.length > 0 ? (
                                     plans.map((plan, index) => {
-                                        
+
                                         const features = JSON.parse(plan.feature);
 
                                         return (
-                                            <div key={plan.id} className="col-lg mb-lg-0 mb-3">
-                                                <div className={`card border ${index === 1 ? 'border-primary' : ''} shadow-none`}>
-                                                    <div className="card-body pt-12">
+                                            <div key={plan.id} className="col-md-6 mb-4 d-flex justify-content-center" style={{
+                                                flexGrow: plan.planName.toLowerCase() === 'professional' ? 1.1 : 1,
+                                            }}>
+                                                <div className={`card border position-relative ${plan.planName.toLowerCase() === 'professional' ? 'highlight-plan' : ''}`}
+                                                    style={{
+                                                        width: plan.planName.toLowerCase() === 'professional' ? '100%' : '95%',
+                                                        maxWidth: plan.planName.toLowerCase() === 'professional' ? '480px' : '420px',
+                                                    }}>
+
+                                                    {plan.planName.toLowerCase() === 'professional' && (
+                                                        <div className="recommended-badge">Recommended</div>
+                                                    )}
+                                                    <div className="card-body pt-4 pb-4 px-3">
                                                         <div className="mt-3 mb-5 text-center">
                                                             <img
                                                                 src={`/assets/img/illustrations/pricing-basic.png`}
@@ -230,18 +240,18 @@ export default function Page() {
                                                             </div>
                                                         </div>
 
-                                                        <ul className="list-group ps-6 my-5 pt-4">
+                                                        <ul className="list-group my-3 pt-2" style={{ paddingLeft: "28%" }}>
                                                             {features.map((feature, idx) => (
-                                                                <li key={idx} className="mb-4">{feature}</li>
+                                                                <li key={idx} className="mb-2 small">{feature}</li>
                                                             ))}
                                                         </ul>
 
-                                                        {!( 
+                                                        {!(
                                                             (plan.planName === 'Basic' &&
                                                                 plan.monthlyAmount === 0.0 &&
                                                                 plan.monthlyDisscountedAmount === 0.0 &&
                                                                 plan.finalAmount === 0.0) ||
-                                                            (activePlan?.planId === plan.id) 
+                                                            (activePlan?.planId === plan.id)
                                                         ) && (
                                                                 <div className="coupon-section mb-4 text-center">
                                                                     <input
@@ -270,7 +280,7 @@ export default function Page() {
                                                                     )}
                                                                 </div>
                                                             )}
-                                                        
+
 
                                                         {!(plan.planName === 'Basic' &&
                                                             plan.monthlyAmount === 0.0 &&
