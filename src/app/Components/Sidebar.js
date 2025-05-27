@@ -61,7 +61,7 @@ export default function Sidebar() {
         onMouseLeave={handleMouseLeave}
       >
         <div className="app-brand demo">
-          <Link href="index.html" className="aap-brand-link">
+          <Link href="/" className="aap-brand-link">
             <span style={{ display: "flex", alignItems: "center" }}>
               <span>
                 <img src="/images/logo.png" width="45" />

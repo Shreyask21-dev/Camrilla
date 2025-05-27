@@ -135,7 +135,7 @@ export default function Page() {
               </form>
 
               <p className="text-center">
-                <span>New on our platform? </span>
+                <span>New to Camrilla? </span>
                 <Link href="/Signup">
                   <span>Create an account</span>
                 </Link>

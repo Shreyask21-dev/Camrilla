@@ -232,28 +232,7 @@ export default function Page() {
                                     <span>Sign in instead</span>
                                 </Link>
                             </p>
-
-                            <div className="divider my-5">
-                                <div className="divider-text">or</div>
-                            </div>
-
-                            <div className="d-flex justify-content-center gap-2">
-                                <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-facebook">
-                                    <i className="tf-icons ri-facebook-fill"></i>
-                                </a>
-
-                                <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-twitter">
-                                    <i className="tf-icons ri-twitter-fill"></i>
-                                </a>
-
-                                <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-github">
-                                    <i className="tf-icons ri-github-fill"></i>
-                                </a>
-
-                                <a href="javascript:;" className="btn btn-icon rounded-circle btn-text-google-plus">
-                                    <i className="tf-icons ri-google-fill"></i>
-                                </a>
-                            </div>
+                            
                         </div>
                     </div>
 
