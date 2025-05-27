@@ -4,6 +4,7 @@ import axios from 'axios';
 import Script from 'next/script'; // For Razorpay script
 import config from '../config/config';
 
+
 export default function Page() {
 
     const [activePlan, setActivePlan] = useState(null);
