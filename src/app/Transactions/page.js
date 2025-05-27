@@ -53,14 +53,12 @@ export default function Page() {
                                     ><i className="ri-group-line me-2"></i>Account</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <a className="nav-link" href="/Security"
-                                    ><i className="ri-lock-line me-2"></i>Security</a
-                                    >
+                                    <Link className="nav-link" href="/Security"
+                                    ><i className="ri-lock-line me-2"></i>Security</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <a className="nav-link active" href="/Transactions"
-                                    ><i className="ri-lock-line me-2"></i>Transactions</a
-                                    >
+                                    <Link className="nav-link active" href="/Transactions"
+                                    ><i className="ri-bank-line me-2"></i>Transactions</Link>
                                 </li>
 
                             </ul>

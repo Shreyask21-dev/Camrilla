@@ -8,6 +8,7 @@ import useUserPlan from '../hooks/useUserPlan';
 export default function Sidebar() {
 
   const token = JSON.parse(localStorage.getItem('camrilla_token'));
+  const userData = JSON.parse(localStorage.getItem('userData'));
 
   const planInfo = useUserPlan();
 
@@ -83,9 +84,7 @@ export default function Sidebar() {
         <ul className="menu-inner py-1">
 
           <li className={`menu-item ${pathname === '/' ? 'active' : ''}`}>
-            <Link href="/" className="menu-link "
-
-            >
+            <Link href="/" className="menu-link ">
               <i className="menu-icon tf-icons ri-bar-chart-line"></i>
               <div data-i18n="Dashboards">Dashboards</div>
             </Link>
@@ -95,6 +94,7 @@ export default function Sidebar() {
             <Link href="/Assignments" className="menu-link ">
               <i className="menu-icon  tf-icons ri-bill-line"></i>
               <div data-i18n="Assignments">Assignments</div>
+              <div class="badge bg-danger rounded-pill ms-auto">{userData?.totalAssignment}</div>
             </Link>
           </li>
 
@@ -102,6 +102,7 @@ export default function Sidebar() {
             <Link href="/Leads" className="menu-link ">
               <i className="menu-icon tf-icons ri-edit-line"></i>
               <div data-i18n="Leads">Leads</div>
+              <div class="badge bg-danger rounded-pill ms-auto">{userData?.totalLeads}</div>
             </Link>
           </li>
 

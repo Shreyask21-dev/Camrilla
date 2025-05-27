@@ -222,7 +222,7 @@ export default function Page() {
                                                     <div className="card-body pt-4 pb-4 px-3">
                                                         <div className="mt-3 mb-5 text-center">
                                                             <img
-                                                                src={`/assets/img/illustrations/pricing-basic.png`}
+                                                                src={`/assets/img/illustrations/${plan?.planName === 'Basic' ? 'pricing-basic.png' : 'pricing-standard.png'}`}
                                                                 alt="Plan"
                                                                 height="100"
                                                             />
