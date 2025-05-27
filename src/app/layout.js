@@ -31,74 +31,6 @@ export default function RootLayout({ children }) {
   const pathname = usePathname()
   const [isMobile, setIsMobile] = useState(false);
 
-  // useEffect(() => {
-  //   const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
-  //   const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/forgot' || pathname.toLowerCase() === '/signup';
-
-  //   // Mobile detection
-  //   const checkMobile = () => {
-  //     setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
-  //   };
-  //   checkMobile();
-  //   window.addEventListener('resize', checkMobile);
-
-  //   if (!tokenData?.accessToken && !isAuthPage) {
-  //     router.push('/Login');
-  //     return;
-  //   }
-
-  //   // Set token to axios defaults
-  //   axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData?.accessToken}`;
-
-  //   // Axios response interceptor
-  //   const interceptor = axios.interceptors.response.use(
-  //     response => response,
-  //     async error => {
-  //       if (error.response && error.response.status === 401) {
-  //         try {
-  //           const storedToken = JSON.parse(localStorage.getItem('camrilla_token'));
-  //           const refreshToken = storedToken?.refreshToken;
-
-  //           if (!refreshToken) throw new Error("No refresh token");
-
-  //           const axiosInstance = axios.create(); // no headers
-  //           const res = await axiosInstance.post('${config.BASE_URL}user/update-access-token', {
-  //             refreshToken: refreshToken,
-  //           });
-
-  //           const newAccessToken = res.data?.data?.token?.accessToken;
-  //           const newRefreshToken = res.data?.data?.token?.refreshToken;
-
-  //           if (newAccessToken && newRefreshToken) {
-  //             localStorage.setItem('camrilla_token', JSON.stringify({
-  //               accessToken: newAccessToken,
-  //               refreshToken: newRefreshToken
-  //             }));
-  //             axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-  //             error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
-  //             console.log("🔄 Access token refreshed");
-  //             return axios(error.config);
-  //           } else {
-  //             throw new Error("Token refresh failed");
-  //           }
-  //         } catch (refreshError) {
-  //           console.error("🚫 Token refresh failed", refreshError);
-  //           localStorage.clear();
-  //           router.push('/Login');
-  //         }
-  //       }
-  //       return Promise.reject(error);
-  //     }
-  //   );
-
-
-  //   return () => {
-  //     axios.interceptors.response.eject(interceptor);
-  //     window.removeEventListener('resize', checkMobile);
-  //   };
-  // }, [pathname, router]);
-
-
   useEffect(() => {
     const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
     const isAuthPage = pathname.toLowerCase() === '/login' || pathname.toLowerCase() === '/forgot' || pathname.toLowerCase() === '/signup';
@@ -111,7 +43,7 @@ export default function RootLayout({ children }) {
 
     const runAuthLogic = async () => {
       if (!tokenData?.accessToken && !isAuthPage) {
-        router.push('/Login');
+        router.replace('/Login');
         setLoading(false);
         return;
       }
@@ -177,9 +109,25 @@ export default function RootLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="preloader">Loading...</div> // You can style this later
+      <html lang="en">
+        <body>
+          <div className="preloader"
+            style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#fff',
+              zIndex: 9999
+            }}>
+            Loading...
+          </div>
+        </body>
+      </html>
     );
   }
+
 
   return (
     <html lang="en"
@@ -222,7 +170,24 @@ export default function RootLayout({ children }) {
         <link rel="stylesheet" href="/assets/vendor/css/pages/page-pricing.css" />
 
       </head>
+
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+
+        {isMobile ? (
+          <MobileFallbackPage />
+        ) : isAuthPage ? (
+          <>{children}</>
+        ) : (
+          <div className="layout-wrapper layout-content-navbar">
+            <div className="layout-container">
+              <Sidebar />
+              <div className="layout-page">
+                <Navbar />
+                <div className="content-wrapper">{children}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Script src="/assets/vendor/js/helpers.js" strategy="beforeInteractive" />
         <Script src="/assets/vendor/js/template-customizer.js" strategy="beforeInteractive" />
@@ -251,24 +216,6 @@ export default function RootLayout({ children }) {
 
         <Script src="/assets/js/pages-auth.js" />
         <Script src="/assets//js/pages-pricing.js" />
-
-        {isMobile ? (
-          <MobileFallbackPage />
-        ) : isAuthPage ? (
-          <>{children}</>
-        ) : (
-          <div className="layout-wrapper layout-content-navbar">
-            <div className="layout-container">
-              <Sidebar />
-              <div className="layout-page">
-                <Navbar />
-                <div className="content-wrapper">
-                  {children}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
       </body>
     </html>

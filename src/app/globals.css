@@ -136,6 +136,7 @@ h2#fc-dom-86 {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: 600;
-  font-size: 20px;
+  font-size: 1.5rem;
+  background-color: white;
+  z-index: 9999;
 }
