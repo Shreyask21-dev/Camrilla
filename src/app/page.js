@@ -18,6 +18,7 @@ import useUserPlan from './hooks/useUserPlan';
 import useSearchStore from './store/searchStore'; // adjust as needed
 import config from './config/config';
 import BasicPlanNotice from './Components/BasicPlanNotice';
+import { useRouter } from 'next/navigation'
 
 const normalize = (str) => str?.trim().toLowerCase();
 
@@ -26,6 +27,11 @@ const bootstrapColors = [
 ];
 
 export default function Home() {
+
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
 
   const handleCloseBasicModal = () => {
     setShowBasicModal(false);
@@ -389,6 +395,50 @@ export default function Home() {
       );
     });
   };
+
+  useEffect(() => {
+    const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
+    if (!tokenData?.accessToken) {
+      router.replace('/Login');
+    } else {
+      setIsAuthenticated(true);
+    }
+    setAuthChecked(true);
+  }, [router]);
+
+  if (!authChecked) {
+    return (
+      <div
+        style={{
+          height: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontSize: '1.2rem',
+          fontWeight: '500'
+        }}
+      >
+        Loading...
+      </div>)// Don't render anything yet
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div
+        style={{
+          height: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontSize: '1.2rem',
+          fontWeight: '500'
+        }}
+      >
+        Redirecting to login...
+      </div>
+    ); // Prevent even a single frame of UI before redirect
+  }
+
 
 
   return (

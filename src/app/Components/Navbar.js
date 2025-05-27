@@ -7,6 +7,8 @@ import useSearchStore from '../store/searchStore'; // adjust the path
 
 export default function Navbar() {
 
+    const token = JSON.parse(localStorage.getItem('camrilla_token'));
+
     const { setSearchTerm } = useSearchStore();
 
     const handleSearchChange = (e) => {
@@ -33,11 +35,13 @@ export default function Navbar() {
         const parsedData = JSON.parse(data);
         console.log('Parsed User Data:', parsedData);
         if (parsedData) {
-        setUserData(parsedData);
+            setUserData(parsedData);
         } else {
-        setUserData({ name: '', email: '' });
+            setUserData({ name: '', email: '' });
         }
     }, []);
+
+     if (!token?.accessToken) return null;
 
     return (
         <div>
@@ -55,7 +59,7 @@ export default function Navbar() {
 
                     <div className="navbar-nav align-items-center">
                         <div className="nav-item navbar-search-wrapper mb-0">
-                           
+
 
                             <div className="position-relative border border-top-0 border-start-0 border-end-0 " style={{ width: "67.5vw" }}>
                                 <i

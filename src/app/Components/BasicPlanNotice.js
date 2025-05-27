@@ -93,7 +93,7 @@ export default function BasicPlanNotice({ show, handleClose }) {
                   ₹{professionalPlan.monthlyAmount}
                 </small>
               </div>
-              <Button variant="primary" href="/Subscriptions">
+              <Button variant="primary" href="/Subscriptions" onClick={handleClose}>
                 Subscribe Now
               </Button>
             </div>

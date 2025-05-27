@@ -7,6 +7,8 @@ import useUserPlan from '../hooks/useUserPlan';
 
 export default function Sidebar() {
 
+  const token = JSON.parse(localStorage.getItem('camrilla_token'));
+
   const planInfo = useUserPlan();
 
   const pathname = usePathname();
@@ -44,6 +46,8 @@ export default function Sidebar() {
     }
   };
 
+  if (!token?.accessToken) return null;
+
   return (
     <div>
       {/* className="layout-menu menu-vertical menu bg-menu-theme" */}
@@ -58,7 +62,7 @@ export default function Sidebar() {
       >
         <div className="app-brand demo">
           <Link href="index.html" className="aap-brand-link">
-            <span style={{display:"flex", alignItems:"center"}}>
+            <span style={{ display: "flex", alignItems: "center" }}>
               <span>
                 <img src="/images/logo.png" width="45" />
               </span>
@@ -115,8 +119,8 @@ export default function Sidebar() {
             </Link>
           </li>
 
-          <li class="menu-header mt-5">
-            <span class="menu-header-text">User &amp; Profile</span>
+          <li className="menu-header mt-5">
+            <span className="menu-header-text">User &amp; Profile</span>
           </li>
 
           <li className={`menu-item ${pathname === '/Profile' ? 'active' : ''} `}>
@@ -133,8 +137,8 @@ export default function Sidebar() {
             </Link>
           </li>
 
-          <li class="menu-header mt-5">
-            <span class="menu-header-text">Join &amp; Us </span>
+          <li className="menu-header mt-5">
+            <span className="menu-header-text">Join &amp; Us </span>
           </li>
 
           <li className="menu-item">
