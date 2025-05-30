@@ -371,7 +371,7 @@ export default function Page() {
                                         </h2>
                                         <div id="accordionPlan-1" class="accordion-collapse collapse show">
                                             <div class="accordion-body">
-                                                We offer flexible monthly subscription plans designed to suit different user needs. You can choose a plan that fits your requirements and upgrade as needed. Visit our <Link href="/Subscriptions">Plans page</Link> to learn more.
+                                                We offer flexible yearly subscription plans designed to suit different user needs. You can choose a plan that fits your requirements and upgrade as needed. Visit our <Link href="/Subscriptions">Plans page</Link> to learn more.
                                             </div>
                                         </div>
                                     </div>
