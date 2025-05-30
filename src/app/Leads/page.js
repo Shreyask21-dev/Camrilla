@@ -396,13 +396,17 @@ export default function Page() {
             case 'all':
                 return 'All Leads';
             case 'lastMonth':
-                return 'Last Month Leads';
+                const now = new Date();
+                const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const monthName2 = lastMonth.toLocaleString('default', { month: 'long' });
+                const year = lastMonth.getFullYear();
+                return `Leads - ${monthName2} ${year}`;
             case 'currentYear':
-                return 'Current Year Leads';
+                return `Leads - Year ${currentYear}`;
             case 'lastYear':
-                return 'Last Year Leads';
+                return `Leads - Year ${currentYear - 1}`;
             default:
-                return `${monthName} Leads`;
+                return `Leads - ${monthName} ${currentYear}`;
         }
     };
 
@@ -510,15 +514,6 @@ export default function Page() {
                                     <h5 class="card-title m-0 me-2  py-1">{getLeadsTitle()}</h5>
                                     <div class="dropdown">
                                         <div className="d-flex flex-wrap align-items-center gap-3">
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    checked={dateRangeFilter === 'all'}
-                                                    onChange={() => setDateRangeFilter('all')}
-                                                />
-                                                <label className="form-check-label" htmlFor="range-all">All</label>
-                                            </div>
 
                                             <div className="form-check form-check-inline">
                                                 <input
@@ -529,8 +524,6 @@ export default function Page() {
                                                 />
                                                 <label className="form-check-label" >Last Month</label>
                                             </div>
-
-
 
                                             <div className="form-check form-check-inline">
                                                 <input
@@ -550,6 +543,16 @@ export default function Page() {
                                                     onChange={() => setDateRangeFilter('lastYear')}
                                                 />
                                                 <label className="form-check-label">Last Year</label>
+                                            </div>
+
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    checked={dateRangeFilter === 'all'}
+                                                    onChange={() => setDateRangeFilter('all')}
+                                                />
+                                                <label className="form-check-label" htmlFor="range-all">All</label>
                                             </div>
 
 

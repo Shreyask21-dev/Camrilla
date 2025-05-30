@@ -187,14 +187,14 @@ export default function Sidebar() {
           </li>
 
           <li className="menu-item">
-            <Link href="https://www.facebook.com/camrillathecommunity/" target='_blank' className="menu-link">
+            <Link href="https://www.facebook.com/camrillatheapp/" target='_blank' className="menu-link">
               <i className="menu-icon tf-icons ri-facebook-circle-fill"></i>
               <div data-i18n="Facebook">Facebook</div>
             </Link>
           </li>
 
           <li className="menu-item">
-            <Link href="https://www.instagram.com/camrilla_photography_club/" target='_blank' className="menu-link">
+            <Link href="https://www.instagram.com/camrilla_photographers_app/" target='_blank' className="menu-link">
               <i className="menu-icon tf-icons ri-instagram-line"></i>
               <div data-i18n="Instagram">Instagram</div>
             </Link>

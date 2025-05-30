@@ -189,7 +189,7 @@ export default function Page() {
                                         </h2>
                                         <div id="accordionPayment-3" class="accordion-collapse collapse">
                                             <div class="accordion-body">
-                                                If you are facing any technical issues during payment, please reach out via our <a href="javascript:void(0);">support portal</a>, or email us at <a href="mailto:support@camrilla.com">support@camrilla.com</a>.
+                                                If you are facing any technical issues during payment, please reach out via our <a href="javascript:void(0);">support portal</a>, or email us at <a href="mailto:camrilla.app@gmail.com">camrilla.app@gmail.com</a>.
                                             </div>
                                         </div>
                                     </div>

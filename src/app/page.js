@@ -112,15 +112,15 @@ export default function Home() {
   const handleMonthChange = (date) => {
     console.log("New month displayed:", date.getMonth() + 1, date.getFullYear());
 
+    setSelectedDate(date);
+
     const calendarApi = calendarRef.current.getApi();
     calendarApi.gotoDate(date);
 
-    // Fetch order data for the selected month
     fetchOrders(date);
   };
 
   useEffect(() => {
-    // const activeNames = Object.keys(assignmentFilters).filter(key => assignmentFilters[key]);
     const activeNormalizedNames = Object.keys(assignmentFilters)
       .filter(key => assignmentFilters[key])
       .map(name => normalize(name));
@@ -151,10 +151,6 @@ export default function Home() {
         (e.transactions || []).some(t => t.paymentNote?.toLowerCase().includes(text))
       );
     };
-
-    // const filtered = allEvents.filter(ev =>
-    //   activeNames.includes(ev.title) && (!searchTerm || matchesSearch(ev))
-    // );
 
     setCalendarEvents(filtered);
   }, [assignmentFilters, allEvents, searchTerm]);
@@ -197,16 +193,6 @@ export default function Home() {
           }
         });
 
-        // const mappedEvents = response.data.data.map(item => ({
-        //   id: item.id,
-        //   title: item.assignmentName || 'No Title',
-        //   start: new Date(item.assignmentDateTime),
-        //   end: new Date(item.assignmentDateTime),
-        //   extendedProps: {
-        //     ...item,
-        //   },
-        // }));
-
         const mappedEvents = response.data.data.map(item => {
           const rawName = item.assignmentName?.trim() || 'No Title';
           const normalized = normalize(rawName);
@@ -226,19 +212,8 @@ export default function Home() {
           };
         });
 
-
-        // Create a filter map with all assignment names selected
-        // const uniqueAssignments = [...new Set(mappedEvents.map(ev => ev.title))];
-        // const filterMap = {};
-        // uniqueAssignments.forEach(name => {
-        //   filterMap[name] = true;
-        // });
-
         setAllEvents(mappedEvents);         // store full list
         setCalendarEvents(mappedEvents);    // show all events initially
-        // setAssignmentFilters(filterMap);    // update filters
-
-
 
         mappedEvents.forEach(event => {
           const rawName = event.title?.trim();
@@ -439,6 +414,7 @@ export default function Home() {
     ); // Prevent even a single frame of UI before redirect
   }
 
+  const formattedMonth = selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
 
   return (
@@ -477,8 +453,13 @@ export default function Home() {
           </div>
         )}
 
+        {selectedDate && (
+          <div className="text-center fw-bold my-5" style={{ fontSize: '1.2rem' }}>
+            📅 Showing Assignments & Statistics for: {formattedMonth}
+          </div>
+        )}
 
-        <div className="row g-6 mt-1">
+        <div className="row g-6 ">
           <div className="col-sm-6 col-lg-3" onClick={() => handleCardClick('total')}>
             <div className="card card-border-shadow-primary h-100">
               <div className="card-body">

@@ -350,14 +350,22 @@ export default function AssignmentPage() {
             case 'All':
                 return 'All Assignments';
             case 'LastMonth':
-                return 'Last Month Assignments';
+                const currentMonthIndex = currentDate.getMonth(); // Get the current month (0-11)
+                const lastMonthIndex = (currentMonthIndex - 1 + 12) % 12; // Calculate the last month index
+                const lastMonthName = new Date(currentDate.getFullYear(), lastMonthIndex).toLocaleString('default', { month: 'long' });
+                const curr_year = currentDate.toLocaleString('default', { year: 'numeric' })
+                return `Assignments - ${lastMonthName} ${curr_year}`;
             case 'CurrentYear':
-                return 'Current Year Assignments';
+                const year = currentDate.toLocaleString('default', { year: 'numeric' })
+                return `Assignments - Year ${year}`;
             case 'LastYear':
-                return 'Last Year Assignments';
+                const current_year = currentDate.toLocaleString('default', { year: 'numeric' })
+                const lastYear = current_year - 1
+                return `Assignments - Year ${lastYear}`;
             default: {
                 const monthName = currentDate.toLocaleString('default', { month: 'long' });
-                return `${monthName} Assignments`;
+                const year = currentDate.toLocaleString('default', { year: 'numeric' })
+                return `Assignments - ${monthName} ${year}`;
             }
         }
     };
@@ -450,17 +458,6 @@ export default function AssignmentPage() {
                                                     className="form-check-input"
                                                     type="radio"
                                                     name="timeFilter"
-                                                    id="filterAll"
-                                                    checked={timeFilter === "All"}
-                                                    onChange={() => handleTimeFilterChange("All")}
-                                                />
-                                                <label className="form-check-label" htmlFor="filterAll">All</label>
-                                            </div>
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    name="timeFilter"
                                                     id="filterLastMonth"
                                                     checked={timeFilter === "LastMonth"}
                                                     onChange={() => handleTimeFilterChange("LastMonth")}
@@ -488,6 +485,17 @@ export default function AssignmentPage() {
                                                     onChange={() => handleTimeFilterChange("LastYear")}
                                                 />
                                                 <label className="form-check-label" htmlFor="filterLastYear">Last Year</label>
+                                            </div>
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="timeFilter"
+                                                    id="filterAll"
+                                                    checked={timeFilter === "All"}
+                                                    onChange={() => handleTimeFilterChange("All")}
+                                                />
+                                                <label className="form-check-label" htmlFor="filterAll">All</label>
                                             </div>
                                         </div>
 
@@ -527,7 +535,7 @@ export default function AssignmentPage() {
                                                                 <span>- {assignment.assignmentAddress || '-'}</span>
                                                             </div>
                                                         </div>
-  
+
                                                         {/* Action Buttons Column */}
                                                         <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '120px' }}>
                                                             <div className="d-flex gap-2">

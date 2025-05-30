@@ -134,7 +134,13 @@ export default function Navbar() {
                                 </li>
 
                                 <li>
-                                    <Link className="dropdown-item" href="https://www.instagram.com/camrilla_photography_club/" target='_blank'>
+                                    <Link className="dropdown-item" href="https://www.facebook.com/camrillatheapp/" target='_blank'>
+                                        <i className="menu-icon tf-icons ri-facebook-circle-fill"></i><span className="align-middle">Facebook</span>
+                                    </Link>
+                                </li>
+
+                                <li>
+                                    <Link className="dropdown-item" href="https://www.instagram.com/camrilla_photographers_app/" target='_blank'>
                                         <i className="ri-instagram-line ri-22px me-3"></i><span className="align-middle">Instagram</span>
                                     </Link>
                                 </li>
