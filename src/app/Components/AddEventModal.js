@@ -156,7 +156,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
 
 
     return (
-        <Modal show={show} onHide={handleClose} size="lg">
+        <Modal show={show} onHide={handleClose} size="lg" backdrop="static"  keyboard={false}>
             <Modal.Header closeButton>
                 <Modal.Title>Add Event</Modal.Title>
             </Modal.Header>

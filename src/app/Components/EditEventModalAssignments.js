@@ -259,7 +259,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
 
 
     return (
-        <Modal show={show} onHide={handleClose} size="xl">
+        <Modal show={show} onHide={handleClose} size="xl" backdrop="static"  keyboard={false}>
             <Modal.Header closeButton>
                 <Modal.Title>Edit Assignment</Modal.Title>
                 {/* <Button variant="danger" className="ms-3" onClick={handleDeleteAssignment}>Delete Assignment</Button> */}

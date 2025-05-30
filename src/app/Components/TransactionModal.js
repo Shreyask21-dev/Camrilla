@@ -78,7 +78,7 @@ export default function TransactionModal({ show, handleClose, assignment, refres
     const remaining = (assignment?.totalAmount || 0) - totalPaid;
 
     return (
-        <Modal show={show} onHide={handleClose} size="lg">
+        <Modal show={show} onHide={handleClose} size="lg"  backdrop="static"  keyboard={false}>
             <Modal.Header closeButton>
                 <Modal.Title>Manage Transactions</Modal.Title>
             </Modal.Header>

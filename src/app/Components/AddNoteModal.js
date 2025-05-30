@@ -55,7 +55,7 @@ export default function AddNoteModal({ show, handleClose, assignmentData, refres
   };
 
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal show={show} onHide={handleClose}  backdrop="static"  keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>Add / Edit Note</Modal.Title>
       </Modal.Header>
