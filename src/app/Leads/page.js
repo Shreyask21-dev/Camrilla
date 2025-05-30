@@ -19,16 +19,43 @@ export default function Page() {
 
     const [calendarDate, setCalendarDate] = useState(new Date());
 
-    const [dateRangeFilter, setDateRangeFilter] = useState('all');
+    const [dateRangeFilter, setDateRangeFilter] = useState(null);
+
+    // const isWithinSelectedRange = (timestamp) => {
+    //     const now = new Date();
+    //     const date = new Date(timestamp);
+
+    //     if (dateRangeFilter === 'last28') {
+    //         const past = new Date(now);
+    //         past.setDate(past.getDate() - 28);
+    //         return date >= past && date <= now;
+    //     }
+
+    //     if (dateRangeFilter === 'lastMonth') {
+    //         const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    //         const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    //         end.setHours(23, 59, 59, 999);
+    //         return date >= start && date <= end;
+    //     }
+
+    //     if (dateRangeFilter === 'lastYear') {
+    //         const start = new Date(now.getFullYear() - 1, 0, 1);
+    //         const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+    //         return date >= start && date <= end;
+    //     }
+
+    //     return true; // 'all' or no filter
+    // };
 
     const isWithinSelectedRange = (timestamp) => {
-        const now = new Date();
         const date = new Date(timestamp);
+        const now = new Date();
 
-        if (dateRangeFilter === 'last28') {
-            const past = new Date(now);
-            past.setDate(past.getDate() - 28);
-            return date >= past && date <= now;
+        if (dateRangeFilter === null) {
+            return (
+                date.getMonth() === calendarDate.getMonth() &&
+                date.getFullYear() === calendarDate.getFullYear()
+            );
         }
 
         if (dateRangeFilter === 'lastMonth') {
@@ -38,14 +65,21 @@ export default function Page() {
             return date >= start && date <= end;
         }
 
+        if (dateRangeFilter === 'currentYear') {
+            const start = new Date(now.getFullYear(), 0, 1);
+            const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+            return date >= start && date <= end;
+        }
+
         if (dateRangeFilter === 'lastYear') {
             const start = new Date(now.getFullYear() - 1, 0, 1);
             const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
             return date >= start && date <= end;
         }
 
-        return true; // 'all' or no filter
+        return true; // for 'all' case
     };
+
 
     const isInSelectedMonth = (timestamp) => {
         const date = new Date(timestamp);
@@ -374,6 +408,25 @@ export default function Page() {
         });
     };
 
+    const getLeadsTitle = () => {
+        const monthName = calendarDate.toLocaleString('default', { month: 'long' });
+        const currentYear = calendarDate.getFullYear();
+
+        switch (dateRangeFilter) {
+            case 'all':
+                return 'All Leads';
+            case 'lastMonth':
+                return 'Last Month Leads';
+            case 'currentYear':
+                return 'Current Year Leads';
+            case 'lastYear':
+                return 'Last Year Leads';
+            default:
+                return `${monthName} Leads`;
+        }
+    };
+
+
     return (
         <div>
             <div className="container-xxl flex-grow-1 container-p-y">
@@ -399,8 +452,8 @@ export default function Page() {
                                         <DatePicker
                                             inline
                                             selected={calendarDate}
-                                            onChange={(date) => setCalendarDate(date)}
-                                            onMonthChange={(date) => setCalendarDate(date)}
+                                            onChange={(date) => { setCalendarDate(date); setDateRangeFilter(null); }}
+                                            onMonthChange={(date) => { setCalendarDate(date); setDateRangeFilter(null); }}
                                             onYearChange={(date) => setCalendarDate(date)}
                                             dayClassName={(date) => hasLeadOnDate(date) ? 'has-lead' : undefined}
                                         />
@@ -474,32 +527,27 @@ export default function Page() {
 
 
                                 <div class="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
-                                    <h5 class="card-title m-0 me-2  py-1">Leads Captured</h5>
+                                    <h5 class="card-title m-0 me-2  py-1">{getLeadsTitle()}</h5>
                                     <div class="dropdown">
-
-                                        <div className="d-flex gap-3 mb-0 flex-wrap mt-3">
+                                        <div className="d-flex flex-wrap align-items-center gap-3">
                                             <div className="form-check form-check-inline">
                                                 <input
                                                     className="form-check-input"
                                                     type="radio"
-                                                    name="dateRange"
-                                                    id="range-all"
                                                     checked={dateRangeFilter === 'all'}
                                                     onChange={() => setDateRangeFilter('all')}
                                                 />
-                                                <label className="form-check-label" htmlFor="range-all">View All</label>
+                                                <label className="form-check-label" htmlFor="range-all">All</label>
                                             </div>
 
                                             <div className="form-check form-check-inline">
                                                 <input
                                                     className="form-check-input"
                                                     type="radio"
-                                                    name="dateRange"
-                                                    id="range-28"
-                                                    checked={dateRangeFilter === 'last28'}
-                                                    onChange={() => setDateRangeFilter('last28')}
+                                                    checked={dateRangeFilter === 'lastMonth'}
+                                                    onChange={() => setDateRangeFilter('lastMonth')}
                                                 />
-                                                <label className="form-check-label" htmlFor="range-28">Last 28 Days</label>
+                                                <label className="form-check-label" >Last Month</label>
                                             </div>
 
 
@@ -508,12 +556,20 @@ export default function Page() {
                                                 <input
                                                     className="form-check-input"
                                                     type="radio"
-                                                    name="dateRange"
-                                                    id="range-year"
+                                                    checked={dateRangeFilter === 'currentYear'}
+                                                    onChange={() => setDateRangeFilter('currentYear')}
+                                                />
+                                                <label className="form-check-label">Current Year</label>
+                                            </div>
+
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
                                                     checked={dateRangeFilter === 'lastYear'}
                                                     onChange={() => setDateRangeFilter('lastYear')}
                                                 />
-                                                <label className="form-check-label" htmlFor="range-year">Last Year</label>
+                                                <label className="form-check-label">Last Year</label>
                                             </div>
 
 
@@ -530,11 +586,7 @@ export default function Page() {
                                     ) : (
                                         <div className="d-flex flex-column gap-4">
                                             {
-                                                // leads.filter((lead) => {
-                                                //     const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
-                                                //     const dateMatch = isWithinSelectedRange(lead.assignmentDateTime) && isInSelectedMonth(lead.assignmentDateTime);
-                                                //     return typeMatch && dateMatch;
-                                                // })
+
                                                 leads
                                                     .filter((lead) => {
                                                         const text = searchTerm.toLowerCase();
@@ -549,7 +601,7 @@ export default function Page() {
                                                             String(lead.totalAmount).includes(text);
 
                                                         const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
-                                                        const dateMatch = isWithinSelectedRange(lead.assignmentDateTime) && isInSelectedMonth(lead.assignmentDateTime);
+                                                        const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
 
                                                         return typeMatch && dateMatch && (!searchTerm || matchesSearch);
                                                     })

@@ -15,6 +15,39 @@ export default function Page() {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [assignmentCount, setAssignmentCount] = useState(0);
+useEffect(() => {
+        const fetchAssignmentCount = async () => {
+            try {
+                const tokenData = localStorage.getItem('camrilla_token');
+                const accessToken = JSON.parse(tokenData)?.accessToken;
+                if (!accessToken) return;
+
+                const now = new Date();
+                const currentYearStart = new Date(2000, 0, 1).getTime();
+                const currentYearEnd = new Date(2100, 11, 31, 23, 59, 59, 999).getTime();
+
+                const response = await axios.get(`${config.BASE_URL}order/assignment`, {
+                    params: {
+                        startDate: currentYearStart,
+                        endDate: currentYearEnd
+                    },
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                console.log(response.data)
+
+                setAssignmentCount((response.data.data || []).length);
+            } catch (error) {
+                console.error("Error fetching assignment count:", error);
+            }
+        };
+
+        fetchAssignmentCount();
+    }, []);
+
     const fetchUserPlan = async () => {
         const tokenData = localStorage.getItem('camrilla_token');
         if (!tokenData) return;
@@ -106,6 +139,8 @@ export default function Page() {
         const year = dateObj.getFullYear(); // "2025"
         return { month, day, year };
     };
+
+    
 
     return (
         <div>
@@ -233,7 +268,7 @@ export default function Page() {
                                         <ul class="list-unstyled mb-0 mt-3 pt-1">
                                             <li class="d-flex align-items-center mb-4">
                                                 <i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Assignments:</span>
-                                                <span>{userData.totalAssignment || 0}</span>
+                                                <span>{assignmentCount}</span>
                                             </li>
                                             <li class="d-flex align-items-center">
                                                 <i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Leads:</span>

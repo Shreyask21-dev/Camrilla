@@ -1,9 +1,11 @@
 'use client';
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import classNames from 'classnames';
 import useUserPlan from '../hooks/useUserPlan';
+import axios from 'axios';
+import config from '../config/config';
 
 export default function Sidebar() {
 
@@ -18,6 +20,7 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [wasManuallyCollapsed, setWasManuallyCollapsed] = useState(false);
 
+  const [assignmentCount, setAssignmentCount] = useState(0);
 
   const handleToggle = () => {
     if (window.innerWidth >= 1200) {
@@ -46,6 +49,40 @@ export default function Sidebar() {
       setIsCollapsed(true);
     }
   };
+
+
+
+  useEffect(() => {
+    const fetchAssignmentCount = async () => {
+      try {
+        const tokenData = localStorage.getItem('camrilla_token');
+        const accessToken = JSON.parse(tokenData)?.accessToken;
+        if (!accessToken) return;
+
+        const now = new Date();
+        const currentYearStart = new Date(2000, 0, 1).getTime();
+        const currentYearEnd = new Date(2100, 11, 31, 23, 59, 59, 999).getTime();
+
+        const response = await axios.get(`${config.BASE_URL}order/assignment`, {
+          params: {
+            startDate: currentYearStart,
+            endDate: currentYearEnd
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
+        console.log(response.data)
+
+        setAssignmentCount((response.data.data || []).length);
+      } catch (error) {
+        console.error("Error fetching assignment count:", error);
+      }
+    };
+
+    fetchAssignmentCount();
+  }, []);
 
   if (!token?.accessToken) return null;
 
@@ -94,7 +131,7 @@ export default function Sidebar() {
             <Link href="/Assignments" className="menu-link ">
               <i className="menu-icon  tf-icons ri-bill-line"></i>
               <div data-i18n="Assignments">Assignments</div>
-              <div class="badge bg-danger rounded-pill ms-auto">{userData?.totalAssignment}</div>
+              <div className="badge bg-danger rounded-pill ms-auto">{assignmentCount}</div>
             </Link>
           </li>
 
@@ -102,7 +139,7 @@ export default function Sidebar() {
             <Link href="/Leads" className="menu-link ">
               <i className="menu-icon tf-icons ri-edit-line"></i>
               <div data-i18n="Leads">Leads</div>
-              <div class="badge bg-danger rounded-pill ms-auto">{userData?.totalLeads}</div>
+              <div className="badge bg-danger rounded-pill ms-auto">{userData?.totalLeads}</div>
             </Link>
           </li>
 

@@ -237,7 +237,7 @@ export default function Page() {
                                                                         ? (plan.finalAmount * (1 - appliedCoupons[plan.id].discountValue / 100)).toFixed(2)
                                                                         : plan.finalAmount}
                                                                 </h1>
-                                                                <sub className="h6 pricing-duration mt-auto mb-1 text-body">/month</sub>
+                                                                <sub className="h6 pricing-duration mt-auto mb-1 text-body">/year</sub>
                                                             </div>
                                                         </div>
 

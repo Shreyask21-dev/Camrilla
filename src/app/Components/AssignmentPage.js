@@ -148,7 +148,7 @@ export default function AssignmentPage() {
         newEnd.setHours(23, 59, 59, 999); // <--- Add this!
         setStartOfMonth(newStart);
         setEndOfMonth(newEnd);
-        setTimeFilter("All"); // 👈 Reset time filter back to All
+        setTimeFilter(null);
     };
 
     const [selectedAssignmentNames, setSelectedAssignmentNames] = useState(["All"]);
@@ -171,7 +171,8 @@ export default function AssignmentPage() {
         return Array.from(nameMap.values());
     }, [allAssignments]);
 
-    const [timeFilter, setTimeFilter] = useState("All");
+    // const [timeFilter, setTimeFilter] = useState("All");
+    const [timeFilter, setTimeFilter] = useState(null);
 
     const filteredAssignments = useMemo(() => {
         const filterByName = selectedAssignmentNames.includes("All")
@@ -344,6 +345,23 @@ export default function AssignmentPage() {
         return map;
     }, [allAssignments]);
 
+    const getTitleText = () => {
+        switch (timeFilter) {
+            case 'All':
+                return 'All Assignments';
+            case 'LastMonth':
+                return 'Last Month Assignments';
+            case 'CurrentYear':
+                return 'Current Year Assignments';
+            case 'LastYear':
+                return 'Last Year Assignments';
+            default: {
+                const monthName = currentDate.toLocaleString('default', { month: 'long' });
+                return `${monthName} Assignments`;
+            }
+        }
+    };
+
 
 
     return (
@@ -424,7 +442,7 @@ export default function AssignmentPage() {
                             <div className="card shadow-none border-0">
 
                                 <div class="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
-                                    <h5 class="card-title m-0 me-2  py-1">Assignments</h5>
+                                    <h5 class="card-title m-0 me-2  py-1">{getTitleText()}</h5>
                                     <div class="dropdown">
                                         <div className="d-flex flex-wrap align-items-center gap-3">
                                             <div className="form-check form-check-inline">
@@ -437,6 +455,17 @@ export default function AssignmentPage() {
                                                     onChange={() => handleTimeFilterChange("All")}
                                                 />
                                                 <label className="form-check-label" htmlFor="filterAll">All</label>
+                                            </div>
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="timeFilter"
+                                                    id="filterLastMonth"
+                                                    checked={timeFilter === "LastMonth"}
+                                                    onChange={() => handleTimeFilterChange("LastMonth")}
+                                                />
+                                                <label className="form-check-label" htmlFor="filterLastMonth">Last Month</label>
                                             </div>
                                             <div className="form-check form-check-inline">
                                                 <input
@@ -459,17 +488,6 @@ export default function AssignmentPage() {
                                                     onChange={() => handleTimeFilterChange("LastYear")}
                                                 />
                                                 <label className="form-check-label" htmlFor="filterLastYear">Last Year</label>
-                                            </div>
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    name="timeFilter"
-                                                    id="filterLastMonth"
-                                                    checked={timeFilter === "LastMonth"}
-                                                    onChange={() => handleTimeFilterChange("LastMonth")}
-                                                />
-                                                <label className="form-check-label" htmlFor="filterLastMonth">Last Month</label>
                                             </div>
                                         </div>
 
@@ -509,7 +527,7 @@ export default function AssignmentPage() {
                                                                 <span>- {assignment.assignmentAddress || '-'}</span>
                                                             </div>
                                                         </div>
-
+  
                                                         {/* Action Buttons Column */}
                                                         <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '120px' }}>
                                                             <div className="d-flex gap-2">
@@ -522,7 +540,8 @@ export default function AssignmentPage() {
                                                             </div>
                                                             <div className="d-flex gap-2">
                                                                 <button className="btn btn-sm btn-outline-info" onClick={() => handleAddNote(assignment)}>
-                                                                    <i className="bi bi-journals"></i>
+                                                                    {/* <i className="bi bi-journal-check"></i> */}
+                                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
                                                                 </button>
                                                                 <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAssignment(assignment.id)}>
                                                                     <i className="bi bi-trash-fill"></i>
