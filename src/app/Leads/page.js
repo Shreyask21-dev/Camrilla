@@ -21,32 +21,6 @@ export default function Page() {
 
     const [dateRangeFilter, setDateRangeFilter] = useState(null);
 
-    // const isWithinSelectedRange = (timestamp) => {
-    //     const now = new Date();
-    //     const date = new Date(timestamp);
-
-    //     if (dateRangeFilter === 'last28') {
-    //         const past = new Date(now);
-    //         past.setDate(past.getDate() - 28);
-    //         return date >= past && date <= now;
-    //     }
-
-    //     if (dateRangeFilter === 'lastMonth') {
-    //         const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    //         const end = new Date(now.getFullYear(), now.getMonth(), 0);
-    //         end.setHours(23, 59, 59, 999);
-    //         return date >= start && date <= end;
-    //     }
-
-    //     if (dateRangeFilter === 'lastYear') {
-    //         const start = new Date(now.getFullYear() - 1, 0, 1);
-    //         const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-    //         return date >= start && date <= end;
-    //     }
-
-    //     return true; // 'all' or no filter
-    // };
-
     const isWithinSelectedRange = (timestamp) => {
         const date = new Date(timestamp);
         const now = new Date();
@@ -143,7 +117,10 @@ export default function Page() {
         setIsOtherSelectedEdit(false); // reset Other handling
 
         const modalElement = document.getElementById('editLeadModal');
-        const modal = new bootstrap.Modal(modalElement);
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
         modal.show();
     };
 
@@ -287,7 +264,10 @@ export default function Page() {
 
     const openAddLeadModal = () => {
         const modalElement = document.getElementById('addLeadModal');
-        const modal = new bootstrap.Modal(modalElement);
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
         modal.show();
     };
 
