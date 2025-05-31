@@ -123,13 +123,38 @@ export default function Page() {
             description: paymentData.planDescription,
             order_id: paymentData.orderId,
             handler: async function (response) {
+
+                const tokenDataString = localStorage.getItem('camrilla_token');
+                if (!tokenDataString) {
+                    alert('Please login first');
+                    return;
+                }
+
+                const tokenData = JSON.parse(tokenDataString);
+                const accessToken = tokenData.accessToken;
+
                 console.log('Payment Success Response:', response);
 
                 try {
                     await axios.post(`${config.BASE_URL}update-payment-response`, {
                         orderId: paymentData.camrillaOrderId
                     });
-                    alert('Payment successful and updated!');
+                    const updateBasicRes = await axios.post(`${config.BASE_URL}update-basic-plan`, {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`
+                        }
+                    });
+
+                    // alert('Payment successful and updated!');
+                    if (updateBasicRes.data && updateBasicRes.data.code === 0) {
+                        alert('Payment successful and subscription updated!');
+                        // Optional: refresh the page or fetch plans again
+                        // window.location.reload();
+                    } else {
+                        console.error('update-basic-plan failed:', updateBasicRes.data.message);
+                        alert('Payment was successful but failed to update subscription.');
+                    }
+
                 } catch (error) {
                     console.error('Error updating payment response:', error);
                     alert('Payment was successful but updating server failed.');
@@ -252,7 +277,8 @@ export default function Page() {
                                                                 plan.monthlyAmount === 0.0 &&
                                                                 plan.monthlyDisscountedAmount === 0.0 &&
                                                                 plan.finalAmount === 0.0) ||
-                                                            (activePlan?.planId === plan.id)
+                                                            // (activePlan?.planId === plan.id)
+                                                            (activePlan?.planId === plan.id && plan.planName.toLowerCase() !== 'professional')
                                                         ) && (
                                                                 <div className="coupon-section mb-4 text-center">
                                                                     <input
@@ -290,9 +316,9 @@ export default function Page() {
                                                                 <button
                                                                     onClick={() => initiatePayment(plan.id)}
                                                                     className={`btn ${activePlan?.planId === plan.id ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
-                                                                    disabled={activePlan?.planId === plan.id}
+                                                                // disabled={activePlan?.planId === plan.id}
                                                                 >
-                                                                    {activePlan?.planId === plan.id ? 'Your Current Plan' : 'Upgrade'}
+                                                                    {activePlan?.planId === plan.id ? (plan.planName.toLowerCase() === 'professional' ? 'Renew' : 'Your Current Plan') : 'Upgrade'}
                                                                 </button>
                                                             )}
                                                     </div>
