@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Modal, Tab, Tabs, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../config/config';
+import BasicPlanNotice from './BasicPlanNotice';
 
-export default function AddEventModal({ show, handleClose, allEvents, selectedDate, refreshEvents, preFilledDate }) {
+export default function AddEventModal({ show, handleClose, allEvents, selectedDate, refreshEvents, preFilledDate, triggerBasicPlanModal }) {
+
+    // const [showBasicPlanNotice, setShowBasicPlanNotice] = useState(false);
 
     const [customAssignToHandle, setCustomAssignToHandle] = useState('');
 
@@ -89,6 +92,12 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
                 alert('Assignment created successfully');
                 handleClose();
                 refreshEvents(selectedDate);
+            } else if (res.data.messageDesc === 'Free Limit Exceeded') {
+                alert('Free limit exceeded. Please subscribe to continue.');
+                // setShowBasicPlanNotice(true);
+                handleClose();
+                triggerBasicPlanModal();
+                return
             } else {
                 alert('Failed: ' + res.data.message);
             }
@@ -152,11 +161,13 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
     };
 
 
-
+    // if (showBasicPlanNotice) {
+    //     return <BasicPlanNotice />;
+    // }
 
 
     return (
-        <Modal show={show} onHide={handleClose} size="lg" backdrop="static"  keyboard={false}>
+        <Modal show={show} onHide={handleClose} size="lg" backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
                 <Modal.Title>Add Event</Modal.Title>
             </Modal.Header>

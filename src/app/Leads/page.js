@@ -4,6 +4,7 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker'
 import useSearchStore from '../store/searchStore'; // adjust path if needed
 import config from '../config/config';
+import BasicPlanNotice from '../Components/BasicPlanNotice';
 
 const normalize = (str) => str?.trim().toLowerCase();
 
@@ -12,6 +13,15 @@ const bootstrapColors = [
 ];
 
 export default function Page() {
+
+    const [showBasicNotice, setShowBasicNotice] = useState(false);
+
+    const handleFreeLimitExceeded = () => {
+        alert('Free limit exceeded. Please subscribe to continue.');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addLeadModal'));
+        if (modal) modal.hide();
+        setShowBasicNotice(true); // show subscription modal
+    };
 
     const [assignmentTypeColorMap, setAssignmentTypeColorMap] = useState(new Map());
 
@@ -195,7 +205,12 @@ export default function Page() {
         axios.post(`${config.BASE_URL}lead-manager/lead`, newLead)
 
             .then(response => {
+                if (response.data?.messageDesc === 'Free Limit Exceeded') {
+                    handleFreeLimitExceeded(); // ✅ handle free limit
+                    return;
+                }
                 console.log('Lead Added:', response.data);
+                alert('Lead Added:', response.data);
                 // Close Modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addLeadModal'));
                 modal.hide();
@@ -212,7 +227,14 @@ export default function Page() {
                 fetchLeads();
             })
             .catch(error => {
-                console.error('Failed to add lead:', error);
+                // console.error('Failed to add lead:', error);
+                const messageDesc = error?.response?.data?.messageDesc;
+                if (messageDesc === 'Free Limit Exceeded') {
+                    handleFreeLimitExceeded();
+                } else {
+                    console.error('Failed to add lead:', error);
+                    alert('Something went wrong while adding the lead.');
+                }
             });
     };
 
@@ -967,7 +989,9 @@ export default function Page() {
                 </div>
             </div>
 
-
+            {showBasicNotice && (
+                <BasicPlanNotice show={true} handleClose={() => setShowBasicNotice(false)} />
+            )}
 
 
         </div>

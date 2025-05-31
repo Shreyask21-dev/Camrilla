@@ -8,11 +8,19 @@ import AddNoteModal from './AddNoteModal';
 import TransactionModal from './TransactionModal';
 import useSearchStore from '../store/searchStore'; // adjust path if needed
 import config from '../config/config';
-
+import BasicPlanNotice from './BasicPlanNotice'; // Adjust path if needed
 
 export default function AssignmentPage() {
 
+    const [showBasicNotice, setShowBasicNotice] = useState(false);
+
     const [planInfo, setPlanInfo] = useState(null);
+
+    const handleShowBasicPlanNotice = () => {
+        alert('Free limit exceeded. Please subscribe to continue.');
+        setShowAddModal(false); // ⛔ close AddEventModal
+        setShowBasicNotice(true); // ✅ show subscription prompt
+    }
 
     useEffect(() => {
         const fetchUserPlan = async () => {
@@ -580,6 +588,7 @@ export default function AssignmentPage() {
                 selectedDate={currentDate}
                 refreshEvents={(date) => fetchAssignments(startOfMonth, endOfMonth)}
                 preFilledDate={currentDate.toISOString().split('T')[0]} // prefill today's date
+                triggerBasicPlanModal={handleShowBasicPlanNotice} // 👈 pass the callback
             />
 
             <EditEventModalAssignments
@@ -607,6 +616,9 @@ export default function AssignmentPage() {
                 />
             )}
 
+            {showBasicNotice && (
+                <BasicPlanNotice show={true} handleClose={() => setShowBasicNotice(false)} />
+            )}
 
 
         </div>

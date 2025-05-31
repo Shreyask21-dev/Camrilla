@@ -19,6 +19,7 @@ import useSearchStore from './store/searchStore'; // adjust as needed
 import config from './config/config';
 import BasicPlanNotice from './Components/BasicPlanNotice';
 import { useRouter } from 'next/navigation'
+import RenewalNotice from './Components/RenewalNotice';
 
 const normalize = (str) => str?.trim().toLowerCase();
 
@@ -27,6 +28,8 @@ const bootstrapColors = [
 ];
 
 export default function Home() {
+
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
 
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
@@ -71,6 +74,35 @@ export default function Home() {
       }
     }
   }, [isBasicPlan]);
+
+  useEffect(() => {
+    if (!planInfo?.endDate || isBasicPlan) return;
+
+    const checkRenewalWindow = () => {
+      const expiry = new Date(planInfo.endDate);
+      const now = new Date();
+      const diffDays = Math.floor((expiry - now) / (1000 * 60 * 60 * 24));
+
+      const shouldShow = diffDays <= 15 && diffDays >= -15;
+
+      if (shouldShow) {
+        const lastShown = localStorage.getItem('renewal_notice_last_shown');
+        const nowTime = Date.now();
+        const FIVE_MINUTES = 5 * 60 * 1000;
+
+        if (!lastShown || nowTime - parseInt(lastShown, 10) > FIVE_MINUTES) {
+          setShowRenewalModal(true);
+          localStorage.setItem('renewal_notice_last_shown', nowTime.toString());
+        }
+      }
+    };
+
+    checkRenewalWindow(); // Initial check
+    const interval = setInterval(checkRenewalWindow, 5 * 60 * 1000); // Every 5 min
+
+    return () => clearInterval(interval); // Cleanup
+  }, [planInfo?.endDate, isBasicPlan]);
+
 
   const showFeedbackMessage = () => {
     if (!planInfo || !planInfo.planName || !planInfo.endDate) return false;
@@ -422,6 +454,10 @@ export default function Home() {
 
       {isBasicPlan && (
         <BasicPlanNotice show={showBasicModal} handleClose={handleCloseBasicModal} />
+      )}
+
+      {!isBasicPlan && (
+        <RenewalNotice show={showRenewalModal} handleClose={() => setShowRenewalModal(false)} />
       )}
 
       <div className="container-xxl flex-grow-1 container-p-y">
@@ -800,6 +836,7 @@ export default function Home() {
         selectedDate={selectedDate}
         refreshEvents={fetchOrders}
         preFilledDate={preFilledDate}
+        triggerBasicPlanModal={() => setShowBasicModal(true)}
       />
 
       <UpdateEventModal

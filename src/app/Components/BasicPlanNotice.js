@@ -1,25 +1,3 @@
-// // ./Components/BasicPlanNotice.js
-// import { Modal, Button } from 'react-bootstrap';
-
-// export default function BasicPlanNotice({ show, handleClose }) {
-//   return (
-//     <Modal show={show} onHide={handleClose} centered>
-//       <Modal.Header closeButton>
-//         <Modal.Title>Basic Plan Notice</Modal.Title>
-//       </Modal.Header>
-//       <Modal.Body className="text-center">
-//         🧩 This is a feature exclusive to the <strong>Basic</strong> plan.
-//       </Modal.Body>
-//       <Modal.Footer>
-//         <Button variant="primary" onClick={handleClose}>
-//           Got it!
-//         </Button>
-//       </Modal.Footer>
-//     </Modal>
-//   );
-// }
-
-
 // ./Components/BasicPlanNotice.js
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
