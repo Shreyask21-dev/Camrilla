@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Script from 'next/script'; // For Razorpay script
 import config from '../config/config';
-
+import SuccessModal from '../Components/SuccessModal';
 
 export default function Page() {
+
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const [activePlan, setActivePlan] = useState(null);
 
@@ -137,7 +139,7 @@ export default function Page() {
 
                 try {
                     await axios.post(`${config.BASE_URL}update-payment-response`, {
-                        orderId: paymentData.camrillaOrderId
+                        orderId: paymentData.orderId
                     });
                     const updateBasicRes = await axios.post(`${config.BASE_URL}update-basic-plan`, {
                         headers: {
@@ -146,14 +148,7 @@ export default function Page() {
                     });
 
                     // alert('Payment successful and updated!');
-                    if (updateBasicRes.data && updateBasicRes.data.code === 0) {
-                        alert('Payment successful and subscription updated!');
-                        // Optional: refresh the page or fetch plans again
-                        // window.location.reload();
-                    } else {
-                        console.error('update-basic-plan failed:', updateBasicRes.data.message);
-                        alert('Payment was successful but failed to update subscription.');
-                    }
+                    setShowSuccessModal(true);
 
                 } catch (error) {
                     console.error('Error updating payment response:', error);
@@ -208,6 +203,9 @@ export default function Page() {
 
     return (
         <div>
+
+            <SuccessModal show={showSuccessModal} handleClose={() => setShowSuccessModal(false)} />
+
             <Script
                 src="https://checkout.razorpay.com/v1/checkout.js"
                 strategy="afterInteractive"
