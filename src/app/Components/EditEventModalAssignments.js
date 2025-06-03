@@ -3,7 +3,13 @@ import { Modal, Form, Button, Tab, Tabs, Table } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../config/config';
 
+// import { useAssignmentStore } from './store/store';
+import { useAssignmentStore } from '../store/store';
+
 export default function EditEventModalAssignments({ show, handleClose, eventData, refreshEvents, selectedDate, allEvents }) {
+    
+    const { decrementAssignmentCount } = useAssignmentStore()
+    
     const [key, setKey] = useState('customer');
     const [formData, setFormData] = useState({});
     const [functions, setFunctions] = useState([]);
@@ -109,6 +115,7 @@ export default function EditEventModalAssignments({ show, handleClose, eventData
         if (!window.confirm('Delete this assignment?')) return;
         await axios.delete(`${config.BASE_URL}order/assignment/${eventData.id}`);
         alert('Assignment deleted');
+        decrementAssignmentCount()
         // , {
         //     headers: { Authorization: `Bearer ${token}` },
         // }

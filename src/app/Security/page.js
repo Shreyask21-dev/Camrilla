@@ -56,18 +56,18 @@ export default function Page() {
   return (
     <div>
 
-      <div class="container-xxl flex-grow-1 container-p-y">
-        <div class="row">
-          <div class="col-md-12">
-            <div class="nav-align-top">
-              <ul class="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
-                <li class="nav-item">
-                  <Link class="nav-link" href="/Settings"
-                  ><i class="ri-group-line me-2"></i> Account</Link>
+      <div className="container-xxl flex-grow-1 container-p-y">
+        <div className="row">
+          <div className="col-md-12">
+            <div className="nav-align-top">
+              <ul className="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
+                <li className="nav-item">
+                  <Link className="nav-link" href="/Settings"
+                  ><i className="ri-group-line me-2"></i> Account</Link>
                 </li>
-                <li class="nav-item">
-                  <Link class="nav-link active" href="/Security"
-                  ><i class="ri-lock-line me-2"></i> Security</Link>
+                <li className="nav-item">
+                  <Link className="nav-link active" href="/Security"
+                  ><i className="ri-lock-line me-2"></i> Security</Link>
                 </li>
                 <li className="nav-item">
                   <Link className="nav-link " href="/Transactions"
@@ -76,9 +76,9 @@ export default function Page() {
               </ul>
             </div>
 
-            <div class="card mb-6">
-              <h5 class="card-header">Change Password</h5>
-              <div class="card-body pt-1">
+            <div className="card mb-6">
+              <h5 className="card-header">Change Password</h5>
+              <div className="card-body pt-1">
                 <form id="formAccountSettings" onSubmit={handlePasswordChange}>
                   <div className="row">
                     <div className="mb-5 col-md-6 form-password-toggle">

@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react';
 import { Modal, Form, Button, Tab, Tabs } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../config/config';
+import { useAssignmentStore } from '../store/store';
 
 export default function UpdateEventModal({ show, handleClose, eventData, refreshEvents, selectedDate, allEvents }) {
+    
+    const { decrementAssignmentCount } = useAssignmentStore()
+
+
     const [formData, setFormData] = useState({});
     const [key, setKey] = useState('customer');
     const [showOtherInput, setShowOtherInput] = useState(false);
@@ -105,6 +110,7 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
             const res = await axios.delete(`${config.BASE_URL}order/assignment/${eventData.id}`);
             if (res.data.code === 0) {
                 alert('Deleted successfully');
+                decrementAssignmentCount()
                 handleClose();
                 refreshEvents(selectedDate);
             } else {
@@ -122,7 +128,7 @@ export default function UpdateEventModal({ show, handleClose, eventData, refresh
             <Modal.Header closeButton>
                 <Modal.Title>Update Assignment</Modal.Title>
                 <Button variant="danger" style={{ marginLeft: "20px" }} onClick={handleDelete}>
-                    <i class="bi bi-trash-fill"></i> &nbsp;Assignment
+                    <i className="bi bi-trash-fill"></i> &nbsp;Assignment
                 </Button>
             </Modal.Header>
             <Modal.Body>

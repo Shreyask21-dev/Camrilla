@@ -145,21 +145,21 @@ useEffect(() => {
     return (
         <div>
 
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div className="container-xxl flex-grow-1 container-p-y">
 
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card mb-6">
-                            <div class="user-profile-header-banner">
-                                <img src="/assets/img/pages/profile-banner.png" alt="Banner image" class="rounded-top" />
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card mb-6">
+                            <div className="user-profile-header-banner">
+                                <img src="/assets/img/pages/profile-banner.png" alt="Banner image" className="rounded-top" />
                             </div>
-                            <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
+                            <div className="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-5">
 
-                                <div class="flex-grow-1 mt-4 mt-sm-12">
+                                <div className="flex-grow-1 mt-4 mt-sm-12">
 
                                     <div
-                                        class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
-                                        <div class="user-profile-info">
+                                        className="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-6">
+                                        <div className="user-profile-info">
                                             <div style={{ display: "flex" }}>
 
                                                 <div
@@ -186,12 +186,12 @@ useEffect(() => {
 
                                                 <div>
 
-                                                    <h4 class="mb-2">{userData.name || 'John Doe'}</h4>
+                                                    <h4 className="mb-2">{userData.name || 'John Doe'}</h4>
                                                     <ul
-                                                        class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
+                                                        className="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
 
-                                                        <li class="list-inline-item">
-                                                            <i class="ri-map-pin-line me-2 ri-24px"></i><span class="fw-medium">{countryName || 'Country'}</span>
+                                                        <li className="list-inline-item">
+                                                            <i className="ri-map-pin-line me-2 ri-24px"></i><span className="fw-medium">{countryName || 'Country'}</span>
                                                         </li>
 
                                                     </ul>
@@ -202,8 +202,8 @@ useEffect(() => {
                                         </div>
 
                                         {planInfo?.planName != 'Professional' &&
-                                            <Link href="/Subscriptions" class="btn btn-primary">
-                                                <i class="ri-user-follow-line ri-16px me-2"></i>Subscribe Now
+                                            <Link href="/Subscriptions" className="btn btn-primary">
+                                                <i className="ri-user-follow-line ri-16px me-2"></i>Subscribe Now
                                             </Link>
                                         }
                                     </div>
@@ -213,31 +213,31 @@ useEffect(() => {
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-xl-4 col-lg-5 col-md-5">
+                <div className="row">
+                    <div className="col-xl-4 col-lg-5 col-md-5">
 
-                        <div class="card mb-6">
-                            <div class="card-body" style={{ height: "283px" }}>
-                                <small class="card-text text-uppercase text-muted small">About</small>
-                                <ul class="list-unstyled my-3 py-1">
-                                    <li class="d-flex align-items-center mb-4">
-                                        <i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Full Name:</span>
+                        <div className="card mb-6">
+                            <div className="card-body" style={{ height: "283px" }}>
+                                <small className="card-text text-uppercase text-muted small">About</small>
+                                <ul className="list-unstyled my-3 py-1">
+                                    <li className="d-flex align-items-center mb-4">
+                                        <i className="ri-user-3-line ri-24px"></i><span className="fw-medium mx-2">Full Name:</span>
                                         <span>{userData.name || 'John Doe'}</span>
                                     </li>
-                                    <li class="d-flex align-items-center mb-4">
-                                        <i class="ri-flag-2-line ri-24px"></i><span class="fw-medium mx-2">Country:</span>
+                                    <li className="d-flex align-items-center mb-4">
+                                        <i className="ri-flag-2-line ri-24px"></i><span className="fw-medium mx-2">Country:</span>
                                         <span>{countryName || 'Country'}</span>
                                     </li>
-                                    <li class="d-flex align-items-center mb-4">
-                                        <i class="ri-cash-line ri-24px"></i><span class="fw-medium mx-2">Currency:</span>
+                                    <li className="d-flex align-items-center mb-4">
+                                        <i className="ri-cash-line ri-24px"></i><span className="fw-medium mx-2">Currency:</span>
                                         <span>{userData.currency || 'INR'}</span>
                                     </li>
-                                    <li class="d-flex align-items-center mb-4">
-                                        <i class="ri-global-line ri-24px"></i><span class="fw-medium mx-2">Time Zone:</span>
+                                    <li className="d-flex align-items-center mb-4">
+                                        <i className="ri-global-line ri-24px"></i><span className="fw-medium mx-2">Time Zone:</span>
                                         <span>{userData.userTimeZone || 'Asia'}</span>
                                     </li>
-                                    <li class="d-flex align-items-center mb-2">
-                                        <i class="ri-translate-2 ri-24px"></i><span class="fw-medium mx-2">Languages:</span>
+                                    <li className="d-flex align-items-center mb-2">
+                                        <i className="ri-translate-2 ri-24px"></i><span className="fw-medium mx-2">Languages:</span>
                                         <span>English</span>
                                     </li>
                                 </ul>
@@ -246,32 +246,32 @@ useEffect(() => {
                         </div>
 
                     </div>
-                    <div class="col-xl-8 col-lg-7 col-md-7">
+                    <div className="col-xl-8 col-lg-7 col-md-7">
 
-                        <div class="row">
+                        <div className="row">
 
                             <div className="col-lg-12 col-xl-6">
-                                <div class="card mb-6">
-                                    <div class="card-body" style={{ height: "283px" }}>
-                                        <small class="card-text text-uppercase text-muted small">Contacts</small>
-                                        <ul class="list-unstyled my-3 py-1">
-                                            <li class="d-flex align-items-center mb-4">
-                                                <i class="ri-phone-line ri-24px"></i><span class="fw-medium mx-2">Contact:</span>
+                                <div className="card mb-6">
+                                    <div className="card-body" style={{ height: "283px" }}>
+                                        <small className="card-text text-uppercase text-muted small">Contacts</small>
+                                        <ul className="list-unstyled my-3 py-1">
+                                            <li className="d-flex align-items-center mb-4">
+                                                <i className="ri-phone-line ri-24px"></i><span className="fw-medium mx-2">Contact:</span>
                                                 <span>{userData.mobile || '(123) 456-7890'}</span>
                                             </li>
-                                            <li class="d-flex align-items-center mb-2">
-                                                <i class="ri-mail-open-line ri-24px"></i><span class="fw-medium mx-2">Email:</span>
+                                            <li className="d-flex align-items-center mb-2">
+                                                <i className="ri-mail-open-line ri-24px"></i><span className="fw-medium mx-2">Email:</span>
                                                 <span>{userData.email || 'john.doe@example.com'}</span>
                                             </li>
                                         </ul>
-                                        <small class="card-text text-uppercase text-muted small">Overview</small>
-                                        <ul class="list-unstyled mb-0 mt-3 pt-1">
-                                            <li class="d-flex align-items-center mb-4">
-                                                <i class="ri-user-3-line ri-24px"></i><span class="fw-medium mx-2">Assignments:</span>
+                                        <small className="card-text text-uppercase text-muted small">Overview</small>
+                                        <ul className="list-unstyled mb-0 mt-3 pt-1">
+                                            <li className="d-flex align-items-center mb-4">
+                                                <i className="ri-user-3-line ri-24px"></i><span className="fw-medium mx-2">Assignments:</span>
                                                 <span>{assignmentCount}</span>
                                             </li>
-                                            <li class="d-flex align-items-center">
-                                                <i class="ri-star-smile-line ri-24px"></i><span class="fw-medium mx-2">Leads:</span>
+                                            <li className="d-flex align-items-center">
+                                                <i className="ri-star-smile-line ri-24px"></i><span className="fw-medium mx-2">Leads:</span>
                                                 <span>{userData.totalLeads || 0}</span>
                                             </li>
                                         </ul>
@@ -280,24 +280,24 @@ useEffect(() => {
                             </div>
 
                             <div className="col-lg-12 col-xl-6">
-                                <div class="card mb-6">
-                                    <div class="card-body" style={{ height: "283px" }}>
-                                        <small class="card-text text-uppercase text-muted small">Plan Details</small>
-                                        <ul class="list-unstyled my-3 py-1">
-                                            <li class="d-flex align-items-center mb-4">
-                                                <i class="ri-file-list-2-line ri-24px"></i><span class="fw-medium mx-2">Plan :</span>
+                                <div className="card mb-6">
+                                    <div className="card-body" style={{ height: "283px" }}>
+                                        <small className="card-text text-uppercase text-muted small">Plan Details</small>
+                                        <ul className="list-unstyled my-3 py-1">
+                                            <li className="d-flex align-items-center mb-4">
+                                                <i className="ri-file-list-2-line ri-24px"></i><span className="fw-medium mx-2">Plan :</span>
                                                 <span>{planInfo?.planName}</span>
                                             </li>
-                                            <li class="d-flex align-items-center mb-4">
-                                                <i class="ri-flag-line ri-24px"></i><span class="fw-medium mx-2">Status:</span>
+                                            <li className="d-flex align-items-center mb-4">
+                                                <i className="ri-flag-line ri-24px"></i><span className="fw-medium mx-2">Status:</span>
                                                 <span>{planInfo?.planStatus}</span>
                                             </li>
-                                            <li class="d-flex align-items-center mb-4">
-                                                <i class="ri-calendar-line ri-24px"></i><span class="fw-medium mx-2">Starts :</span>
+                                            <li className="d-flex align-items-center mb-4">
+                                                <i className="ri-calendar-line ri-24px"></i><span className="fw-medium mx-2">Starts :</span>
                                                 <span>{new Date(planInfo?.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                             </li>
-                                            <li class="d-flex align-items-center">
-                                                <i class="ri-calendar-line ri-24px"></i><span class="fw-medium mx-2">Ends:</span>
+                                            <li className="d-flex align-items-center">
+                                                <i className="ri-calendar-line ri-24px"></i><span className="fw-medium mx-2">Ends:</span>
                                                 <span>{new Date(planInfo?.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                             </li>
                                         </ul>

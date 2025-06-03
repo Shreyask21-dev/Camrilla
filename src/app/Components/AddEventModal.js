@@ -4,9 +4,13 @@ import axios from 'axios';
 import config from '../config/config';
 import BasicPlanNotice from './BasicPlanNotice';
 
+import { useAssignmentStore } from '../store/store';
+
 export default function AddEventModal({ show, handleClose, allEvents, selectedDate, refreshEvents, preFilledDate, triggerBasicPlanModal }) {
 
     // const [showBasicPlanNotice, setShowBasicPlanNotice] = useState(false);
+
+    const { incrementAssignmentCount } = useAssignmentStore();
 
     const [customAssignToHandle, setCustomAssignToHandle] = useState('');
 
@@ -89,6 +93,7 @@ export default function AddEventModal({ show, handleClose, allEvents, selectedDa
         try {
             const res = await axios.post(`${config.BASE_URL}order/assignment`, payload);
             if (res.data.code === 0) {
+                incrementAssignmentCount();
                 alert('Assignment created successfully');
                 handleClose();
                 refreshEvents(selectedDate);

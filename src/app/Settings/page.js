@@ -88,18 +88,18 @@ export default function Page() {
     return (
         <div>
 
-            <div class="container-xxl flex-grow-1 container-p-y">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="nav-align-top">
-                            <ul class="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
-                                <li class="nav-item">
-                                    <Link class="nav-link active" href="/Settings"
-                                    ><i class="ri-group-line me-2"></i>Account</Link>
+            <div className="container-xxl flex-grow-1 container-p-y">
+                <div className="row">
+                    <div className="col-md-12">
+                        <div className="nav-align-top">
+                            <ul className="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
+                                <li className="nav-item">
+                                    <Link className="nav-link active" href="/Settings"
+                                    ><i className="ri-group-line me-2"></i>Account</Link>
                                 </li>
-                                <li class="nav-item">
-                                    <Link class="nav-link" href="/Security"
-                                    ><i class="ri-lock-line me-2"></i>Security</Link>
+                                <li className="nav-item">
+                                    <Link className="nav-link" href="/Security"
+                                    ><i className="ri-lock-line me-2"></i>Security</Link>
                                 </li>
                                 <li className="nav-item">
                                     <Link className="nav-link" href="/Transactions"
@@ -108,13 +108,13 @@ export default function Page() {
 
                             </ul>
                         </div>
-                        <div class="card mb-6">
+                        <div className="card mb-6">
 
-                            <div class="card-body pt-0">
+                            <div className="card-body pt-0">
                                 <form id="formAccountSettings" method="GET" onsubmit="return false">
-                                    <div class="row mt-1 g-5">
-                                        <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
+                                    <div className="row mt-1 g-5">
+                                        <div className="col-md-6">
+                                            <div className="form-floating form-floating-outline">
                                                 <input
                                                     className="form-control"
                                                     type="text"
@@ -126,8 +126,8 @@ export default function Page() {
                                                 <label for="firstName">First Name</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
+                                        <div className="col-md-6">
+                                            <div className="form-floating form-floating-outline">
                                                 <input
                                                     className="form-control"
                                                     type="text"
@@ -139,8 +139,8 @@ export default function Page() {
                                                 <label for="lastName">Last Name</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating form-floating-outline">
+                                        <div className="col-md-6">
+                                            <div className="form-floating form-floating-outline">
                                                 <input
                                                     className="form-control"
                                                     type="text"
@@ -152,9 +152,9 @@ export default function Page() {
                                                 <label for="email">E-mail</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="input-group input-group-merge">
-                                                <div class="form-floating form-floating-outline">
+                                        <div className="col-md-6">
+                                            <div className="input-group input-group-merge">
+                                                <div className="form-floating form-floating-outline">
                                                     <input
                                                         type="text"
                                                         id="phoneNumber"
@@ -169,9 +169,9 @@ export default function Page() {
                                             </div>
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <div class="input-group input-group-merge">
-                                                <div class="form-floating form-floating-outline">
+                                        <div className="col-md-6">
+                                            <div className="input-group input-group-merge">
+                                                <div className="form-floating form-floating-outline">
                                                     <input
                                                         type="text"
                                                         id="country"
@@ -200,9 +200,9 @@ export default function Page() {
                                             </div>
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <div class="input-group input-group-merge">
-                                                <div class="form-floating form-floating-outline">
+                                        <div className="col-md-6">
+                                            <div className="input-group input-group-merge">
+                                                <div className="form-floating form-floating-outline">
                                                     <input
                                                         type="text"
                                                         id="currency"
@@ -216,9 +216,9 @@ export default function Page() {
                                             </div>
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <div class="input-group input-group-merge">
-                                                <div class="form-floating form-floating-outline">
+                                        <div className="col-md-6">
+                                            <div className="input-group input-group-merge">
+                                                <div className="form-floating form-floating-outline">
                                                     <input
                                                         type="text"
                                                         id="timeZone"
@@ -234,8 +234,8 @@ export default function Page() {
 
                                         <h5 className="mb-4">Your Current Plan Details</h5>
                                         {planInfo && (<>
-                                            <div class="col-md-6">
-                                                <div class="form-floating form-floating-outline">
+                                            <div className="col-md-6">
+                                                <div className="form-floating form-floating-outline">
                                                     <input
                                                         className="form-control"
                                                         type="text"
@@ -247,8 +247,8 @@ export default function Page() {
                                                     <label for="Plan">Plan</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-floating form-floating-outline">
+                                            <div className="col-md-6">
+                                                <div className="form-floating form-floating-outline">
                                                     <input
                                                         className="form-control"
                                                         type="text"
@@ -262,8 +262,8 @@ export default function Page() {
                                             </div>
                                             {planInfo.planName === 'Professional' &&
                                                 <>
-                                                    <div class="col-md-6">
-                                                        <div class="form-floating form-floating-outline">
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating form-floating-outline">
                                                             <input
                                                                 className="form-control"
                                                                 type="text"
@@ -275,8 +275,8 @@ export default function Page() {
                                                             <label for="startDate">Start Date</label>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-floating form-floating-outline">
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating form-floating-outline">
                                                             <input
                                                                 className="form-control"
                                                                 type="text"

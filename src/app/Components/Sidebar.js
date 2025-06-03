@@ -6,6 +6,7 @@ import classNames from 'classnames';
 import useUserPlan from '../hooks/useUserPlan';
 import axios from 'axios';
 import config from '../config/config';
+import { useAssignmentStore } from '../store/store';
 
 export default function Sidebar() {
 
@@ -20,7 +21,10 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [wasManuallyCollapsed, setWasManuallyCollapsed] = useState(false);
 
-  const [assignmentCount, setAssignmentCount] = useState(0);
+  // const [assignmentCount, setAssignmentCount] = useState(0);
+
+  const { assignmentCount, setAssignmentCount } = useAssignmentStore();
+
 
   const handleToggle = () => {
     if (window.innerWidth >= 1200) {
@@ -75,14 +79,21 @@ export default function Sidebar() {
 
         console.log(response.data)
 
+        // setAssignmentCount((response.data.data || []).length);
         setAssignmentCount((response.data.data || []).length);
       } catch (error) {
         console.error("Error fetching assignment count:", error);
       }
     };
 
-    fetchAssignmentCount();
-  }, []);
+    // fetchAssignmentCount();
+    // Only fetch if count is null (initial load)
+    if (assignmentCount === null) {
+      fetchAssignmentCount();
+    }
+  }, [setAssignmentCount, assignmentCount]);
+
+  const displayCount = assignmentCount !== null ? assignmentCount : 0;
 
   if (!token?.accessToken) return null;
 
@@ -131,7 +142,7 @@ export default function Sidebar() {
             <Link href="/Assignments" className="menu-link ">
               <i className="menu-icon  tf-icons ri-bill-line"></i>
               <div data-i18n="Assignments">Assignments</div>
-              <div className="badge bg-danger rounded-pill ms-auto">{assignmentCount}</div>
+              <div className="badge bg-danger rounded-pill ms-auto">{displayCount}</div>
             </Link>
           </li>
 

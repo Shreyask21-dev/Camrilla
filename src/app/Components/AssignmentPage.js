@@ -10,7 +10,11 @@ import useSearchStore from '../store/searchStore'; // adjust path if needed
 import config from '../config/config';
 import BasicPlanNotice from './BasicPlanNotice'; // Adjust path if needed
 
+import { useAssignmentStore } from '../store/store';
+
 export default function AssignmentPage() {
+
+    const { decrementAssignmentCount } = useAssignmentStore()
 
     const [showBasicNotice, setShowBasicNotice] = useState(false);
 
@@ -287,7 +291,7 @@ export default function AssignmentPage() {
 
         try {
             await axios.delete(`${config.BASE_URL}order/assignment/${assignmentId}`);
-
+            decrementAssignmentCount()
             alert('Assignment deleted successfully');
             fetchAssignments(startOfMonth, endOfMonth); // Refresh after delete
         } catch (error) {
@@ -457,9 +461,9 @@ export default function AssignmentPage() {
                         <div className="col app-calendar-content">
                             <div className="card shadow-none border-0">
 
-                                <div class="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
-                                    <h5 class="card-title m-0 me-2  py-1">{getTitleText()}</h5>
-                                    <div class="dropdown">
+                                <div className="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
+                                    <h5 className="card-title m-0 me-2  py-1">{getTitleText()}</h5>
+                                    <div className="dropdown">
                                         <div className="d-flex flex-wrap align-items-center gap-3">
                                             <div className="form-check form-check-inline">
                                                 <input
@@ -557,7 +561,7 @@ export default function AssignmentPage() {
                                                             <div className="d-flex gap-2">
                                                                 <button className="btn btn-sm btn-outline-info" onClick={() => handleAddNote(assignment)}>
                                                                     {/* <i className="bi bi-journal-check"></i> */}
-                                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                                    <i className="bi bi-file-earmark-pdf-fill"></i>
                                                                 </button>
                                                                 <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAssignment(assignment.id)}>
                                                                     <i className="bi bi-trash-fill"></i>
