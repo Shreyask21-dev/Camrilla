@@ -7,6 +7,7 @@ import useUserPlan from '../hooks/useUserPlan';
 import axios from 'axios';
 import config from '../config/config';
 import { useAssignmentStore } from '../store/store';
+import useLeadStore from '../store/leadStore';
 
 export default function Sidebar() {
 
@@ -21,9 +22,13 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [wasManuallyCollapsed, setWasManuallyCollapsed] = useState(false);
 
+  // const [leadCount, setLeadCount] = useState(0)
+
   // const [assignmentCount, setAssignmentCount] = useState(0);
 
   const { assignmentCount, setAssignmentCount } = useAssignmentStore();
+
+  const { leadCount, setLeadCount } = useLeadStore();
 
 
   const handleToggle = () => {
@@ -54,6 +59,30 @@ export default function Sidebar() {
     }
   };
 
+  // New useEffect for fetching lead count
+  useEffect(() => {
+    const fetchLeadCount = async () => {
+      try {
+        const tokenData = localStorage.getItem('camrilla_token');
+        const accessToken = JSON.parse(tokenData)?.accessToken;
+        if (!accessToken) return;
+
+        const response = await axios.get(`${config.BASE_URL}lead-manager/lead`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
+        // Assuming response.data.data is an array of leads
+        // setLeadCount((response.data.data || []).length);
+        setLeadCount((response.data.data || []).length);
+      } catch (error) {
+        console.error("Error fetching lead count:", error);
+      }
+    };
+
+    fetchLeadCount();
+  }, [setLeadCount]); // Empty dependency array means this runs once on mount
 
 
   useEffect(() => {
@@ -150,7 +179,7 @@ export default function Sidebar() {
             <Link href="/Leads" className="menu-link ">
               <i className="menu-icon tf-icons ri-edit-line"></i>
               <div data-i18n="Leads">Leads</div>
-              <div className="badge bg-danger rounded-pill ms-auto">{userData?.totalLeads}</div>
+              <div className="badge bg-danger rounded-pill ms-auto">{leadCount}</div>
             </Link>
           </li>
 

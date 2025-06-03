@@ -5,6 +5,7 @@ import DatePicker from 'react-datepicker'
 import useSearchStore from '../store/searchStore'; // adjust path if needed
 import config from '../config/config';
 import BasicPlanNotice from '../Components/BasicPlanNotice';
+import useLeadStore from '../store/leadStore';
 
 const normalize = (str) => str?.trim().toLowerCase();
 
@@ -13,6 +14,8 @@ const bootstrapColors = [
 ];
 
 export default function Page() {
+
+    const { setLeadCount, incrementLeadCount, decrementLeadCount } = useLeadStore();
 
     const [showBasicNotice, setShowBasicNotice] = useState(false);
 
@@ -209,6 +212,7 @@ export default function Page() {
                     handleFreeLimitExceeded(); // ✅ handle free limit
                     return;
                 }
+                incrementLeadCount();
                 console.log('Lead Added:', response.data);
                 alert('Lead Added:', response.data);
                 // Close Modal
@@ -253,6 +257,7 @@ export default function Page() {
         axios.get(`${config.BASE_URL}lead-manager/lead`)
             .then(response => {
                 console.log(response.data.data)
+                setLeadCount(response.data.data.length);
                 setLeads(response.data.data);
 
                 const rawLeads = response.data.data;
@@ -384,6 +389,7 @@ export default function Page() {
             const response = await axios.delete(`${config.BASE_URL}lead-manager/lead/${selectedLead.id}`);
 
             console.log('Lead deleted:', response.data);
+            decrementLeadCount();
 
             // Close modal after delete
             const modal = bootstrap.Modal.getInstance(document.getElementById('editLeadModal'));
