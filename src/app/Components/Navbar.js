@@ -87,7 +87,7 @@ export default function Navbar() {
                             </a>
                             <ul className="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <a className="dropdown-item" href="pages-account-settings-account.html">
+                                    <a className="dropdown-item" href="/Profile">
                                         <div className="d-flex">
                                             <div className="flex-shrink-0 me-2">
                                                 <AvatarInitials name={userData?.name || 'Guest'} />
