@@ -15,8 +15,48 @@ export default function Page() {
   const [password, setPassword] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
 
+  // --- validation state (added) ---
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  })
+
+  // validation helpers (added)
+  const validateEmail = (value) => {
+    if (!value || value.trim() === '') return 'Email is required.'
+    const trimmed = value.trim()
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!re.test(trimmed)) return 'Enter a valid email address.'
+    return ''
+  }
+
+  const validatePassword = (value) => {
+    if (!value || value === '') return 'Password is required.'
+    if (value.length < 8) return 'Password must be at least 8 characters.'
+    return ''
+  }
+
+  // onBlur handlers to provide inline feedback (added)
+  const handleEmailBlur = () => {
+    setErrors((prev) => ({ ...prev, email: validateEmail(email) }))
+  }
+
+  const handlePasswordBlur = () => {
+    setErrors((prev) => ({ ...prev, password: validatePassword(password) }))
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
+
+    // run validations before attempting submit (added)
+    const emailErr = validateEmail(email)
+    const passwordErr = validatePassword(password)
+    setErrors({ email: emailErr, password: passwordErr })
+
+    if (emailErr || passwordErr) {
+      // stop submission if invalid
+      return
+    }
 
     try {
       const response = await axios.post(`${config.BASE_URL}user/login`, {
@@ -89,14 +129,20 @@ export default function Page() {
                 <div className="form-floating form-floating-outline mb-5">
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                     id="email"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onBlur={handleEmailBlur}   /* added */
                     required
                   />
                   <label htmlFor="email">Email</label>
+                  {errors.email && (
+                    <div className="invalid-feedback d-block" style={{ marginTop: 6 }}>
+                      {errors.email}
+                    </div>
+                  )}
                 </div>
                 <div className="mb-5">
                   <div className="form-password-toggle">
@@ -105,10 +151,11 @@ export default function Page() {
                         <input
                           type={showPassword ? 'text' : 'password'}
                           id="password"
-                          className="form-control"
+                          className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                           placeholder="********"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          onBlur={handlePasswordBlur} /* added */
                           required
                         />
                         <label htmlFor="password">Password</label>
@@ -120,6 +167,11 @@ export default function Page() {
                         <i className={showPassword ? "ri-eye-line" : "ri-eye-off-line"}></i>
                       </span>
                     </div>
+                    {errors.password && (
+                      <div className="invalid-feedback d-block" style={{ marginTop: 6 }}>
+                        {errors.password}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mb-5 d-flex justify-content-between mt-5">

@@ -1,307 +1,356 @@
-'use client'
-import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
-import { lookup } from 'country-data';
-import config from '../config/config';
+"use client";
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import { lookup } from "country-data";
+import config from "../config/config";
 
 export default function Page() {
+  const [paymentHistory, setPaymentHistory] = useState([]);
 
-    const [paymentHistory, setPaymentHistory] = useState([]);
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      const tokenData = localStorage.getItem("camrilla_token");
+      if (!tokenData) return;
 
-    useEffect(() => {
-        const fetchPaymentHistory = async () => {
-            const tokenData = localStorage.getItem('camrilla_token');
-            if (!tokenData) return;
+      try {
+        const { accessToken } = JSON.parse(tokenData);
+        const res = await fetch(`${config.BASE_URL}payment-history`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
-            try {
-                const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch(`${config.BASE_URL}payment-history`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-
-                const json = await res.json();
-                if (json.code === 0) {
-                    setPaymentHistory(json.data || []);
-                }
-            } catch (err) {
-                console.error("Error fetching payment history:", err);
-            }
-        };
-
-        fetchPaymentHistory();
-    }, []);
-
-
-    const [userData, setUserData] = useState({});
-
-    const [planInfo, setPlanInfo] = useState(null);
-
-    useEffect(() => {
-        const data = localStorage.getItem('userData');
-        if (data) {
-            const parsedData = JSON.parse(data);
-            setUserData(parsedData);
+        const json = await res.json();
+        if (json.code === 0) {
+          setPaymentHistory(json.data || []);
         }
-    }, []);
-
-    useEffect(() => {
-        const fetchUserPlan = async () => {
-            const tokenData = localStorage.getItem('camrilla_token');
-            if (!tokenData) return;
-
-            try {
-                const { accessToken } = JSON.parse(tokenData);
-                const res = await fetch(`${config.BASE_URL}user-plan`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-
-                const json = await res.json();
-                if (json.code === 0) {
-                    setPlanInfo(json.data.userPlanDetails);
-                }
-            } catch (err) {
-                console.error("Error fetching user plan:", err);
-            }
-        };
-
-        fetchUserPlan();
-    }, []);
-
-    const getCountryDetails = (countryCode) => {
-        try {
-            const countries = lookup?.countries?.({ alpha2: countryCode }) || [];
-            const country = countries.length > 0 ? countries[0] : null;
-            return country ? { name: country.name, phoneCode: country.callingCodes?.[0] || '' } : { name: '', phoneCode: '' };
-        } catch (e) {
-            console.error('Error in getCountryDetails:', e);
-            return { name: '', phoneCode: '' };
-        }
+      } catch (err) {
+        console.error("Error fetching payment history:", err);
+      }
     };
 
+    fetchPaymentHistory();
+  }, []);
 
-    const { name: countryName, phoneCode } = getCountryDetails(userData.country || '');
+  const [userData, setUserData] = useState({});
 
-    return (
-        <div>
+  const [planInfo, setPlanInfo] = useState(null);
 
-            <div className="container-xxl flex-grow-1 container-p-y">
-                <div className="row">
-                    <div className="col-md-12">
-                        <div className="nav-align-top">
-                            <ul className="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
-                                <li className="nav-item">
-                                    <Link className="nav-link active" href="/Settings"
-                                    ><i className="ri-group-line me-2"></i>Account</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className="nav-link" href="/Security"
-                                    ><i className="ri-lock-line me-2"></i>Security</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className="nav-link" href="/Transactions"
-                                    ><i className="ri-bank-line me-2"></i>Transactions</Link>
-                                </li>
+  useEffect(() => {
+    const data = localStorage.getItem("userData");
+    if (data) {
+      const parsedData = JSON.parse(data);
+      setUserData(parsedData);
+    }
+  }, []);
 
-                            </ul>
-                        </div>
-                        <div className="card mb-6">
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      const tokenData = localStorage.getItem("camrilla_token");
+      if (!tokenData) return;
 
-                            <div className="card-body pt-0">
-                                <form id="formAccountSettings" method="GET" onsubmit="return false">
-                                    <div className="row mt-1 g-5">
-                                        <div className="col-md-6">
-                                            <div className="form-floating form-floating-outline">
-                                                <input
-                                                    className="form-control"
-                                                    type="text"
-                                                    id="firstName"
-                                                    name="firstName"
-                                                    value={userData.name?.split(' ')[0] || ''}
-                                                    readOnly
-                                                />
-                                                <label for="firstName">First Name</label>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="form-floating form-floating-outline">
-                                                <input
-                                                    className="form-control"
-                                                    type="text"
-                                                    id="lastName"
-                                                    name="lastName"
-                                                    value={userData.name?.split(' ')[1] || ''}
-                                                    readOnly
-                                                />
-                                                <label for="lastName">Last Name</label>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="form-floating form-floating-outline">
-                                                <input
-                                                    className="form-control"
-                                                    type="text"
-                                                    id="email"
-                                                    name="email"
-                                                    value={userData.email || ''}
-                                                    readOnly
-                                                />
-                                                <label for="email">E-mail</label>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="input-group input-group-merge">
-                                                <div className="form-floating form-floating-outline">
-                                                    <input
-                                                        type="text"
-                                                        id="phoneNumber"
-                                                        name="phoneNumber"
-                                                        className="form-control"
-                                                        // value={userData.mobile || ''}
-                                                        value={`${phoneCode} ${userData.mobile || ''}`}
-                                                        readOnly
-                                                    />
-                                                    <label for="phoneNumber">Phone Number</label>
-                                                </div>
-                                            </div>
-                                        </div>
+      try {
+        const { accessToken } = JSON.parse(tokenData);
+        const res = await fetch(`${config.BASE_URL}user-plan`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
-                                        <div className="col-md-6">
-                                            <div className="input-group input-group-merge">
-                                                <div className="form-floating form-floating-outline">
-                                                    <input
-                                                        type="text"
-                                                        id="country"
-                                                        name="country"
-                                                        className="form-control"
-                                                        // value={userData.country || ''}
-                                                        value={countryName}
-                                                        readOnly
-                                                    />
-                                                    <label for="country">Country</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* Language */}
-                                        <div className="col-md-6">
-                                            <div className="form-floating form-floating-outline">
-                                                <input
-                                                    id="TagifyLanguageSuggestion"
-                                                    name="TagifyLanguageSuggestion"
-                                                    className="form-control h-auto"
-                                                    placeholder="select language"
-                                                    value="English" // static for now
-                                                    readOnly
-                                                />
-                                                <label htmlFor="TagifyLanguageSuggestion">Language</label>
-                                            </div>
-                                        </div>
+        const json = await res.json();
+        if (json.code === 0) {
+          setPlanInfo(json.data.userPlanDetails);
+        }
+      } catch (err) {
+        console.error("Error fetching user plan:", err);
+      }
+    };
 
-                                        <div className="col-md-6">
-                                            <div className="input-group input-group-merge">
-                                                <div className="form-floating form-floating-outline">
-                                                    <input
-                                                        type="text"
-                                                        id="currency"
-                                                        name="currency"
-                                                        className="form-control"
-                                                        value={userData.currency || ''}
-                                                        readOnly
-                                                    />
-                                                    <label for="currency">Currency</label>
-                                                </div>
-                                            </div>
-                                        </div>
+    fetchUserPlan();
+  }, []);
 
-                                        <div className="col-md-6">
-                                            <div className="input-group input-group-merge">
-                                                <div className="form-floating form-floating-outline">
-                                                    <input
-                                                        type="text"
-                                                        id="timeZone"
-                                                        name="timeZone"
-                                                        className="form-control"
-                                                        value={userData.userTimeZone || ''}
-                                                        readOnly
-                                                    />
-                                                    <label for="timeZone">Time Zone</label>
-                                                </div>
-                                            </div>
-                                        </div>
+  const getCountryDetails = (countryCode) => {
+    try {
+      const countries = lookup?.countries?.({ alpha2: countryCode }) || [];
+      const country = countries.length > 0 ? countries[0] : null;
+      return country
+        ? { name: country.name, phoneCode: country.callingCodes?.[0] || "" }
+        : { name: "", phoneCode: "" };
+    } catch (e) {
+      console.error("Error in getCountryDetails:", e);
+      return { name: "", phoneCode: "" };
+    }
+  };
 
-                                        <h5 className="mb-4">Your Current Plan Details</h5>
-                                        {planInfo && (<>
-                                            <div className="col-md-6">
-                                                <div className="form-floating form-floating-outline">
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        id="Plan"
-                                                        name="Plan"
-                                                        value={planInfo.planName}
-                                                        readOnly
-                                                    />
-                                                    <label for="Plan">Plan</label>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="form-floating form-floating-outline">
-                                                    <input
-                                                        className="form-control"
-                                                        type="text"
-                                                        id="Status"
-                                                        name="Status"
-                                                        value={planInfo.planStatus}
-                                                        readOnly
-                                                    />
-                                                    <label for="Status">Status</label>
-                                                </div>
-                                            </div>
-                                            {planInfo.planName === 'Professional' &&
-                                                <>
-                                                    <div className="col-md-6">
-                                                        <div className="form-floating form-floating-outline">
-                                                            <input
-                                                                className="form-control"
-                                                                type="text"
-                                                                id="startDate"
-                                                                name="startDate"
-                                                                value={new Date(planInfo.startDate).toLocaleDateString()}
-                                                                readOnly
-                                                            />
-                                                            <label for="startDate">Start Date</label>
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <div className="form-floating form-floating-outline">
-                                                            <input
-                                                                className="form-control"
-                                                                type="text"
-                                                                id="endDate"
-                                                                name="endDate"
-                                                                value={new Date(planInfo.endDate).toLocaleDateString()}
-                                                                readOnly
-                                                            />
-                                                            <label for="startDate">End Date</label>
-                                                        </div>
-                                                    </div>
-                                                </>}
+  // Get timezone using country name
+  const COUNTRY_TIMEZONE_MAP = {
+    India: "Asia/Kolkata",
+    "United States": "America/New_York",
+    Canada: "America/Toronto",
+    "United Kingdom": "Europe/London",
+    Australia: "Australia/Sydney",
+    Germany: "Europe/Berlin",
+    France: "Europe/Paris",
+    UAE: "Asia/Dubai",
+    Singapore: "Asia/Singapore",
+    Japan: "Asia/Tokyo",
+    China: "Asia/Shanghai",
+  };
 
-                                        </>
-                                        )}
-                                    </div>
-                                </form>
-                            </div>
+  const getTimeZoneFromCountry = (countryName) => {
+    if (!countryName) return "UTC";
 
-                        </div>
-                    </div>
-                </div>
+    // 1. Check from map
+    if (COUNTRY_TIMEZONE_MAP[countryName]) {
+      return COUNTRY_TIMEZONE_MAP[countryName];
+    }
 
+    // 2. Fallback: try to detect
+    try {
+      const zones = Intl.supportedValuesOf("timeZone");
+      const match = zones.find((z) =>
+        z.toLowerCase().includes(countryName.toLowerCase())
+      );
+      return match || "UTC";
+    } catch (e) {
+      return "UTC";
+    }
+  };
+
+  const { name: countryName, phoneCode } = getCountryDetails(
+    userData.country || ""
+  );
+
+  return (
+    <div>
+      <div className="container-xxl flex-grow-1 container-p-y">
+        <div className="row">
+          <div className="col-md-12">
+            <div className="nav-align-top">
+              <ul className="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
+                <li className="nav-item">
+                  <Link className="nav-link active" href="/Settings">
+                    <i className="ri-group-line me-2"></i>Account
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" href="/Security">
+                    <i className="ri-lock-line me-2"></i>Security
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" href="/Transactions">
+                    <i className="ri-bank-line me-2"></i>Transactions
+                  </Link>
+                </li>
+              </ul>
             </div>
+            <div className="card mb-6">
+              <div className="card-body pt-0">
+                <form
+                  id="formAccountSettings"
+                  method="GET"
+                  onsubmit="return false"
+                >
+                  <div className="row mt-1 g-5">
+                    <div className="col-md-6">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          className="form-control"
+                          type="text"
+                          id="firstName"
+                          name="firstName"
+                          value={userData.name?.split(" ")[0] || ""}
+                          readOnly
+                        />
+                        <label for="firstName">First Name</label>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          className="form-control"
+                          type="text"
+                          id="lastName"
+                          name="lastName"
+                          value={userData.name?.split(" ")[1] || ""}
+                          readOnly
+                        />
+                        <label for="lastName">Last Name</label>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          className="form-control"
+                          type="text"
+                          id="email"
+                          name="email"
+                          value={userData.email || ""}
+                          readOnly
+                        />
+                        <label for="email">E-mail</label>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="input-group input-group-merge">
+                        <div className="form-floating form-floating-outline">
+                          <input
+                            type="text"
+                            id="phoneNumber"
+                            name="phoneNumber"
+                            className="form-control"
+                            // value={userData.mobile || ''}
+                            value={`${phoneCode} ${userData.mobile || ""}`}
+                            readOnly
+                          />
+                          <label for="phoneNumber">Phone Number</label>
+                        </div>
+                      </div>
+                    </div>
 
+                    <div className="col-md-6">
+                      <div className="input-group input-group-merge">
+                        <div className="form-floating form-floating-outline">
+                          <input
+                            type="text"
+                            id="country"
+                            name="country"
+                            className="form-control"
+                            // value={userData.country || ''}
+                            value={countryName}
+                            readOnly
+                          />
+                          <label for="country">Country</label>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Language */}
+                    <div className="col-md-6">
+                      <div className="form-floating form-floating-outline">
+                        <input
+                          id="TagifyLanguageSuggestion"
+                          name="TagifyLanguageSuggestion"
+                          className="form-control h-auto"
+                          placeholder="select language"
+                          value="English" // static for now
+                          readOnly
+                        />
+                        <label htmlFor="TagifyLanguageSuggestion">
+                          Language
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="input-group input-group-merge">
+                        <div className="form-floating form-floating-outline">
+                          <input
+                            type="text"
+                            id="currency"
+                            name="currency"
+                            className="form-control"
+                            value={userData.currency || ""}
+                            readOnly
+                          />
+                          <label for="currency">Currency</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="input-group input-group-merge">
+                        <div className="form-floating form-floating-outline">
+                          <input
+                            type="text"
+                            id="timeZone"
+                            name="timeZone"
+                            className="form-control"
+                            value={
+                              userData.userTimeZone &&
+                              userData.userTimeZone !== "null"
+                                ? userData.userTimeZone
+                                : getTimeZoneFromCountry(countryName)
+                            }
+                            readOnly
+                          />
+                          <label for="timeZone">Time Zone</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h5 className="mb-4">Your Current Plan Details</h5>
+                    {planInfo && (
+                      <>
+                        <div className="col-md-6">
+                          <div className="form-floating form-floating-outline">
+                            <input
+                              className="form-control"
+                              type="text"
+                              id="Plan"
+                              name="Plan"
+                              value={planInfo.planName}
+                              readOnly
+                            />
+                            <label for="Plan">Plan</label>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-floating form-floating-outline">
+                            <input
+                              className="form-control"
+                              type="text"
+                              id="Status"
+                              name="Status"
+                              value={planInfo.planStatus}
+                              readOnly
+                            />
+                            <label for="Status">Status</label>
+                          </div>
+                        </div>
+                        {planInfo.planName === "Professional" && (
+                          <>
+                            <div className="col-md-6">
+                              <div className="form-floating form-floating-outline">
+                                <input
+                                  className="form-control"
+                                  type="text"
+                                  id="startDate"
+                                  name="startDate"
+                                  value={new Date(
+                                    planInfo.startDate
+                                  ).toLocaleDateString()}
+                                  readOnly
+                                />
+                                <label for="startDate">Start Date</label>
+                              </div>
+                            </div>
+                            <div className="col-md-6">
+                              <div className="form-floating form-floating-outline">
+                                <input
+                                  className="form-control"
+                                  type="text"
+                                  id="endDate"
+                                  name="endDate"
+                                  value={new Date(
+                                    planInfo.endDate
+                                  ).toLocaleDateString()}
+                                  readOnly
+                                />
+                                <label for="startDate">End Date</label>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         </div>
-    )
+      </div>
+    </div>
+  );
 }

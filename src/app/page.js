@@ -878,7 +878,7 @@ export default function Home() {
                           name="eventEndDate"
                           placeholder="End Date"
                         />
-                        <label for="eventEndDate">End Date</label>
+                        <label htmlFor="eventEndDate">End Date</label>
                       </div>
                       <div className="mb-5">
                         <div className="form-check form-switch">

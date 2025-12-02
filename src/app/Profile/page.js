@@ -272,7 +272,8 @@ useEffect(() => {
                                             </li>
                                             <li className="d-flex align-items-center">
                                                 <i className="ri-star-smile-line ri-24px"></i><span className="fw-medium mx-2">Leads:</span>
-                                                <span>{userData.totalLeads || 0}</span>
+                                                <span>{leads.length}</span>
+
                                             </li>
                                         </ul>
                                     </div>
