@@ -203,7 +203,7 @@ export default function Page() {
         setTimeout(() => router.push('/Login'), 1600)
       } else {
         // handle non-0 codes gracefully
-        console.error('Signup response:', res.data)
+        console.log('Signup response:', res.data)
         setErrorMsg(res.data?.message || 'Registration failed. Please try again.')
       }
     } catch (error) {
