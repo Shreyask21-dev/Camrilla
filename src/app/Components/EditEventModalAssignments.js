@@ -61,6 +61,11 @@ export default function EditEventModalAssignments({
     const token = JSON.parse(localStorage.getItem("camrilla_token"))?.accessToken;
     const uniqueAssignmentNames = [...new Set(allEvents.map(ev => ev.title))];
 
+    // ---------- Validation state ----------
+    const [errors, setErrors] = useState({});
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     // ------------ Load event data safely -------------
     useEffect(() => {
         if (eventData) {
@@ -86,13 +91,101 @@ export default function EditEventModalAssignments({
             setTransactions(Array.isArray(eventData.transactions) ? eventData.transactions : []);
 
             setShowOtherInput(eventData.assignmentName === "Other");
+            setCustomAssignmentName(eventData.assignmentName === "Other" ? "" : "");
+            setErrors({});
         }
     }, [eventData]);
 
     // ------------ Handle Change -------------
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        // if number input for totalAmount, keep as number
+        const val = name === "totalAmount" ? (value === "" ? "" : Number(value)) : value;
+        setFormData(prev => ({ ...prev, [name]: val }));
+        validateField(name, val);
+    };
+
+    // ------------ Field validation helpers -------------
+    const validateField = (name, value) => {
+        let msg = "";
+
+        const v = value === undefined ? formData[name] : value;
+
+        switch (name) {
+            case "customerName":
+                if (!v || !String(v).trim()) msg = "Customer name required";
+                break;
+            case "customerMobile":
+                if (!v || !String(v).trim()) msg = "Customer mobile required";
+                break;
+            case "customerEmail":
+                if (!v || !String(v).trim()) msg = "Customer email required";
+                else if (!emailRegex.test(String(v).trim())) msg = "Invalid email";
+                break;
+            case "customerAddress":
+                if (!v || !String(v).trim()) msg = "Customer address required";
+                break;
+            case "assignmentName":
+                if (!showOtherInput && (!v || !String(v).trim())) msg = "Assignment name required";
+                break;
+            case "assignmentAddress":
+                if (!v || !String(v).trim()) msg = "Assignment address required";
+                break;
+            case "contactPerson1Mobile":
+                if (!v || !String(v).trim()) msg = "Alternate contact required";
+                break;
+            case "assignmentDate":
+                if (!v) msg = "Assignment date required";
+                break;
+            case "assignmentTime":
+                if (!v) msg = "Assignment time required";
+                break;
+            case "assignmentNote":
+                if (!v || !String(v).trim()) msg = "Assignment note required";
+                break;
+            case "totalAmount":
+                if (v === "" || v === null || isNaN(Number(v)) || Number(v) <= 0) msg = "Total amount must be > 0";
+                break;
+            default:
+                msg = "";
+        }
+
+        setErrors(prev => ({ ...prev, [name]: msg }));
+        return msg === "";
+    };
+
+    const validateForm = () => {
+        const requiredFields = [
+            "customerName",
+            "customerMobile",
+            "customerEmail",
+            "customerAddress",
+            "assignmentName",
+            "assignmentAddress",
+            "contactPerson1Mobile",
+            "assignmentDate",
+            "assignmentTime",
+            "assignmentNote",
+            "totalAmount"
+        ];
+
+        let valid = true;
+        requiredFields.forEach((f) => {
+            // If assignmentName is "Other", check customAssignmentName separately
+            if (f === "assignmentName" && showOtherInput) {
+                if (!customAssignmentName || !String(customAssignmentName).trim()) {
+                    setErrors(prev => ({ ...prev, customAssignmentName: "Assignment name required" }));
+                    valid = false;
+                } else {
+                    setErrors(prev => ({ ...prev, customAssignmentName: "" }));
+                }
+            } else {
+                const ok = validateField(f);
+                if (!ok) valid = false;
+            }
+        });
+
+        return valid;
     };
 
     // ------------ Assignment selector -------------
@@ -100,14 +193,23 @@ export default function EditEventModalAssignments({
         if (e.target.value === "other") {
             setShowOtherInput(true);
             setFormData(prev => ({ ...prev, assignmentName: "" }));
+            setErrors(prev => ({ ...prev, assignmentName: "Assignment name required" }));
         } else {
             setShowOtherInput(false);
             setFormData(prev => ({ ...prev, assignmentName: e.target.value }));
+            setErrors(prev => ({ ...prev, assignmentName: "" }));
+            setCustomAssignmentName("");
+            setErrors(prev => ({ ...prev, customAssignmentName: "" }));
         }
     };
 
     // ------------ Update Assignment API -------------
     const handleUpdateAssignment = async () => {
+        if (!validateForm()) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
         const dateTime = new Date(`${formData.assignmentDate}T${formData.assignmentTime}`).getTime();
 
         const payload = {
@@ -134,6 +236,7 @@ export default function EditEventModalAssignments({
             alert("Error updating assignment");
         }
     };
+
     // ------------- Delete Function -------------
     const handleDeleteFunction = async (functionId) => {
         if (!functionId) return alert("Invalid function ID");
@@ -155,34 +258,36 @@ export default function EditEventModalAssignments({
     };
 
     // ------------- Delete Transaction -------------
-   const handleDeleteTransaction = async (transactionId) => {
-    if (!transactionId) return alert("Invalid transaction ID");
+    const handleDeleteTransaction = async (transactionId) => {
+        if (!transactionId) return alert("Invalid transaction ID");
 
-    const confirmDelete = window.confirm("Are you sure you want to delete this transaction?");
-    if (!confirmDelete) return; // User cancelled deletion
+        const confirmDelete = window.confirm("Are you sure you want to delete this transaction?");
+        if (!confirmDelete) return; // User cancelled deletion
 
-    try {
-        await axios.delete(
-            `${config.BASE_URL}order/assignment/${eventData.id}/transaction/${transactionId}`,
-            {
-                headers: { Authorization: `Bearer ${token}` }
-            }
-        );
+        try {
+            await axios.delete(
+                `${config.BASE_URL}order/assignment/${eventData.id}/transaction/${transactionId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
 
-        setTransactions(prev => prev.filter(t => t.id !== transactionId));
-        alert("Transaction deleted successfully");
-        refreshEvents(selectedDate);
-    } catch (err) {
-        console.error(err);
-        alert("Failed to delete transaction");
-    }
-};
+            setTransactions(prev => prev.filter(t => t.id !== transactionId));
+            alert("Transaction deleted successfully");
+            refreshEvents(selectedDate);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete transaction");
+        }
+    };
 
 
     // ------------- Add or Update Function -------------
     const handleAddOrUpdateFunction = async () => {
-        if (!newFunction.functionName.trim()) return alert("Function name required");
+        // Inline validation for function
+        if (!newFunction.functionName || !String(newFunction.functionName).trim()) return alert("Function name required");
         if (!newFunction.functionDateTime) return alert("Function date required");
+        if (newFunction.assingTo === "Other" && !newFunction.assignToHandle.trim()) return alert("Assigned to name required");
 
         const functionDateTime = new Date(newFunction.functionDateTime).getTime();
 
@@ -258,6 +363,7 @@ export default function EditEventModalAssignments({
     // ------------- Add / Update Transaction -------------
     const handleAddOrUpdateTransaction = async () => {
         if (!newTransaction.receivedPayment) return alert("Payment amount required");
+        if (Number(newTransaction.receivedPayment) <= 0) return alert("Payment amount must be positive");
         if (!newTransaction.receivedDate) return alert("Received date required");
 
         const receivedDate = new Date(newTransaction.receivedDate).getTime();
@@ -333,6 +439,45 @@ export default function EditEventModalAssignments({
     const totalPaid = transactions.reduce((sum, t) => sum + Number(t.receivedPayment || 0), 0);
     const remaining = (formData.totalAmount || 0) - totalPaid;
 
+    // overall validity for disabling the Update button
+    const formIsValid = () => {
+        // quick check: no error messages and required fields present
+        const required = [
+            "customerName",
+            "customerMobile",
+            "customerEmail",
+            "customerAddress",
+            "assignmentAddress",
+            "contactPerson1Mobile",
+            "assignmentDate",
+            "assignmentTime",
+            "assignmentNote",
+            "totalAmount"
+        ];
+
+        for (const f of required) {
+            if (!formData[f] && formData[f] !== 0) return false;
+            if (errors[f]) return false;
+        }
+
+        // assignmentName handled separately
+        if (showOtherInput) {
+            if (!customAssignmentName || !String(customAssignmentName).trim()) return false;
+            if (errors.customAssignmentName) return false;
+        } else {
+            if (!formData.assignmentName || !String(formData.assignmentName).trim()) return false;
+            if (errors.assignmentName) return false;
+        }
+
+        // email pattern
+        if (!emailRegex.test(String(formData.customerEmail || "").trim())) return false;
+
+        // total amount numeric > 0
+        if (isNaN(Number(formData.totalAmount)) || Number(formData.totalAmount) <= 0) return false;
+
+        return true;
+    };
+
     return (
         <Modal show={show} onHide={handleClose} size="xl" backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
@@ -351,7 +496,12 @@ export default function EditEventModalAssignments({
                                     name="customerName"
                                     value={safe(formData.customerName)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.customerName}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.customerName}
+                                </Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -360,7 +510,12 @@ export default function EditEventModalAssignments({
                                     name="customerMobile"
                                     value={safe(formData.customerMobile)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.customerMobile}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.customerMobile}
+                                </Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -369,7 +524,12 @@ export default function EditEventModalAssignments({
                                     name="customerEmail"
                                     value={safe(formData.customerEmail)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.customerEmail}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.customerEmail}
+                                </Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -378,7 +538,12 @@ export default function EditEventModalAssignments({
                                     name="customerAddress"
                                     value={safe(formData.customerAddress)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.customerAddress}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.customerAddress}
+                                </Form.Control.Feedback>
                             </Form.Group>
                         </Form>
                     </Tab>
@@ -391,6 +556,8 @@ export default function EditEventModalAssignments({
                                 <Form.Select
                                     onChange={handleAssignmentChange}
                                     value={safe(formData.assignmentName)}
+                                    isInvalid={!!errors.assignmentName || !!errors.customAssignmentName}
+                                    required={!showOtherInput}
                                 >
                                     <option value="">-- Select Assignment --</option>
                                     {uniqueAssignmentNames.map((name, idx) => (
@@ -398,6 +565,9 @@ export default function EditEventModalAssignments({
                                     ))}
                                     <option value="other">Other</option>
                                 </Form.Select>
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.assignmentName || errors.customAssignmentName}
+                                </Form.Control.Feedback>
                             </Form.Group>
 
                             {showOtherInput && (
@@ -405,8 +575,18 @@ export default function EditEventModalAssignments({
                                     <Form.Label>New Assignment Name</Form.Label>
                                     <Form.Control
                                         value={customAssignmentName}
-                                        onChange={(e) => setCustomAssignmentName(e.target.value)}
+                                        onChange={(e) => {
+                                            setCustomAssignmentName(e.target.value);
+                                            if (!e.target.value || !String(e.target.value).trim()) {
+                                                setErrors(prev => ({ ...prev, customAssignmentName: "Assignment name required" }));
+                                            } else {
+                                                setErrors(prev => ({ ...prev, customAssignmentName: "" }));
+                                            }
+                                        }}
+                                        isInvalid={!!errors.customAssignmentName}
+                                        required={showOtherInput}
                                     />
+                                    <Form.Control.Feedback type="invalid">{errors.customAssignmentName}</Form.Control.Feedback>
                                 </Form.Group>
                             )}
 
@@ -416,7 +596,12 @@ export default function EditEventModalAssignments({
                                     name="assignmentAddress"
                                     value={safe(formData.assignmentAddress)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.assignmentAddress}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.assignmentAddress}
+                                </Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -425,7 +610,12 @@ export default function EditEventModalAssignments({
                                     name="contactPerson1Mobile"
                                     value={safe(formData.contactPerson1Mobile)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.contactPerson1Mobile}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.contactPerson1Mobile}
+                                </Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -435,7 +625,10 @@ export default function EditEventModalAssignments({
                                     name="assignmentDate"
                                     value={safe(formData.assignmentDate)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.assignmentDate}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">{errors.assignmentDate}</Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -445,7 +638,10 @@ export default function EditEventModalAssignments({
                                     name="assignmentTime"
                                     value={safe(formData.assignmentTime)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.assignmentTime}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">{errors.assignmentTime}</Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -456,7 +652,10 @@ export default function EditEventModalAssignments({
                                     name="assignmentNote"
                                     value={safe(formData.assignmentNote)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.assignmentNote}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">{errors.assignmentNote}</Form.Control.Feedback>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -466,7 +665,10 @@ export default function EditEventModalAssignments({
                                     type="number"
                                     value={safe(formData.totalAmount, 0)}
                                     onChange={handleChange}
+                                    isInvalid={!!errors.totalAmount}
+                                    required
                                 />
+                                <Form.Control.Feedback type="invalid">{errors.totalAmount}</Form.Control.Feedback>
                             </Form.Group>
                         </Form>
                     </Tab>
@@ -515,6 +717,7 @@ export default function EditEventModalAssignments({
                                                 assignToHandle: e.target.value
                                             }))
                                         }
+                                        required
                                     />
                                 </Form.Group>
                             )}
@@ -558,6 +761,7 @@ export default function EditEventModalAssignments({
                                     onChange={(e) =>
                                         setNewFunction(prev => ({ ...prev, functionName: e.target.value }))
                                     }
+                                    required
                                 />
                             </Form.Group>
 
@@ -569,6 +773,7 @@ export default function EditEventModalAssignments({
                                     onChange={(e) =>
                                         setNewFunction(prev => ({ ...prev, functionDateTime: e.target.value }))
                                     }
+                                    required
                                 />
                             </Form.Group>
 
@@ -614,6 +819,7 @@ export default function EditEventModalAssignments({
                                                 assignToHandle: e.target.value
                                             }))
                                         }
+                                        required
                                     />
                                 )}
                             </Form.Group>
@@ -671,6 +877,7 @@ export default function EditEventModalAssignments({
                                             receivedPayment: e.target.value
                                         }))
                                     }
+                                    required
                                 />
                             </Form.Group>
 
@@ -685,6 +892,7 @@ export default function EditEventModalAssignments({
                                             receivedDate: e.target.value
                                         }))
                                     }
+                                    required
                                 />
                             </Form.Group>
 
@@ -698,6 +906,7 @@ export default function EditEventModalAssignments({
                                             paymentNote: e.target.value
                                         }))
                                     }
+                                    required
                                 />
                             </Form.Group>
 
@@ -714,7 +923,7 @@ export default function EditEventModalAssignments({
                     Close
                 </Button>
 
-                <Button variant="primary" onClick={handleUpdateAssignment}>
+                <Button variant="primary" onClick={handleUpdateAssignment} disabled={!formIsValid()}>
                     Update Assignment
                 </Button>
             </Modal.Footer>

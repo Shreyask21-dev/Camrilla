@@ -17,6 +17,13 @@ export default function Page() {
 
     const { setLeadCount, incrementLeadCount, decrementLeadCount } = useLeadStore();
 
+    // Calculate min and max dates for date inputs
+    const today = new Date();
+    const minDate = today.toISOString().split('T')[0];
+    const maxDate = new Date(today.getFullYear() + 10, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+    const minDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0, 16);
+    const maxDateTime = new Date(today.getFullYear() + 10, today.getMonth(), today.getDate(), 23, 59).toISOString().slice(0, 16);
+
     const [showBasicNotice, setShowBasicNotice] = useState(false);
 
     const handleFreeLimitExceeded = () => {
@@ -538,9 +545,9 @@ export default function Page() {
                             <div className="card shadow-none border-0">
 
 
-                                <div class="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
-                                    <h5 class="card-title m-0 me-2  py-1">{getLeadsTitle()}</h5>
-                                    <div class="dropdown">
+                                <div className="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
+                                    <h5 className="card-title m-0 me-2  py-1">{getLeadsTitle()}</h5>
+                                    <div className="dropdown">
                                         <div className="d-flex flex-wrap align-items-center gap-3">
 
                                             <div className="form-check form-check-inline">
@@ -760,7 +767,7 @@ export default function Page() {
 
                                 <div className="mb-3">
                                     <label className="form-label">Assignment DateTime</label>
-                                    <input type="datetime-local" className="form-control" onChange={(e) => handleDateTimeChange(e.target.value)} required />
+                                    <input type="datetime-local" className="form-control" min={minDateTime} max={maxDateTime} onChange={(e) => handleDateTimeChange(e.target.value)} required />
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label">Total Amount</label>
@@ -856,7 +863,7 @@ export default function Page() {
                                     {/* Assignment DateTime */}
                                     <div className="mb-3">
                                         <label className="form-label">Assignment DateTime</label>
-                                        <input type="datetime-local" className="form-control" value={selectedLead.assignmentDateTime} onChange={(e) => setSelectedLead({ ...selectedLead, assignmentDateTime: e.target.value })} required />
+                                        <input type="datetime-local" className="form-control" min={minDateTime} max={maxDateTime} value={selectedLead.assignmentDateTime} onChange={(e) => setSelectedLead({ ...selectedLead, assignmentDateTime: e.target.value })} required />
                                     </div>
 
                                     {/* Total Amount */}

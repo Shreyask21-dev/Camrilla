@@ -19,6 +19,7 @@ import useSearchStore from "./store/searchStore"; // adjust as needed
 import config from "./config/config";
 import BasicPlanNotice from "./Components/BasicPlanNotice";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import RenewalNotice from "./Components/RenewalNotice";
 
 const normalize = (str) => str?.trim().toLowerCase();
@@ -350,22 +351,25 @@ export default function Home() {
     dueGrowthPercent,
     receivedGrowthPercent,
   } = useMemo(() => {
-    const thisWeekStart = dayjs().startOf("week");
-    const lastWeekStart = dayjs().subtract(1, "week").startOf("week");
-    const lastWeekEnd = thisWeekStart;
+    const thisMonthStart = dayjs().startOf("month");
+    const lastMonthStart = dayjs().subtract(1, "month").startOf("month");
+    const lastMonthEnd = thisMonthStart;
 
     let totalPayment = 0;
     let duePayment = 0;
     let receivedPayment = 0;
 
-    let lastWeekTotal = 0;
-    let thisWeekTotal = 0;
+    let lastMonthTotal = 0;
+    let thisMonthTotal = 0;
 
-    let lastWeekReceived = 0;
-    let thisWeekReceived = 0;
+    let lastMonthReceived = 0;
+    let thisMonthReceived = 0;
 
-    let lastWeekDue = 0;
-    let thisWeekDue = 0;
+    let lastMonthDue = 0;
+    let thisMonthDue = 0;
+
+    let lastMonthPayment = 0;
+    let thisMonthPayment = 0;
 
     const assignmentsCount = allEvents.length;
 
@@ -385,21 +389,23 @@ export default function Home() {
       receivedPayment += received;
       duePayment += due;
 
-      if (assignmentDate.isBetween(lastWeekStart, lastWeekEnd, null, "[)")) {
-        lastWeekTotal += 1;
-        lastWeekReceived += received;
-        lastWeekDue += due;
+      if (assignmentDate.isBetween(lastMonthStart, lastMonthEnd, null, "[)")) {
+        lastMonthTotal += 1;
+        lastMonthReceived += received;
+        lastMonthDue += due;
+        lastMonthPayment += totalAmount;
       }
 
-      if (assignmentDate.isAfter(thisWeekStart)) {
-        thisWeekTotal += 1;
-        thisWeekReceived += received;
-        thisWeekDue += due;
+      if (assignmentDate.isAfter(thisMonthStart)) {
+        thisMonthTotal += 1;
+        thisMonthReceived += received;
+        thisMonthDue += due;
+        thisMonthPayment += totalAmount;
       }
     });
 
     const calcPercent = (thisVal, lastVal) => {
-      if (lastVal === 0) return thisVal > 0 ? 100 : 0;
+      if (lastVal === 0) return 0;
       return +(((thisVal - lastVal) / lastVal) * 100).toFixed(1);
     };
 
@@ -408,13 +414,10 @@ export default function Home() {
       totalPaymentSum: totalPayment,
       totalDueAmount: duePayment,
       totalReceivedAmount: receivedPayment,
-      assignmentGrowthPercent: calcPercent(thisWeekTotal, lastWeekTotal),
-      paymentGrowthPercent: calcPercent(
-        totalPayment,
-        totalPayment - duePayment
-      ),
-      dueGrowthPercent: calcPercent(thisWeekDue, lastWeekDue),
-      receivedGrowthPercent: calcPercent(thisWeekReceived, lastWeekReceived),
+      assignmentGrowthPercent: calcPercent(thisMonthTotal, lastMonthTotal),
+      paymentGrowthPercent: calcPercent(thisMonthPayment, lastMonthPayment),
+      dueGrowthPercent: calcPercent(thisMonthDue, lastMonthDue),
+      receivedGrowthPercent: calcPercent(thisMonthReceived, lastMonthReceived),
     };
   }, [allEvents]);
 
@@ -509,12 +512,12 @@ export default function Home() {
         {isBasicPlan && (
           <div className="alert alert-info text-center py-2 mb-0" role="alert">
             🚀 Unlock the full potential of Camrilla –{" "}
-            <a
+            <Link
               href="/Subscriptions"
               className="text-decoration-underline fw-bold"
             >
               Upgrade to PRO now
-            </a>{" "}
+            </Link>{" "}
             and elevate your business!
           </div>
         )}
@@ -673,6 +676,9 @@ export default function Home() {
                         inline
                         selected={selectedDate}
                         onChange={(date) => {
+                          if (date.getMonth() !== selectedDate.getMonth() || date.getFullYear() !== selectedDate.getFullYear()) {
+                            fetchOrders(date);
+                          }
                           setSelectedDate(date);
                           const calendarApi = calendarRef.current.getApi();
                           calendarApi.gotoDate(date);
@@ -683,6 +689,7 @@ export default function Home() {
                             ? "has-assignment"
                             : undefined
                         }
+                        showNavigation={false}
                       />
                     </div>
                   </div>
@@ -770,9 +777,10 @@ export default function Home() {
               </div>
 
               <div className="col app-calendar-content">
-                <div className="card shadow-none border-0">
-                  <div className="card-body pb-0 ps-0">
+                <div className="card shadow-none border-0 " >
+                  <div className="card-body pb-0 ps-0 ">
                     <FullCalendar
+                      contentHeight={500}
                       ref={calendarRef}
                       plugins={[
                         dayGridPlugin,

@@ -135,12 +135,15 @@ export default function AssignmentPage() {
             const startMillis = startDate.getTime();
             const endMillis = endDate.getTime();
 
-            const response = await axios.get(`${config.BASE_URL}order/assignment`, {
-                params: {
-                    startDate: startMillis,
-                    endDate: endMillis
-                }
-            });
+        const response = await axios.get(`${config.BASE_URL}order/assignment`, {
+            params: {
+                startDate: startMillis,
+                endDate: endMillis
+            },
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        });
 
             setAssignments(response.data.data); // save your data here
             console.log('Assignments fetched:', response.data);
@@ -170,7 +173,7 @@ export default function AssignmentPage() {
     const uniqueAssignmentNames = useMemo(() => {
         const nameMap = new Map();
 
-        allAssignments.forEach(item => {
+        assignments.forEach(item => {
             const rawName = item.assignmentName;
             if (!rawName) return;
 
@@ -181,7 +184,7 @@ export default function AssignmentPage() {
         });
 
         return Array.from(nameMap.values());
-    }, [allAssignments]);
+    }, [assignments]);
 
     // const [timeFilter, setTimeFilter] = useState("All");
     const [timeFilter, setTimeFilter] = useState(null);
@@ -341,7 +344,7 @@ export default function AssignmentPage() {
         const map = new Map();
         let index = 0;
 
-        allAssignments.forEach(item => {
+        assignments.forEach(item => {
             const rawName = item.assignmentName?.trim();
             if (!rawName) return;
 
@@ -355,7 +358,7 @@ export default function AssignmentPage() {
         });
 
         return map;
-    }, [allAssignments]);
+    }, [assignments]);
 
     const getTitleText = () => {
         switch (timeFilter) {

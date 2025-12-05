@@ -23,6 +23,11 @@ export default function AddEventModal({
 
     const [key, setKey] = useState('customer');
 
+    // Calculate min and max dates for the date picker
+    const today = new Date();
+    const minDate = today.toISOString().split('T')[0];
+    const maxDate = new Date(today.getFullYear() + 10, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+
     // -----------------------------  
     // FORM STATE (unchanged)  
     // -----------------------------
@@ -356,6 +361,8 @@ export default function AddEventModal({
                                 name="assignmentDate"
                                 value={formData.assignmentDate}
                                 onChange={handleInputChange}
+                                min={minDate}
+                                max={maxDate}
                                 isInvalid={!!errors.assignmentDate}
                             />
                             <Form.Control.Feedback type="invalid">{errors.assignmentDate}</Form.Control.Feedback>
