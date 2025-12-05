@@ -897,7 +897,7 @@ export default function Home() {
                           />
                           <label
                             className="form-check-label"
-                            for="allDaySwitch"
+                            htmlFor="allDaySwitch"
                           >
                             All Day
                           </label>
@@ -911,7 +911,7 @@ export default function Home() {
                           name="eventURL"
                           placeholder="https://www.google.com"
                         />
-                        <label for="eventURL">Event URL</label>
+                        <label htmlFor="eventURL">Event URL</label>
                       </div>
                       <div className="form-floating form-floating-outline mb-5 select2-primary">
                         <select
@@ -942,7 +942,7 @@ export default function Home() {
                             Cheryl May
                           </option>
                         </select>
-                        <label for="eventGuests">Add Guests</label>
+                        <label htmlFor="eventGuests">Add Guests</label>
                       </div>
                       <div className="form-floating form-floating-outline mb-5">
                         <input
@@ -952,7 +952,7 @@ export default function Home() {
                           name="eventLocation"
                           placeholder="Enter Location"
                         />
-                        <label for="eventLocation">Location</label>
+                        <label htmlFor="eventLocation">Location</label>
                       </div>
                       <div className="form-floating form-floating-outline mb-5">
                         <textarea
@@ -960,7 +960,7 @@ export default function Home() {
                           name="eventDescription"
                           id="eventDescription"
                         ></textarea>
-                        <label for="eventDescription">Description</label>
+                        <label htmlFor="eventDescription">Description</label>
                       </div>
                       <div className="mb-5 d-flex justify-content-sm-between justify-content-start my-6 gap-2">
                         <div className="d-flex">
