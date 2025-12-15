@@ -5,6 +5,8 @@ import config from '../config/config';
 import BasicPlanNotice from './BasicPlanNotice';
 import { useAssignmentStore } from '../store/store';
 
+const MAX_NOTE_LENGTH = 300; // ✅ character limit
+
 export default function AddEventModal({
     show,
     handleClose,
@@ -29,7 +31,7 @@ export default function AddEventModal({
     const maxDate = new Date(today.getFullYear() + 10, today.getMonth(), today.getDate()).toISOString().split('T')[0];
 
     // -----------------------------  
-    // FORM STATE (unchanged)  
+    // FORM STATE (✅ added assignmentNote)
     // -----------------------------
     const [formData, setFormData] = useState({
         customerName: '',
@@ -44,10 +46,11 @@ export default function AddEventModal({
         assignTo: 'Me',
         assignToName: 'Me',
         assignToHandle: 'MeTo',
+        assignmentNote: '',          // ✅ NEW
     });
 
     // -----------------------------  
-    // VALIDATION ERRORS (ADDED)  
+    // VALIDATION ERRORS  
     // -----------------------------
     const [errors, setErrors] = useState({});
 
@@ -59,10 +62,29 @@ export default function AddEventModal({
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-
-        // Clear existing error when typing
         setErrors(prev => ({ ...prev, [name]: '' }));
     };
+
+    // ✅ Separate handler for note (to manage char count & limits)
+    const handleNoteChange = (e) => {
+    let value = e.target.value;
+
+    // 🚫 Hard limit at 300 chars + alert
+    if (value.length > MAX_NOTE_LENGTH) {
+        alert(`Maximum ${MAX_NOTE_LENGTH} characters allowed.`);
+        value = value.slice(0, MAX_NOTE_LENGTH); // keep only first 300
+    }
+
+    setFormData(prev => ({ ...prev, assignmentNote: value }));
+
+    if (!value.trim()) {
+        setErrors(prev => ({ ...prev, assignmentNote: 'Note is required.' }));
+    } else {
+        // we already trimmed to <= MAX_NOTE_LENGTH, so no length error now
+        setErrors(prev => ({ ...prev, assignmentNote: '' }));
+    }
+};
+
 
     // -----------------------------
     // ASSIGNMENT SELECT HANDLER
@@ -81,7 +103,7 @@ export default function AddEventModal({
     };
 
     // -----------------------------
-    // VALIDATION HELPERS (ADDED)
+    // VALIDATION HELPERS
     // -----------------------------
     const isEmpty = (v) => !v || v.trim() === "";
 
@@ -111,7 +133,7 @@ export default function AddEventModal({
     };
 
     // -----------------------------
-    // FULL TAB VALIDATIONS (ADDED)
+    // FULL TAB VALIDATIONS
     // -----------------------------
     const validateCustomerTab = () => {
         const e = {};
@@ -119,12 +141,12 @@ export default function AddEventModal({
         if (isEmpty(formData.customerName)) e.customerName = "Customer name is required.";
         const emailErr = validateEmail(formData.customerEmail);
         if (emailErr) e.customerEmail = emailErr;
-        const mobileErr = validateMobile(formData.customerMobile);
-        if (mobileErr) e.customerMobile = mobileErr;
-        if (isEmpty(formData.customerAddress) || formData.customerAddress.length < 5)
-            e.customerAddress = "Address must be at least 5 characters.";
+    const mobileErr = validateMobile(formData.customerMobile);
+    if (mobileErr) e.customerMobile = mobileErr;
+    if (isEmpty(formData.customerAddress) || formData.customerAddress.length < 2)
+        e.customerAddress = "Address must be at least 2 characters.";
 
-        setErrors(prev => ({ ...prev, ...e }));
+    setErrors(prev => ({ ...prev, ...e }));
         return Object.keys(e).length === 0;
     };
 
@@ -136,8 +158,8 @@ export default function AddEventModal({
         if (isEmpty(assignmentValid))
             e.assignmentName = "Assignment name is required.";
 
-        if (isEmpty(formData.assignmentAddress) || formData.assignmentAddress.length < 5)
-            e.assignmentAddress = "Venue must be at least 5 characters.";
+        if (isEmpty(formData.assignmentAddress) || formData.assignmentAddress.length < 2)
+            e.assignmentAddress = "Venue must be at least 2 characters.";
 
         const altErr = validateMobile(formData.contactPerson1Mobile);
         if (altErr) e.contactPerson1Mobile = altErr;
@@ -147,6 +169,13 @@ export default function AddEventModal({
 
         if (isEmpty(formData.assignmentTime))
             e.assignmentTime = "Time is required.";
+
+        // ✅ Note validation here
+        if (isEmpty(formData.assignmentNote)) {
+            e.assignmentNote = "Note is required.";
+        } else if (formData.assignmentNote.length > MAX_NOTE_LENGTH) {
+            e.assignmentNote = `Maximum ${MAX_NOTE_LENGTH} characters allowed.`;
+        }
 
         setErrors(prev => ({ ...prev, ...e }));
         return Object.keys(e).length === 0;
@@ -182,10 +211,9 @@ export default function AddEventModal({
     };
 
     // --------------------------------
-    // SUBMIT HANDLER (VALIDATION ADDED)
+    // SUBMIT HANDLER
     // --------------------------------
     const handleSubmit = async () => {
-
         if (!validateCustomerTab() || !validateAssignmentTab() || !validateAssignTo()) {
             return;
         }
@@ -236,6 +264,7 @@ export default function AddEventModal({
                 assignTo: 'Me',
                 assignToName: 'Me',
                 assignToHandle: 'MeTo',
+                assignmentNote: '',   // ✅ reset note
             });
             setErrors({});
             setCustomAssignToHandle('');
@@ -342,6 +371,8 @@ export default function AddEventModal({
                                     onChange={handleInputChange}
                                     isInvalid={!!errors.assignmentAddress}
                                 />
+                           
+
                                 <Form.Control.Feedback type="invalid">{errors.assignmentAddress}</Form.Control.Feedback>
                             </Form.Group>
 
@@ -377,6 +408,40 @@ export default function AddEventModal({
                                     isInvalid={!!errors.assignmentTime}
                                 />
                                 <Form.Control.Feedback type="invalid">{errors.assignmentTime}</Form.Control.Feedback>
+                            </Form.Group>
+
+                            {/* ✅ NEW NOTE FIELD WITH COUNTER */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Note</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={4}
+                                    name="assignmentNote"
+                                    value={formData.assignmentNote}
+                                    onChange={handleNoteChange}
+                                    isInvalid={!!errors.assignmentNote}
+                                    placeholder="Enter assignment note (max 300 characters)"
+                                />
+                                <div className="d-flex justify-content-between mt-1">
+                                    <Form.Text
+                                        className={
+                                            formData.assignmentNote.length > MAX_NOTE_LENGTH
+                                                ? "text-danger"
+                                                : "text-muted"
+                                        }
+                                    >
+                                        {formData.assignmentNote.length} / {MAX_NOTE_LENGTH} characters
+                                    </Form.Text>
+
+                                    {errors.assignmentNote && (
+                                        <Form.Control.Feedback
+                                            type="invalid"
+                                            style={{ display: "block" }}
+                                        >
+                                            {errors.assignmentNote}
+                                        </Form.Control.Feedback>
+                                    )}
+                                </div>
                             </Form.Group>
                         </Form>
                     </Tab>

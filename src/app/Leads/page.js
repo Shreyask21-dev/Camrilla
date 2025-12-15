@@ -1,507 +1,589 @@
-'use client'
-import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
-import DatePicker from 'react-datepicker'
-import useSearchStore from '../store/searchStore'; // adjust path if needed
-import config from '../config/config';
-import BasicPlanNotice from '../Components/BasicPlanNotice';
-import useLeadStore from '../store/leadStore';
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import DatePicker from "react-datepicker";
+import useSearchStore from "../store/searchStore"; // adjust path if needed
+import config from "../config/config";
+import BasicPlanNotice from "../Components/BasicPlanNotice";
+import useLeadStore from "../store/leadStore";
 
 const normalize = (str) => str?.trim().toLowerCase();
 
 const bootstrapColors = [
-    'success', 'warning', 'info', 'danger', 'dark', 'primary', 'secondary'
+  "success",
+  "warning",
+  "info",
+  "danger",
+  "dark",
+  "primary",
+  "secondary",
 ];
 
 export default function Page() {
-
-    const { setLeadCount, incrementLeadCount, decrementLeadCount } = useLeadStore();
-
-    // Calculate min and max dates for date inputs
-    const today = new Date();
-    const minDate = today.toISOString().split('T')[0];
-    const maxDate = new Date(today.getFullYear() + 10, today.getMonth(), today.getDate()).toISOString().split('T')[0];
-    const minDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0, 16);
-    const maxDateTime = new Date(today.getFullYear() + 10, today.getMonth(), today.getDate(), 23, 59).toISOString().slice(0, 16);
-
-    const [showBasicNotice, setShowBasicNotice] = useState(false);
-
-    const handleFreeLimitExceeded = () => {
-        alert('Free limit exceeded. Please subscribe to continue.');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addLeadModal'));
-        if (modal) modal.hide();
-        setShowBasicNotice(true); // show subscription modal
-    };
-
-    const [assignmentTypeColorMap, setAssignmentTypeColorMap] = useState(new Map());
-
-    const { searchTerm } = useSearchStore();
-
-    const [calendarDate, setCalendarDate] = useState(new Date());
-
-    const [dateRangeFilter, setDateRangeFilter] = useState(null);
-
-    const isWithinSelectedRange = (timestamp) => {
-        const date = new Date(timestamp);
-        const now = new Date();
-
-        if (dateRangeFilter === null) {
-            return (
-                date.getMonth() === calendarDate.getMonth() &&
-                date.getFullYear() === calendarDate.getFullYear()
-            );
-        }
-
-        if (dateRangeFilter === 'lastMonth') {
-            const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const end = new Date(now.getFullYear(), now.getMonth(), 0);
-            end.setHours(23, 59, 59, 999);
-            return date >= start && date <= end;
-        }
-
-        if (dateRangeFilter === 'currentYear') {
-            const start = new Date(now.getFullYear(), 0, 1);
-            const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-            return date >= start && date <= end;
-        }
-
-        if (dateRangeFilter === 'lastYear') {
-            const start = new Date(now.getFullYear() - 1, 0, 1);
-            const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-            return date >= start && date <= end;
-        }
-
-        return true; // for 'all' case
-    };
-
-
-    const isInSelectedMonth = (timestamp) => {
-        const date = new Date(timestamp);
-        return (
-            date.getMonth() === calendarDate.getMonth() &&
-            date.getFullYear() === calendarDate.getFullYear()
-        );
-    };
-
-    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-    const [assignmentForm, setAssignmentForm] = useState({
-        customerName: '',
-        customerMobile: '',
-        customerEmail: '',
-        customerAddress: '',
-        assignmentName: '',
-        assignmentAddress: '',
-        contactPerson1Mobile: '',
-        assignmentDate: '',
-        assignmentTime: '',
-        assignTo: 'Me',
-        assignToName: 'Me',
-        assignToHandle: 'MeTo',
-    });
-    const [assignmentTab, setAssignmentTab] = useState('customer');
-    const [customAssignmentName, setCustomAssignmentName] = useState('');
-    const [showOtherAssignmentInput, setShowOtherAssignmentInput] = useState(false);
-
-
-    const openAssignmentModal = (lead) => {
-        setAssignmentForm({
-            customerName: lead.customerName || '',
-            customerMobile: lead.customerMobile || '',
-            customerEmail: lead.customerEmail || '',
-            customerAddress: lead.customerAddress || '',
-            assignmentName: lead.assignmentType || '',
-            assignmentAddress: '',
-            contactPerson1Mobile: '',
-            assignmentDate: '',
-            assignmentTime: '',
-            assignTo: 'Me',
-            assignToName: 'Me',
-            assignToHandle: 'MeTo',
-        });
-        setAssignmentTab('customer');
-        setShowOtherAssignmentInput(false);
-        setCustomAssignmentName('');
-        setShowAssignmentModal(true);
-    };
-
-
-    const [selectedLead, setSelectedLead] = useState(null);
-    const [isOtherSelectedEdit, setIsOtherSelectedEdit] = useState(false);
-
-    const openEditLeadModal = (lead) => {
-        setSelectedLead({
-            ...lead,
-            assignmentDateTime: new Date(lead.assignmentDateTime).toISOString().slice(0, 16) // convert timestamp to input value
-        });
-
-        setIsOtherSelectedEdit(false); // reset Other handling
-
-        const modalElement = document.getElementById('editLeadModal');
-        const modal = new bootstrap.Modal(modalElement, {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
-    };
-
-
-    const [selectedTypes, setSelectedTypes] = useState(['all']);
-
-    const [isOtherSelected, setIsOtherSelected] = useState(false);
-
-    const [leads, setLeads] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const [newLead, setNewLead] = useState({
-        customerName: '',
-        customerMobile: '',
-        customerEmail: '',
-        customerAddress: '',
-        assignmentDateTime: '',
-        totalAmount: '',
-        assignmentType: '',
-    });
-
-    const handleDateTimeChange = (dateString) => {
-        const timestamp = new Date(dateString).getTime();
-        setNewLead({ ...newLead, assignmentDateTime: timestamp });
-    };
-
-    const handleEditLead = (e) => {
-        e.preventDefault();
-
-        const camrillaToken = localStorage.getItem('camrilla_token');
-        if (!camrillaToken) {
-            console.error('No token found');
-            return;
-        }
-
-        const { accessToken } = JSON.parse(camrillaToken);
-
-        const body = {
-            ...selectedLead,
-            assignmentDateTime: new Date(selectedLead.assignmentDateTime).getTime(), // back to timestamp
-        };
-
-        axios.put(`${config.BASE_URL}lead-manager/lead/${selectedLead.id}`, body)
-
-            .then(response => {
-                console.log('Lead Updated:', response.data);
-                // Close Modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editLeadModal'));
-                modal.hide();
-                // Clear selected
-                setSelectedLead(null);
-                // Refresh leads
-                fetchLeads();
-            })
-            .catch(error => {
-                console.error('Failed to update lead:', error);
-            });
-    };
-
-
-    const handleAddLead = (e) => {
-        e.preventDefault();
-
-        const camrillaToken = localStorage.getItem('camrilla_token');
-        if (!camrillaToken) {
-            console.error('No token found');
-            return;
-        }
-
-        const { accessToken } = JSON.parse(camrillaToken);
-
-        axios.post(`${config.BASE_URL}lead-manager/lead`, newLead)
-
-            .then(response => {
-                if (response.data?.messageDesc === 'Free Limit Exceeded') {
-                    handleFreeLimitExceeded(); // ✅ handle free limit
-                    return;
-                }
-                incrementLeadCount();
-                console.log('Lead Added:', response.data);
-                alert('Lead Added:', response.data);
-                // Close Modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addLeadModal'));
-                modal.hide();
-                // Clear form
-                setNewLead({
-                    customerName: '',
-                    customerMobile: '',
-                    customerEmail: '',
-                    customerAddress: '',
-                    assignmentDateTime: '',
-                    totalAmount: '',
-                });
-                // Refresh leads
-                fetchLeads();
-            })
-            .catch(error => {
-                // console.error('Failed to add lead:', error);
-                const messageDesc = error?.response?.data?.messageDesc;
-                if (messageDesc === 'Free Limit Exceeded') {
-                    handleFreeLimitExceeded();
-                } else {
-                    console.error('Failed to add lead:', error);
-                    alert('Something went wrong while adding the lead.');
-                }
-            });
-    };
-
-
-
-
-    const fetchLeads = () => {
-        const camrillaToken = localStorage.getItem('camrilla_token');
-        if (!camrillaToken) {
-            console.error('No token found');
-            return;
-        }
-
-        const { accessToken } = JSON.parse(camrillaToken);
-
-        axios.get(`${config.BASE_URL}lead-manager/lead`)
-            .then(response => {
-                console.log(response.data.data)
-                setLeadCount(response.data.data.length);
-                setLeads(response.data.data);
-
-                const rawLeads = response.data.data;
-                setLeads(rawLeads);
-
-                const nameMap = new Map();
-                let index = 0;
-
-                rawLeads.forEach(lead => {
-                    const name = lead.assignmentType?.trim();
-                    const normalized = normalize(name);
-
-                    if (name && !nameMap.has(normalized)) {
-                        nameMap.set(normalized, bootstrapColors[index % bootstrapColors.length]);
-                        index++;
-                    }
-                });
-
-                setAssignmentTypeColorMap(nameMap);
-                setLoading(false);
-            })
-            .catch(error => {
-                console.error('Failed fetching leads:', error);
-                setLoading(false);
-            });
-    };
-
-    useEffect(() => {
-        fetchLeads();
-    }, []);
-
-    const openAddLeadModal = () => {
-        const modalElement = document.getElementById('addLeadModal');
-        const modal = new bootstrap.Modal(modalElement, {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
-    };
-
-    const handleSelectAll = () => {
-        if (selectedTypes.includes('all')) {
-            setSelectedTypes([]); // unselect all
-        } else {
-            setSelectedTypes(['all']); // select all
-        }
-    };
-
-    const handleTypeChange = (type) => {
-        if (selectedTypes.includes('all')) {
-            setSelectedTypes([type]);
-        } else {
-            if (selectedTypes.includes(type)) {
-                const updated = selectedTypes.filter(item => item !== type);
-                setSelectedTypes(updated.length === 0 ? ['all'] : updated);
-            } else {
-                setSelectedTypes([...selectedTypes, type]);
-            }
-        }
-    };
-
-    const uniqueAssignmentTypes = useMemo(() => {
-        return [...new Set(leads.map(lead => lead.assignmentType))];
-    }, [leads]);
-
-
-    const handleNextAssignmentTab = () => {
-        if (assignmentTab === 'customer') setAssignmentTab('assignment');
-        else if (assignmentTab === 'assignment') setAssignmentTab('assignto');
-    };
-
-    const handleSubmitAssignment = async () => {
-        const accessToken = JSON.parse(localStorage.getItem('camrilla_token'))?.accessToken;
-        if (!accessToken) return alert('Missing token');
-
-        const dateTime = new Date(`${assignmentForm.assignmentDate}T${assignmentForm.assignmentTime}`);
-
-        const payload = {
-            customerName: assignmentForm.customerName,
-            customerMobile: assignmentForm.customerMobile,
-            customerEmail: assignmentForm.customerEmail,
-            customerAddress: assignmentForm.customerAddress,
-            assignmentAddress: assignmentForm.assignmentAddress,
-            assignmentName: showOtherAssignmentInput ? customAssignmentName : assignmentForm.assignmentName,
-            assignmentDateTime: dateTime.getTime(),
-            assignmentStatus: "Completed",
-            contactPerson1Name: "",
-            contactPerson1Mobile: assignmentForm.contactPerson1Mobile,
-            contactPerson2Name: "",
-            contactPerson2Mobile: "",
-            assignToName: assignmentForm.assignToName,
-            assignToHandle: assignmentForm.assignToHandle,
-            assignmentNote: "Some Note",
-            totalAmount: 0,
-            reminderBeforedays: 1,
-            reminderDate: "21-11-2018"
-        };
-
-        try {
-            const res = await axios.post(`${config.BASE_URL}order/assignment`, payload);
-
-            if (res.data.code === 0) {
-                alert('Assignment Created Successfully');
-                setShowAssignmentModal(false);
-            } else {
-                alert('Failed: ' + res.data.message);
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Something went wrong');
-        }
-    };
-
-    const handleDeleteLead = async () => {
-        if (!selectedLead) return;
-
-        const confirmDelete = window.confirm("Are you sure you want to delete this lead?");
-        if (!confirmDelete) return;
-
-        const camrillaToken = localStorage.getItem('camrilla_token');
-        if (!camrillaToken) {
-            console.error('No token found');
-            return;
-        }
-
-        const { accessToken } = JSON.parse(camrillaToken);
-
-        try {
-            const response = await axios.delete(`${config.BASE_URL}lead-manager/lead/${selectedLead.id}`);
-
-            console.log('Lead deleted:', response.data);
-            decrementLeadCount();
-
-            // Close modal after delete
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editLeadModal'));
-            modal.hide();
-            setSelectedLead(null);
-
-            // Refresh leads list
-            fetchLeads();
-
-        } catch (error) {
-            console.error('Failed to delete lead:', error);
-            alert('Failed to delete lead');
-        }
-    };
-
-    const hasLeadOnDate = (date) => {
-        return leads.some(lead => {
-            const leadDate = new Date(lead.assignmentDateTime);
-            return (
-                leadDate.getDate() === date.getDate() &&
-                leadDate.getMonth() === date.getMonth() &&
-                leadDate.getFullYear() === date.getFullYear()
-            );
-        });
-    };
-
-    const getLeadsTitle = () => {
-        const monthName = calendarDate.toLocaleString('default', { month: 'long' });
-        const currentYear = calendarDate.getFullYear();
-
-        switch (dateRangeFilter) {
-            case 'all':
-                return 'All Leads';
-            case 'lastMonth':
-                const now = new Date();
-                const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                const monthName2 = lastMonth.toLocaleString('default', { month: 'long' });
-                const year = lastMonth.getFullYear();
-                return `Leads - ${monthName2} ${year}`;
-            case 'currentYear':
-                return `Leads - Year ${currentYear}`;
-            case 'lastYear':
-                return `Leads - Year ${currentYear - 1}`;
-            default:
-                return `Leads - ${monthName} ${currentYear}`;
-        }
-    };
-
-
+  const { setLeadCount, incrementLeadCount, decrementLeadCount } =
+    useLeadStore();
+
+  // Calculate min and max dates for date inputs
+  const today = new Date();
+  const minDate = today.toISOString().split("T")[0];
+  const maxDate = new Date(
+    today.getFullYear() + 10,
+    today.getMonth(),
+    today.getDate()
+  )
+    .toISOString()
+    .split("T")[0];
+  const minDateTime = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  )
+    .toISOString()
+    .slice(0, 16);
+  const maxDateTime = new Date(
+    today.getFullYear() + 10,
+    today.getMonth(),
+    today.getDate(),
+    23,
+    59
+  )
+    .toISOString()
+    .slice(0, 16);
+
+  const [showBasicNotice, setShowBasicNotice] = useState(false);
+
+  const handleFreeLimitExceeded = () => {
+    alert("Free limit exceeded. Please subscribe to continue.");
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("addLeadModal")
+    );
+    if (modal) modal.hide();
+    setShowBasicNotice(true); // show subscription modal
+  };
+
+  const [assignmentTypeColorMap, setAssignmentTypeColorMap] = useState(
+    new Map()
+  );
+
+  const { searchTerm } = useSearchStore();
+
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  const [dateRangeFilter, setDateRangeFilter] = useState(null);
+
+  const isWithinSelectedRange = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+
+    if (dateRangeFilter === null) {
+      return (
+        date.getMonth() === calendarDate.getMonth() &&
+        date.getFullYear() === calendarDate.getFullYear()
+      );
+    }
+
+    if (dateRangeFilter === "lastMonth") {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      end.setHours(23, 59, 59, 999);
+      return date >= start && date <= end;
+    }
+
+    if (dateRangeFilter === "currentYear") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+      return date >= start && date <= end;
+    }
+
+    if (dateRangeFilter === "lastYear") {
+      const start = new Date(now.getFullYear() - 1, 0, 1);
+      const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+      return date >= start && date <= end;
+    }
+
+    return true; // for 'all' case
+  };
+
+  const isInSelectedMonth = (timestamp) => {
+    const date = new Date(timestamp);
     return (
-        <div>
-            <div className="container-xxl flex-grow-1 container-p-y">
-                <div className="card app-calendar-wrapper">
-                    <div className="row g-0">
+      date.getMonth() === calendarDate.getMonth() &&
+      date.getFullYear() === calendarDate.getFullYear()
+    );
+  };
 
-                        <div className="col app-calendar-sidebar border-end" id="app-calendar-sidebar">
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [assignmentForm, setAssignmentForm] = useState({
+    customerName: "",
+    customerMobile: "",
+    customerEmail: "",
+    customerAddress: "",
+    assignmentName: "",
+    assignmentAddress: "",
+    contactPerson1Mobile: "",
+    assignmentDate: "",
+    assignmentTime: "",
+    assignTo: "Me",
+    assignToName: "Me",
+    assignToHandle: "MeTo",
+  });
+  const [assignmentTab, setAssignmentTab] = useState("customer");
+  const [customAssignmentName, setCustomAssignmentName] = useState("");
+  const [showOtherAssignmentInput, setShowOtherAssignmentInput] =
+    useState(false);
 
-                            <div className="p-5 my-sm-0 mb-4 border-bottom">
+  const openAssignmentModal = (lead) => {
+    setAssignmentForm({
+      customerName: lead.customerName || "",
+      customerMobile: lead.customerMobile || "",
+      customerEmail: lead.customerEmail || "",
+      customerAddress: lead.customerAddress || "",
+      assignmentName: lead.assignmentType || "",
+      assignmentAddress: "",
+      contactPerson1Mobile: "",
+      assignmentDate: "",
+      assignmentTime: "",
+      assignTo: "Me",
+      assignToName: "Me",
+      assignToHandle: "MeTo",
+    });
+    setAssignmentTab("customer");
+    setShowOtherAssignmentInput(false);
+    setCustomAssignmentName("");
+    setShowAssignmentModal(true);
+  };
 
-                                <button
-                                    className="btn btn-primary btn-toggle-sidebar w-100"
-                                    onClick={openAddLeadModal}>
-                                    <i className="ri-add-line ri-16px me-1_5"></i>
-                                    <span className="align-middle">Add Leads</span>
-                                </button>
-                            </div>
-                            <div className="px-4">
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [isOtherSelectedEdit, setIsOtherSelectedEdit] = useState(false);
 
-                                <div style={{ display: "flex", justifyContent: "center" }}>
+  const openEditLeadModal = (lead) => {
+    setSelectedLead({
+      ...lead,
+      assignmentDateTime: new Date(lead.assignmentDateTime)
+        .toISOString()
+        .slice(0, 16), // convert timestamp to input value
+    });
 
-                                    <div style={{ transform: "scale(1.2)", transformOrigin: "top center", marginBottom: "20%", margintop: "10%" }}>
-                                        <DatePicker
-                                            inline
-                                            selected={calendarDate}
-                                            onChange={(date) => { setCalendarDate(date); setDateRangeFilter(null); }}
-                                            onMonthChange={(date) => { setCalendarDate(date); setDateRangeFilter(null); }}
-                                            onYearChange={(date) => setCalendarDate(date)}
-                                            dayClassName={(date) => hasLeadOnDate(date) ? 'has-lead' : undefined}
-                                        />
+    setIsOtherSelectedEdit(false); // reset Other handling
 
-                                    </div>
+    const modalElement = document.getElementById("editLeadModal");
+    const modal = new bootstrap.Modal(modalElement, {
+      backdrop: "static",
+      keyboard: false,
+    });
+    modal.show();
+  };
 
-                                </div>
+  const [selectedTypes, setSelectedTypes] = useState(["all"]);
 
-                                <hr className="mb-5 mx-n4 mt-3" />
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
 
-                                <div className="mb-4 ms-1">
-                                    <h5>Event Filters</h5>
-                                </div>
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-                                {/* View All */}
-                                <div className="form-check form-check-secondary mb-5 ms-3">
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        id="viewAll"
-                                        checked={selectedTypes.includes('all')}
-                                        onChange={() => handleSelectAll()}
-                                    />
-                                    <label className="form-check-label" htmlFor="viewAll">View All</label>
-                                </div>
+  const [newLead, setNewLead] = useState({
+    customerName: "",
+    customerMobile: "",
+    customerEmail: "",
+    customerAddress: "",
+    assignmentDateTime: "",
+    totalAmount: "",
+    assignmentType: "",
+  });
+  
+  const handleDateTimeChange = (dateString) => {
+    const timestamp = new Date(dateString).getTime();
+    setNewLead({ ...newLead, assignmentDateTime: timestamp });
+  };
 
-                                {/* Dynamic Assignment Types */}
-                                <div className="app-calendar-events-filter text-heading">
-                                    {/* {uniqueAssignmentTypes.map((type, index) => (
+  const handleEditLead = (e) => {
+    e.preventDefault();
+
+    const camrillaToken = localStorage.getItem("camrilla_token");
+    if (!camrillaToken) {
+      console.error("No token found");
+      return;
+    }
+
+    const { accessToken } = JSON.parse(camrillaToken);
+
+    const body = {
+      ...selectedLead,
+      assignmentDateTime: new Date(selectedLead.assignmentDateTime).getTime(), // back to timestamp
+    };
+
+    axios
+      .put(`${config.BASE_URL}lead-manager/lead/${selectedLead.id}`, body)
+
+      .then((response) => {
+        console.log("Lead Updated:", response.data);
+        // Close Modal
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("editLeadModal")
+        );
+        modal.hide();
+        // Clear selected
+        setSelectedLead(null);
+        // Refresh leads
+        fetchLeads();
+      })
+      .catch((error) => {
+        console.error("Failed to update lead:", error);
+      });
+  };
+
+  const handleAddLead = (e) => {
+    e.preventDefault();
+
+    const camrillaToken = localStorage.getItem("camrilla_token");
+    if (!camrillaToken) {
+      console.error("No token found");
+      return;
+    }
+
+    const { accessToken } = JSON.parse(camrillaToken);
+
+    axios
+      .post(`${config.BASE_URL}lead-manager/lead`, newLead)
+
+      .then((response) => {
+        if (response.data?.messageDesc === "Free Limit Exceeded") {
+          handleFreeLimitExceeded(); // ✅ handle free limit
+          return;
+        }
+        incrementLeadCount();
+        console.log("Lead Added:", response.data);
+        alert("Lead Added:", response.data);
+        // Close Modal
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("addLeadModal")
+        );
+        modal.hide();
+        // Clear form
+        setNewLead({
+          customerName: "",
+          customerMobile: "",
+          customerEmail: "",
+          customerAddress: "",
+          assignmentDateTime: "",
+          totalAmount: "",
+            assignmentType: "",
+        });
+        setIsOtherSelected(false);
+        // Refresh leads
+        fetchLeads();
+      })
+      .catch((error) => {
+        // console.error('Failed to add lead:', error);
+        const messageDesc = error?.response?.data?.messageDesc;
+        if (messageDesc === "Free Limit Exceeded") {
+          handleFreeLimitExceeded();
+        } else {
+          console.error("Failed to add lead:", error);
+          alert("Something went wrong while adding the lead.");
+        }
+      });
+  };
+
+  const fetchLeads = () => {
+    const camrillaToken = localStorage.getItem("camrilla_token");
+    if (!camrillaToken) {
+      console.error("No token found");
+      return;
+    }
+
+    const { accessToken } = JSON.parse(camrillaToken);
+
+    axios
+      .get(`${config.BASE_URL}lead-manager/lead`)
+      .then((response) => {
+        console.log(response.data.data);
+        setLeadCount(response.data.data.length);
+        setLeads(response.data.data);
+
+        const rawLeads = response.data.data;
+        setLeads(rawLeads);
+
+        const nameMap = new Map();
+        let index = 0;
+
+        rawLeads.forEach((lead) => {
+          const name = lead.assignmentType?.trim();
+          const normalized = normalize(name);
+
+          if (name && !nameMap.has(normalized)) {
+            nameMap.set(
+              normalized,
+              bootstrapColors[index % bootstrapColors.length]
+            );
+            index++;
+          }
+        });
+
+        setAssignmentTypeColorMap(nameMap);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Failed fetching leads:", error);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const openAddLeadModal = () => {
+    // ✅ fresh form every time
+    setNewLead({
+      customerName: "",
+      customerMobile: "",
+      customerEmail: "",
+      customerAddress: "",
+      assignmentDateTime: "",
+      totalAmount: "",
+      assignmentType: "", // ✅ important
+    });
+    setIsOtherSelected(false); // ✅ reset "Other" checkbox flow
+
+    const modalElement = document.getElementById("addLeadModal");
+    const modal = new bootstrap.Modal(modalElement, {
+      backdrop: "static",
+      keyboard: false,
+    });
+    modal.show();
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTypes.includes("all")) {
+      setSelectedTypes([]); // unselect all
+    } else {
+      setSelectedTypes(["all"]); // select all
+    }
+  };
+
+  const handleTypeChange = (type) => {
+    if (selectedTypes.includes("all")) {
+      setSelectedTypes([type]);
+    } else {
+      if (selectedTypes.includes(type)) {
+        const updated = selectedTypes.filter((item) => item !== type);
+        setSelectedTypes(updated.length === 0 ? ["all"] : updated);
+      } else {
+        setSelectedTypes([...selectedTypes, type]);
+      }
+    }
+  };
+
+  const uniqueAssignmentTypes = useMemo(() => {
+    // Take only leads from the currently selected month in the calendar
+    const monthLeads = leads.filter((lead) =>
+      isInSelectedMonth(lead.assignmentDateTime)
+    );
+
+    return [...new Set(monthLeads.map((lead) => lead.assignmentType))];
+  }, [leads, calendarDate]);
+
+  const handleNextAssignmentTab = () => {
+    if (assignmentTab === "customer") setAssignmentTab("assignment");
+    else if (assignmentTab === "assignment") setAssignmentTab("assignto");
+  };
+
+  const handleSubmitAssignment = async () => {
+    const accessToken = JSON.parse(
+      localStorage.getItem("camrilla_token")
+    )?.accessToken;
+    if (!accessToken) return alert("Missing token");
+
+    const dateTime = new Date(
+      `${assignmentForm.assignmentDate}T${assignmentForm.assignmentTime}`
+    );
+
+    const payload = {
+      customerName: assignmentForm.customerName,
+      customerMobile: assignmentForm.customerMobile,
+      customerEmail: assignmentForm.customerEmail,
+      customerAddress: assignmentForm.customerAddress,
+      assignmentAddress: assignmentForm.assignmentAddress,
+      assignmentName: showOtherAssignmentInput
+        ? customAssignmentName
+        : assignmentForm.assignmentName,
+      assignmentDateTime: dateTime.getTime(),
+      assignmentStatus: "Completed",
+      contactPerson1Name: "",
+      contactPerson1Mobile: assignmentForm.contactPerson1Mobile,
+      contactPerson2Name: "",
+      contactPerson2Mobile: "",
+      assignToName: assignmentForm.assignToName,
+      assignToHandle: assignmentForm.assignToHandle,
+      assignmentNote: "Some Note",
+      totalAmount: 0,
+      reminderBeforedays: 1,
+      reminderDate: "21-11-2018",
+    };
+
+    try {
+      const res = await axios.post(
+        `${config.BASE_URL}order/assignment`,
+        payload
+      );
+
+      if (res.data.code === 0) {
+        alert("Assignment Created Successfully");
+        setShowAssignmentModal(false);
+      } else {
+        alert("Failed: " + res.data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
+
+  const handleDeleteLead = async () => {
+    if (!selectedLead) return;
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this lead?"
+    );
+    if (!confirmDelete) return;
+
+    const camrillaToken = localStorage.getItem("camrilla_token");
+    if (!camrillaToken) {
+      console.error("No token found");
+      return;
+    }
+
+    const { accessToken } = JSON.parse(camrillaToken);
+
+    try {
+      const response = await axios.delete(
+        `${config.BASE_URL}lead-manager/lead/${selectedLead.id}`
+      );
+
+      console.log("Lead deleted:", response.data);
+      decrementLeadCount();
+
+      // Close modal after delete
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("editLeadModal")
+      );
+      modal.hide();
+      setSelectedLead(null);
+
+      // Refresh leads list
+      fetchLeads();
+    } catch (error) {
+      console.error("Failed to delete lead:", error);
+      alert("Failed to delete lead");
+    }
+  };
+
+  const hasLeadOnDate = (date) => {
+    return leads.some((lead) => {
+      const leadDate = new Date(lead.assignmentDateTime);
+      return (
+        leadDate.getDate() === date.getDate() &&
+        leadDate.getMonth() === date.getMonth() &&
+        leadDate.getFullYear() === date.getFullYear()
+      );
+    });
+  };
+
+  const getLeadsTitle = () => {
+    const monthName = calendarDate.toLocaleString("default", { month: "long" });
+    const currentYear = calendarDate.getFullYear();
+
+    switch (dateRangeFilter) {
+      case "all":
+        return "All Leads";
+      case "lastMonth":
+        const now = new Date();
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const monthName2 = lastMonth.toLocaleString("default", {
+          month: "long",
+        });
+        const year = lastMonth.getFullYear();
+        return `Leads - ${monthName2} ${year}`;
+      case "currentYear":
+        return `Leads - Year ${currentYear}`;
+      case "lastYear":
+        return `Leads - Year ${currentYear - 1}`;
+      default:
+        return `Leads - ${monthName} ${currentYear}`;
+    }
+  };
+
+  return (
+    <div>
+      <div className="container-xxl flex-grow-1 container-p-y">
+        <div className="card app-calendar-wrapper">
+          <div className="row g-0">
+            <div
+              className="col app-calendar-sidebar border-end"
+              id="app-calendar-sidebar"
+            >
+              <div className="p-5 my-sm-0 mb-4 border-bottom">
+                <button
+                  className="btn btn-primary btn-toggle-sidebar w-100"
+                  onClick={openAddLeadModal}
+                >
+                  <i className="ri-add-line ri-16px me-1_5"></i>
+                  <span className="align-middle">Add Leads</span>
+                </button>
+              </div>
+              <div className="px-4">
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      transform: "scale(1.2)",
+                      transformOrigin: "top center",
+                      marginBottom: "20%",
+                      margintop: "10%",
+                    }}
+                  >
+                    <DatePicker
+                      inline
+                      selected={calendarDate}
+                      onChange={(date) => {
+                        setCalendarDate(date);
+                        setDateRangeFilter(null);
+                      }}
+                      onMonthChange={(date) => {
+                        setCalendarDate(date);
+                        setDateRangeFilter(null);
+                      }}
+                      onYearChange={(date) => setCalendarDate(date)}
+                      dayClassName={(date) =>
+                        hasLeadOnDate(date) ? "has-lead" : undefined
+                      }
+                    />
+                  </div>
+                </div>
+
+                <hr className="mb-5 mx-n4 mt-3" />
+
+                <div className="mb-4 ms-1">
+                  <h5>Event Filters</h5>
+                </div>
+
+                {/* View All */}
+                <div className="form-check form-check-secondary mb-5 ms-3">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="viewAll"
+                    checked={selectedTypes.includes("all")}
+                    onChange={() => handleSelectAll()}
+                  />
+                  <label className="form-check-label" htmlFor="viewAll">
+                    View All
+                  </label>
+                </div>
+
+                {/* Dynamic Assignment Types */}
+                <div className="app-calendar-events-filter text-heading">
+                  {/* {uniqueAssignmentTypes.map((type, index) => (
                                         <div className="form-check mb-4 ms-3" key={index}>
                                             <input
                                                 className="form-check-input"
@@ -515,498 +597,875 @@ export default function Page() {
                                             </label>
                                         </div>
                                     ))} */}
-                                    {uniqueAssignmentTypes.map((type, index) => {
-                                        const color = assignmentTypeColorMap.get(normalize(type)) || 'secondary';
-                                        return (
-                                            <div className="form-check mb-4 ms-3 d-flex align-items-center gap-2" key={index}>
-                                                <input
-                                                    className="form-check-input"
-                                                    type="checkbox"
-                                                    id={`filter-${type}`}
-                                                    checked={selectedTypes.includes(type)}
-                                                    onChange={() => handleTypeChange(type)}
-                                                    style={{
-                                                        backgroundColor: selectedTypes.includes(type)
-                                                            ? `var(--bs-${color})`
-                                                            : 'transparent',
-                                                        borderColor: `var(--bs-${color})`
-                                                    }}
-                                                />
-                                                <label className="form-check-label" htmlFor={`filter-${type}`}>{type}</label>
-                                            </div>
-                                        );
-                                    })}
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col app-calendar-content">
-                            <div className="card shadow-none border-0">
-
-
-                                <div className="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
-                                    <h5 className="card-title m-0 me-2  py-1">{getLeadsTitle()}</h5>
-                                    <div className="dropdown">
-                                        <div className="d-flex flex-wrap align-items-center gap-3">
-
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    checked={dateRangeFilter === 'lastMonth'}
-                                                    onChange={() => setDateRangeFilter('lastMonth')}
-                                                />
-                                                <label className="form-check-label" >Last Month</label>
-                                            </div>
-
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    checked={dateRangeFilter === 'currentYear'}
-                                                    onChange={() => setDateRangeFilter('currentYear')}
-                                                />
-                                                <label className="form-check-label">Current Year</label>
-                                            </div>
-
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    checked={dateRangeFilter === 'lastYear'}
-                                                    onChange={() => setDateRangeFilter('lastYear')}
-                                                />
-                                                <label className="form-check-label">Last Year</label>
-                                            </div>
-
-                                            <div className="form-check form-check-inline">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    checked={dateRangeFilter === 'all'}
-                                                    onChange={() => setDateRangeFilter('all')}
-                                                />
-                                                <label className="form-check-label" htmlFor="range-all">All</label>
-                                            </div>
-
-
-                                        </div>
-
-
-                                    </div>
-                                </div>
-
-
-                                <div className="card-body mt-4">
-                                    {loading ? (
-                                        <p>Loading leads...</p>
-                                    ) : (
-                                        <div className="d-flex flex-column gap-4">
-                                            {
-
-                                                leads
-                                                    .filter((lead) => {
-                                                        const text = searchTerm.toLowerCase();
-
-                                                        const matchesSearch =
-                                                            lead.customerName?.toLowerCase().includes(text) ||
-                                                            lead.customerMobile?.toLowerCase().includes(text) ||
-                                                            lead.customerEmail?.toLowerCase().includes(text) ||
-                                                            lead.customerAddress?.toLowerCase().includes(text) ||
-                                                            lead.assignmentType?.toLowerCase().includes(text) ||
-                                                            lead.status?.toLowerCase().includes(text) ||
-                                                            String(lead.totalAmount).includes(text);
-
-                                                        const typeMatch = selectedTypes.includes('all') || selectedTypes.includes(lead.assignmentType);
-                                                        const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
-
-                                                        return typeMatch && dateMatch && (!searchTerm || matchesSearch);
-                                                    })
-                                                    .sort((a, b) => new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime))
-                                                    .map((lead) => {
-                                                        const assignmentDate = new Date(lead.assignmentDateTime);
-                                                        const leadCreatedDate = new Date(lead.leadDate);
-
-                                                        const day = assignmentDate.getDate();
-                                                        const month = assignmentDate.toLocaleString('default', { month: 'short' });
-                                                        const year = assignmentDate.getFullYear();
-
-                                                        return (
-                                                            <div key={lead.id} className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3" style={{}}>
-                                                                {/* Date Column */}
-                                                                <div className="text-center border border-top-0 border-bottom-0 border-start-0" style={{ minWidth: '80px' }}>
-                                                                    <small className="text-muted">{month}</small>
-                                                                    <h3 className="mb-0">{day}</h3>
-                                                                    <small className="text-muted">{year}</small>
-                                                                </div>
-
-                                                                {/* Info Column */}
-                                                                <div className="flex-grow-1">
-                                                                    <strong className="d-block mb-1">{lead.customerName}</strong>
-                                                                    <div className="text-muted small mb-1">
-                                                                        {lead.customerEmail || '-'} | {lead.customerMobile || '-'}
-                                                                    </div>
-                                                                    <div className="text-muted small">
-                                                                        {/* <strong>{lead.assignmentType || '-'}</strong><br /> */}
-                                                                        <span
-                                                                            className={`badge bg-${assignmentTypeColorMap.get(normalize(lead.assignmentType)) || 'secondary'}`}
-                                                                        >
-                                                                            {lead.assignmentType || '-'}
-                                                                        </span>
-                                                                        <span>Amount: ₹{lead.totalAmount || 0}</span><br />
-                                                                        <span>Lead Date: {leadCreatedDate.toLocaleDateString()}</span>
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Status + Action Buttons Column */}
-                                                                <div className="d-flex flex-column justify-content-between align-items-end gap-2" style={{ minWidth: '140px' }}>
-                                                                    <span className={`badge rounded-pill text-uppercase ${lead.status === 'IN-PROGRESS' ? 'bg-label-info' :
-                                                                        lead.status === 'CONVERTED' ? 'bg-label-success' :
-                                                                            lead.status === 'NEW' ? 'bg-label-primary' :
-                                                                                'bg-label-secondary'}`}>
-                                                                        {lead.status}
-                                                                    </span>
-
-                                                                    <div className="d-flex gap-2">
-                                                                        {lead.status === 'CONVERTED' && (
-                                                                            <button className="btn btn-sm btn-outline-warning" onClick={() => openAssignmentModal(lead)}>
-                                                                                <i className="bi bi-plus-lg"></i>
-                                                                            </button>
-                                                                        )}
-                                                                        <button className="btn btn-sm btn-outline-dark" onClick={() => openEditLeadModal(lead)}>
-                                                                            <i className="ri-pencil-line"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-
-                                                        );
-                                                    })}
-                                        </div>
-                                    )}
-                                </div>
-
-
-                            </div>
-
-                        </div>
-
-                    </div>
+                  {uniqueAssignmentTypes.map((type, index) => {
+                    const color =
+                      assignmentTypeColorMap.get(normalize(type)) ||
+                      "secondary";
+                    return (
+                      <div
+                        className="form-check mb-4 ms-3 d-flex align-items-center gap-2"
+                        key={index}
+                      >
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`filter-${type}`}
+                          checked={selectedTypes.includes(type)}
+                          onChange={() => handleTypeChange(type)}
+                          style={{
+                            backgroundColor: selectedTypes.includes(type)
+                              ? `var(--bs-${color})`
+                              : "transparent",
+                            borderColor: `var(--bs-${color})`,
+                          }}
+                        />
+                        <label
+                          className="form-check-label"
+                          htmlFor={`filter-${type}`}
+                        >
+                          {type}
+                        </label>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
             </div>
 
-            {/* Add Lead Modal */}
-            <div className="modal fade" id="addLeadModal" tabIndex="-1" aria-labelledby="addLeadModalLabel" aria-hidden="true">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="addLeadModalLabel">Add New Lead</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div className="modal-body">
-                            {/* Form inside Modal */}
-                            <form onSubmit={handleAddLead}>
-                                <div className="mb-3">
-                                    <label className="form-label">Customer Name</label>
-                                    <input type="text" className="form-control" value={newLead.customerName} onChange={(e) => setNewLead({ ...newLead, customerName: e.target.value })} required />
+            <div className="col app-calendar-content">
+              <div className="card shadow-none border-0">
+                <div className="card-header d-flex align-items-center justify-content-between border border-top-0 border-start-0 border-end-0">
+                  <h5 className="card-title m-0 me-2  py-1">
+                    {getLeadsTitle()}
+                  </h5>
+                  <div className="dropdown">
+                    <div className="d-flex flex-wrap align-items-center gap-3">
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          checked={dateRangeFilter === "lastMonth"}
+                          onChange={() => setDateRangeFilter("lastMonth")}
+                        />
+                        <label className="form-check-label">Last Month</label>
+                      </div>
+
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          checked={dateRangeFilter === "currentYear"}
+                          onChange={() => setDateRangeFilter("currentYear")}
+                        />
+                        <label className="form-check-label">Current Year</label>
+                      </div>
+
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          checked={dateRangeFilter === "lastYear"}
+                          onChange={() => setDateRangeFilter("lastYear")}
+                        />
+                        <label className="form-check-label">Last Year</label>
+                      </div>
+
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          checked={dateRangeFilter === "all"}
+                          onChange={() => setDateRangeFilter("all")}
+                        />
+                        <label className="form-check-label" htmlFor="range-all">
+                          All
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card-body mt-4">
+                  {loading ? (
+                    <p>Loading leads...</p>
+                  ) : (
+                    <div className="d-flex flex-column gap-4">
+                      {leads
+                        .filter((lead) => {
+                          const text = searchTerm.toLowerCase();
+
+                          const matchesSearch =
+                            lead.customerName?.toLowerCase().includes(text) ||
+                            lead.customerMobile?.toLowerCase().includes(text) ||
+                            lead.customerEmail?.toLowerCase().includes(text) ||
+                            lead.customerAddress
+                              ?.toLowerCase()
+                              .includes(text) ||
+                            lead.assignmentType?.toLowerCase().includes(text) ||
+                            lead.status?.toLowerCase().includes(text) ||
+                            String(lead.totalAmount).includes(text);
+
+                          const typeMatch =
+                            selectedTypes.includes("all") ||
+                            selectedTypes.includes(lead.assignmentType);
+                          const dateMatch = isWithinSelectedRange(
+                            lead.assignmentDateTime
+                          );
+
+                          return (
+                            typeMatch &&
+                            dateMatch &&
+                            (!searchTerm || matchesSearch)
+                          );
+                        })
+                        .sort(
+                          (a, b) =>
+                            new Date(a.assignmentDateTime) -
+                            new Date(b.assignmentDateTime)
+                        )
+                        .map((lead) => {
+                          const assignmentDate = new Date(
+                            lead.assignmentDateTime
+                          );
+                          const leadCreatedDate = new Date(lead.leadDate);
+
+                          const day = assignmentDate.getDate();
+                          const month = assignmentDate.toLocaleString(
+                            "default",
+                            { month: "short" }
+                          );
+                          const year = assignmentDate.getFullYear();
+
+                          return (
+                            <div
+                              key={lead.id}
+                              className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3"
+                              style={{}}
+                            >
+                              {/* Date Column */}
+                              <div
+                                className="text-center border border-top-0 border-bottom-0 border-start-0"
+                                style={{ minWidth: "80px" }}
+                              >
+                                <small className="text-muted">{month}</small>
+                                <h3 className="mb-0">{day}</h3>
+                                <small className="text-muted">{year}</small>
+                              </div>
+
+                              {/* Info Column */}
+                              <div className="flex-grow-1">
+                                <strong className="d-block mb-1">
+                                  {lead.customerName}
+                                </strong>
+                                <div className="text-muted small mb-1">
+                                  {lead.customerEmail || "-"} |{" "}
+                                  {lead.customerMobile || "-"}
                                 </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Customer Mobile</label>
-                                    <input type="text" className="form-control" value={newLead.customerMobile} onChange={(e) => setNewLead({ ...newLead, customerMobile: e.target.value })} required />
+                                <div className="text-muted small">
+                                  {/* <strong>{lead.assignmentType || '-'}</strong><br /> */}
+                                  <span
+                                    className={`badge bg-${
+                                      assignmentTypeColorMap.get(
+                                        normalize(lead.assignmentType)
+                                      ) || "secondary"
+                                    }`}
+                                  >
+                                    {lead.assignmentType || "-"}
+                                  </span>
+                                  <span>Amount: ₹{lead.totalAmount || 0}</span>
+                                  <br />
+                                  <span>
+                                    Lead Date:{" "}
+                                    {leadCreatedDate.toLocaleDateString()}
+                                  </span>
                                 </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Customer Email</label>
-                                    <input type="email" className="form-control" value={newLead.customerEmail} onChange={(e) => setNewLead({ ...newLead, customerEmail: e.target.value })} />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Customer Address</label>
-                                    <input type="text" className="form-control" value={newLead.customerAddress} onChange={(e) => setNewLead({ ...newLead, customerAddress: e.target.value })} />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Assignment Type</label>
-                                    <select
-                                        className="form-select"
-                                        value={newLead.assignmentType}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            if (value === 'Other') {
-                                                setIsOtherSelected(true);
-                                                setNewLead({ ...newLead, assignmentType: '' }); // Clear assignmentType to allow typing
-                                            } else {
-                                                setIsOtherSelected(false);
-                                                setNewLead({ ...newLead, assignmentType: value });
-                                            }
-                                        }}
-                                        required={!isOtherSelected}
+                              </div>
+
+                              {/* Status + Action Buttons Column */}
+                              <div
+                                className="d-flex flex-column justify-content-between align-items-end gap-2"
+                                style={{ minWidth: "140px" }}
+                              >
+                                <span
+                                  className={`badge rounded-pill text-uppercase ${
+                                    lead.status === "IN-PROGRESS"
+                                      ? "bg-label-info"
+                                      : lead.status === "CONVERTED"
+                                      ? "bg-label-success"
+                                      : lead.status === "NEW"
+                                      ? "bg-label-primary"
+                                      : "bg-label-secondary"
+                                  }`}
+                                >
+                                  {lead.status}
+                                </span>
+
+                                <div className="d-flex gap-2">
+                                  {lead.status === "CONVERTED" && (
+                                    <button
+                                      className="btn btn-sm btn-outline-warning"
+                                      onClick={() => openAssignmentModal(lead)}
                                     >
-                                        <option value="">Select Type</option>
-                                        {uniqueAssignmentTypes.map((type, index) => (
-                                            <option key={index} value={type}>
-                                                {type}
-                                            </option>
-                                        ))}
-                                        <option value="Other">Other</option>
-                                    </select>
+                                      <i className="bi bi-plus-lg"></i>
+                                    </button>
+                                  )}
+                                  <button
+                                    className="btn btn-sm btn-outline-dark"
+                                    onClick={() => openEditLeadModal(lead)}
+                                  >
+                                    <i className="ri-pencil-line"></i>
+                                  </button>
                                 </div>
-
-                                {isOtherSelected && (
-                                    <div className="mb-3 mt-2">
-                                        <label className="form-label">Enter New Assignment Type</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={newLead.assignmentType}
-                                            onChange={(e) => setNewLead({ ...newLead, assignmentType: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                )}
-
-
-                                <div className="mb-3">
-                                    <label className="form-label">Assignment DateTime</label>
-                                    <input type="datetime-local" className="form-control" min={minDateTime} max={maxDateTime} onChange={(e) => handleDateTimeChange(e.target.value)} required />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Total Amount</label>
-                                    <input type="number" className="form-control" value={newLead.totalAmount} onChange={(e) => setNewLead({ ...newLead, totalAmount: e.target.value })} />
-                                </div>
-                                <button type="submit" className="btn btn-primary w-100">Submit</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="modal fade" id="editLeadModal" tabIndex="-1" aria-labelledby="editLeadModalLabel" aria-hidden="true">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-header d-flex justify-content-between align-items-center">
-                            <h5 className="modal-title" id="editLeadModalLabel">Edit Lead</h5>
-                            <div className="d-flex align-items-center gap-2">
-                                <button type="button" className="btn btn-sm btn-outline-danger" onClick={handleDeleteLead}>
-                                    <i className="ri-delete-bin-6-line"></i> {/* Remixicon trash bin icon */}
-                                </button>
-                                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
                             </div>
-                        </div>
-                        <div className="modal-body">
-                            {selectedLead && (
-                                <form onSubmit={handleEditLead}>
-                                    {/* Same fields like Add Lead, but with selectedLead */}
-                                    {/* customerName */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Name</label>
-                                        <input type="text" className="form-control" value={selectedLead.customerName} onChange={(e) => setSelectedLead({ ...selectedLead, customerName: e.target.value })} required />
-                                    </div>
-
-                                    {/* customerMobile */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Mobile</label>
-                                        <input type="text" className="form-control" value={selectedLead.customerMobile} onChange={(e) => setSelectedLead({ ...selectedLead, customerMobile: e.target.value })} required />
-                                    </div>
-
-                                    {/* customerEmail */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Email</label>
-                                        <input type="email" className="form-control" value={selectedLead.customerEmail} onChange={(e) => setSelectedLead({ ...selectedLead, customerEmail: e.target.value })} />
-                                    </div>
-
-                                    {/* customerAddress */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Address</label>
-                                        <input type="text" className="form-control" value={selectedLead.customerAddress} onChange={(e) => setSelectedLead({ ...selectedLead, customerAddress: e.target.value })} />
-                                    </div>
-
-                                    {/* Assignment Type Dropdown */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Assignment Type</label>
-                                        <select
-                                            className="form-select"
-                                            value={selectedLead.assignmentType}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                if (value === 'Other') {
-                                                    setIsOtherSelectedEdit(true);
-                                                    setSelectedLead({ ...selectedLead, assignmentType: '' });
-                                                } else {
-                                                    setIsOtherSelectedEdit(false);
-                                                    setSelectedLead({ ...selectedLead, assignmentType: value });
-                                                }
-                                            }}
-                                            required={!isOtherSelectedEdit}
-                                        >
-                                            <option value="">Select Type</option>
-                                            {uniqueAssignmentTypes.map((type, index) => (
-                                                <option key={index} value={type}>{type}</option>
-                                            ))}
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-
-                                    {/* If Other is selected */}
-                                    {isOtherSelectedEdit && (
-                                        <div className="mb-3 mt-2">
-                                            <label className="form-label">Enter New Assignment Type</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={selectedLead.assignmentType}
-                                                onChange={(e) => setSelectedLead({ ...selectedLead, assignmentType: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Assignment DateTime */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Assignment DateTime</label>
-                                        <input type="datetime-local" className="form-control" min={minDateTime} max={maxDateTime} value={selectedLead.assignmentDateTime} onChange={(e) => setSelectedLead({ ...selectedLead, assignmentDateTime: e.target.value })} required />
-                                    </div>
-
-                                    {/* Total Amount */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Total Amount</label>
-                                        <input type="number" className="form-control" value={selectedLead.totalAmount} onChange={(e) => setSelectedLead({ ...selectedLead, totalAmount: e.target.value })} />
-                                    </div>
-
-                                    {/* Status Dropdown */}
-                                    <div className="mb-3">
-                                        <label className="form-label">Status</label>
-                                        <select
-                                            className="form-select"
-                                            value={selectedLead.status}
-                                            onChange={(e) => setSelectedLead({ ...selectedLead, status: e.target.value })}
-                                            required
-                                        >
-                                            <option value="NEW">New</option>
-                                            <option value="IN-PROGRESS">In Progress</option>
-                                            <option value="CONVERTED">Converted</option>
-                                            <option value="CLOSED">Closed</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Submit */}
-                                    <button type="submit" className="btn btn-primary w-100">Update Lead</button>
-
-                                </form>
-                            )}
-                        </div>
+                          );
+                        })}
                     </div>
+                  )}
                 </div>
+              </div>
             </div>
-
-            <div className={`modal fade ${showAssignmentModal ? 'show d-block' : ''}`} tabIndex="-1">
-                <div className="modal-dialog modal-lg modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Add Assignment</h5>
-                            <button type="button" className="btn-close" onClick={() => setShowAssignmentModal(false)}></button>
-                        </div>
-                        <div className="modal-body">
-
-                            {/* Tab Buttons */}
-                            <ul className="nav nav-tabs mb-3">
-                                <li className="nav-item">
-                                    <button className={`nav-link ${assignmentTab === 'customer' ? 'active' : ''}`} onClick={() => setAssignmentTab('customer')}>Customer</button>
-                                </li>
-                                <li className="nav-item">
-                                    <button className={`nav-link ${assignmentTab === 'assignment' ? 'active' : ''}`} onClick={() => setAssignmentTab('assignment')}>Assignment</button>
-                                </li>
-                                <li className="nav-item">
-                                    <button className={`nav-link ${assignmentTab === 'assignto' ? 'active' : ''}`} onClick={() => setAssignmentTab('assignto')}>Assign To</button>
-                                </li>
-                            </ul>
-
-                            {/* Tab Content */}
-                            {assignmentTab === 'customer' && (
-                                <>
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Name</label>
-                                        <input className="form-control" value={assignmentForm.customerName} onChange={(e) => setAssignmentForm({ ...assignmentForm, customerName: e.target.value })} />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Email</label>
-                                        <input className="form-control" value={assignmentForm.customerEmail} onChange={(e) => setAssignmentForm({ ...assignmentForm, customerEmail: e.target.value })} />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Mobile</label>
-                                        <input className="form-control" value={assignmentForm.customerMobile} onChange={(e) => setAssignmentForm({ ...assignmentForm, customerMobile: e.target.value })} />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Customer Address</label>
-                                        <input className="form-control" value={assignmentForm.customerAddress} onChange={(e) => setAssignmentForm({ ...assignmentForm, customerAddress: e.target.value })} />
-                                    </div>
-                                </>
-                            )}
-
-                            {assignmentTab === 'assignment' && (
-                                <>
-                                    <div className="mb-3">
-                                        <label className="form-label">Assignment Name</label>
-                                        <input
-                                            className="form-control"
-                                            value={assignmentForm.assignmentName}
-                                            onChange={(e) => setAssignmentForm({ ...assignmentForm, assignmentName: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">Assignment Address</label>
-                                        <input className="form-control" value={assignmentForm.assignmentAddress} onChange={(e) => setAssignmentForm({ ...assignmentForm, assignmentAddress: e.target.value })} />
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">Alternate Mobile</label>
-                                        <input className="form-control" value={assignmentForm.contactPerson1Mobile} onChange={(e) => setAssignmentForm({ ...assignmentForm, contactPerson1Mobile: e.target.value })} />
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">Assignment Date</label>
-                                        <input type="date" className="form-control" value={assignmentForm.assignmentDate} onChange={(e) => setAssignmentForm({ ...assignmentForm, assignmentDate: e.target.value })} />
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <label className="form-label">Assignment Time</label>
-                                        <input type="time" className="form-control" value={assignmentForm.assignmentTime} onChange={(e) => setAssignmentForm({ ...assignmentForm, assignmentTime: e.target.value })} />
-                                    </div>
-                                </>
-                            )}
-
-                            {assignmentTab === 'assignto' && (
-                                <>
-                                    <div className="form-check">
-                                        <input type="radio" className="form-check-input" id="me" name="assignTo" value="Me" checked={assignmentForm.assignTo === 'Me'} onChange={(e) => setAssignmentForm({ ...assignmentForm, assignTo: e.target.value, assignToName: 'Me', assignToHandle: 'MeTo' })} />
-                                        <label className="form-check-label" htmlFor="me">Me</label>
-                                    </div>
-                                    <div className="form-check">
-                                        <input type="radio" className="form-check-input" id="other" name="assignTo" value="Other" checked={assignmentForm.assignTo === 'Other'} onChange={(e) => setAssignmentForm({ ...assignmentForm, assignTo: e.target.value, assignToName: 'Other', assignToHandle: 'OtherTo' })} />
-                                        <label className="form-check-label" htmlFor="other">Other</label>
-                                    </div>
-                                </>
-                            )}
-
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setShowAssignmentModal(false)}>Cancel</button>
-                            {assignmentTab === 'assignto' ? (
-                                <button className="btn btn-primary" onClick={handleSubmitAssignment}>Submit</button>
-                            ) : (
-                                <button className="btn btn-primary" onClick={handleNextAssignmentTab}>Next</button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {showBasicNotice && (
-                <BasicPlanNotice show={true} handleClose={() => setShowBasicNotice(false)} />
-            )}
-
-
+          </div>
         </div>
-    )
+      </div>
+
+      {/* Add Lead Modal */}
+      <div
+        className="modal fade"
+        id="addLeadModal"
+        tabIndex="-1"
+        aria-labelledby="addLeadModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="addLeadModalLabel">
+                Add New Lead
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              {/* Form inside Modal */}
+              <form onSubmit={handleAddLead}>
+                <div className="mb-3">
+                  <label className="form-label">Customer Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={newLead.customerName}
+                    onChange={(e) =>
+                      setNewLead({ ...newLead, customerName: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Customer Mobile</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={newLead.customerMobile}
+                    onChange={(e) =>
+                      setNewLead({ ...newLead, customerMobile: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Customer Email</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={newLead.customerEmail}
+                    onChange={(e) =>
+                      setNewLead({ ...newLead, customerEmail: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Customer Address</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={newLead.customerAddress}
+                    onChange={(e) =>
+                      setNewLead({
+                        ...newLead,
+                        customerAddress: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Assignment Type</label>
+                  <select
+                    className="form-select"
+                    value={newLead.assignmentType}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "Other") {
+                        setIsOtherSelected(true);
+                        setNewLead({ ...newLead, assignmentType: "" }); // Clear assignmentType to allow typing
+                      } else {
+                        setIsOtherSelected(false);
+                        setNewLead({ ...newLead, assignmentType: value });
+                      }
+                    }}
+                    required={!isOtherSelected}
+                  >
+                    <option value="">Select Type</option>
+                    {uniqueAssignmentTypes.map((type, index) => (
+                      <option key={index} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {isOtherSelected && (
+                  <div className="mb-3 mt-2">
+                    <label className="form-label">
+                      Enter New Assignment Type
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newLead.assignmentType}
+                      onChange={(e) =>
+                        setNewLead({
+                          ...newLead,
+                          assignmentType: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label">Assignment DateTime</label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    min={minDateTime}
+                    max={maxDateTime}
+                    onChange={(e) => handleDateTimeChange(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Total Amount</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={newLead.totalAmount}
+                    onChange={(e) =>
+                      setNewLead({ ...newLead, totalAmount: e.target.value })
+                    }
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary w-100">
+                  Submit
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="modal fade"
+        id="editLeadModal"
+        tabIndex="-1"
+        aria-labelledby="editLeadModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header d-flex justify-content-between align-items-center">
+              <h5 className="modal-title" id="editLeadModalLabel">
+                Edit Lead
+              </h5>
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={handleDeleteLead}
+                >
+                  <i className="ri-delete-bin-6-line"></i>{" "}
+                  {/* Remixicon trash bin icon */}
+                </button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+            </div>
+            <div className="modal-body">
+              {selectedLead && (
+                <form onSubmit={handleEditLead}>
+                  {/* Same fields like Add Lead, but with selectedLead */}
+                  {/* customerName */}
+                  <div className="mb-3">
+                    <label className="form-label">Customer Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={selectedLead.customerName}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          customerName: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  {/* customerMobile */}
+                  <div className="mb-3">
+                    <label className="form-label">Customer Mobile</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={selectedLead.customerMobile}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          customerMobile: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  {/* customerEmail */}
+                  <div className="mb-3">
+                    <label className="form-label">Customer Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={selectedLead.customerEmail}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          customerEmail: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* customerAddress */}
+                  <div className="mb-3">
+                    <label className="form-label">Customer Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={selectedLead.customerAddress}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          customerAddress: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Assignment Type Dropdown */}
+                  <div className="mb-3">
+                    <label className="form-label">Assignment Type</label>
+                    <select
+                      className="form-select"
+                      value={selectedLead.assignmentType}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "Other") {
+                          setIsOtherSelectedEdit(true);
+                          setSelectedLead({
+                            ...selectedLead,
+                            assignmentType: "",
+                          });
+                        } else {
+                          setIsOtherSelectedEdit(false);
+                          setSelectedLead({
+                            ...selectedLead,
+                            assignmentType: value,
+                          });
+                        }
+                      }}
+                      required={!isOtherSelectedEdit}
+                    >
+                      <option value="">Select Type</option>
+                      {uniqueAssignmentTypes.map((type, index) => (
+                        <option key={index} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* If Other is selected */}
+                  {isOtherSelectedEdit && (
+                    <div className="mb-3 mt-2">
+                      <label className="form-label">
+                        Enter New Assignment Type
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={selectedLead.assignmentType}
+                        onChange={(e) =>
+                          setSelectedLead({
+                            ...selectedLead,
+                            assignmentType: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Assignment DateTime */}
+                  <div className="mb-3">
+                    <label className="form-label">Assignment DateTime</label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      min={minDateTime}
+                      max={maxDateTime}
+                      value={selectedLead.assignmentDateTime}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          assignmentDateTime: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  {/* Total Amount */}
+                  <div className="mb-3">
+                    <label className="form-label">Total Amount</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={selectedLead.totalAmount}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          totalAmount: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Status Dropdown */}
+                  <div className="mb-3">
+                    <label className="form-label">Status</label>
+                    <select
+                      className="form-select"
+                      value={selectedLead.status}
+                      onChange={(e) =>
+                        setSelectedLead({
+                          ...selectedLead,
+                          status: e.target.value,
+                        })
+                      }
+                      required
+                    >
+                      <option value="NEW">New</option>
+                      <option value="IN-PROGRESS">In Progress</option>
+                      <option value="CONVERTED">Converted</option>
+                      <option value="CLOSED">Closed</option>
+                    </select>
+                  </div>
+
+                  {/* Submit */}
+                  <button type="submit" className="btn btn-primary w-100">
+                    Update Lead
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`modal fade ${showAssignmentModal ? "show d-block" : ""}`}
+        tabIndex="-1"
+      >
+        <div className="modal-dialog modal-lg modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Add Assignment</h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowAssignmentModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {/* Tab Buttons */}
+              <ul className="nav nav-tabs mb-3">
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      assignmentTab === "customer" ? "active" : ""
+                    }`}
+                    onClick={() => setAssignmentTab("customer")}
+                  >
+                    Customer
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      assignmentTab === "assignment" ? "active" : ""
+                    }`}
+                    onClick={() => setAssignmentTab("assignment")}
+                  >
+                    Assignment
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
+                      assignmentTab === "assignto" ? "active" : ""
+                    }`}
+                    onClick={() => setAssignmentTab("assignto")}
+                  >
+                    Assign To
+                  </button>
+                </li>
+              </ul>
+
+              {/* Tab Content */}
+              {assignmentTab === "customer" && (
+                <>
+                  <div className="mb-3">
+                    <label className="form-label">Customer Name</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.customerName}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          customerName: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Customer Email</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.customerEmail}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          customerEmail: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Customer Mobile</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.customerMobile}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          customerMobile: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Customer Address</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.customerAddress}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          customerAddress: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {assignmentTab === "assignment" && (
+                <>
+                  <div className="mb-3">
+                    <label className="form-label">Assignment Name</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.assignmentName}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          assignmentName: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Assignment Address</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.assignmentAddress}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          assignmentAddress: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Alternate Mobile</label>
+                    <input
+                      className="form-control"
+                      value={assignmentForm.contactPerson1Mobile}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          contactPerson1Mobile: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Assignment Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={assignmentForm.assignmentDate}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          assignmentDate: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Assignment Time</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={assignmentForm.assignmentTime}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          assignmentTime: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {assignmentTab === "assignto" && (
+                <>
+                  <div className="form-check">
+                    <input
+                      type="radio"
+                      className="form-check-input"
+                      id="me"
+                      name="assignTo"
+                      value="Me"
+                      checked={assignmentForm.assignTo === "Me"}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          assignTo: e.target.value,
+                          assignToName: "Me",
+                          assignToHandle: "MeTo",
+                        })
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="me">
+                      Me
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      type="radio"
+                      className="form-check-input"
+                      id="other"
+                      name="assignTo"
+                      value="Other"
+                      checked={assignmentForm.assignTo === "Other"}
+                      onChange={(e) =>
+                        setAssignmentForm({
+                          ...assignmentForm,
+                          assignTo: e.target.value,
+                          assignToName: "Other",
+                          assignToHandle: "OtherTo",
+                        })
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="other">
+                      Other
+                    </label>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowAssignmentModal(false)}
+              >
+                Cancel
+              </button>
+              {assignmentTab === "assignto" ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSubmitAssignment}
+                >
+                  Submit
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  onClick={handleNextAssignmentTab}
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showBasicNotice && (
+        <BasicPlanNotice
+          show={true}
+          handleClose={() => setShowBasicNotice(false)}
+        />
+      )}
+    </div>
+  );
 }

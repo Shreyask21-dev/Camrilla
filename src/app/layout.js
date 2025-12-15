@@ -83,6 +83,9 @@ export default function RootLayout({ children }) {
               }
             } catch (refreshError) {
               console.error("Token refresh failed", refreshError);
+              if (typeof window !== 'undefined' && window.toastr) {
+                window.toastr.warning("You have been logged out because you logged in from another device.");
+              }
               localStorage.clear();
               router.push('/Login');
             }
@@ -169,6 +172,8 @@ export default function RootLayout({ children }) {
 
         <link rel="stylesheet" href="/assets/vendor/css/pages/page-pricing.css" />
 
+        <link rel="stylesheet" href="/assets/vendor/libs/toastr/toastr.css" />
+
       </head>
 
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -194,6 +199,7 @@ export default function RootLayout({ children }) {
         <Script src="/assets/js/config.js" strategy="beforeInteractive" />
 
         <Script src="/assets/vendor/libs/jquery/jquery.js" />
+        <Script src="/assets/vendor/libs/toastr/toastr.js" />
         <Script src="/assets/vendor/libs/popper/popper.js" />
         <Script src="/assets/vendor/js/bootstrap.js" />
         <Script src="/assets/vendor/libs/node-waves/node-waves.js" />

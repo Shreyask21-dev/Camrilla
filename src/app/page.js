@@ -560,12 +560,12 @@ export default function Home() {
                   <h4 className="mb-0">{totalAssignments}</h4>
                 </div>
                 <h6 className="mb-0 fw-normal">Total assignment</h6>
-                <p className="mb-0">
+                {/* <p className="mb-0">
                   <span className="me-1 fw-medium">
                     {assignmentGrowthPercent}%
                   </span>
                   <small className="text-muted">than last month</small>
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
@@ -584,13 +584,13 @@ export default function Home() {
                   <h4 className="mb-0">{totalPayment}</h4>
                 </div>
                 <h6 className="mb-0 fw-normal">Total Payment</h6>
-                <p className="mb-0">
+                {/* <p className="mb-0">
                   <span className="me-1 fw-medium">
                     {paymentGrowthPercent > 0 ? "+" : ""}
                     {paymentGrowthPercent}%
                   </span>
                   <small className="text-muted">than last month</small>
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
@@ -609,13 +609,13 @@ export default function Home() {
                   <h4 className="mb-0">{duePayment}</h4>
                 </div>
                 <h6 className="mb-0 fw-normal">Due Payment </h6>
-                <p className="mb-0">
+                {/* <p className="mb-0">
                   <span className="me-1 fw-medium">
                     {dueGrowthPercent > 0 ? "+" : ""}
                     {dueGrowthPercent}%
                   </span>
                   <small className="text-muted">than last month</small>
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
@@ -634,13 +634,13 @@ export default function Home() {
                   <h4 className="mb-0">{receivedPayment}</h4>
                 </div>
                 <h6 className="mb-0 fw-normal">Recieved Payment</h6>
-                <p className="mb-0">
+                {/* <p className="mb-0">
                   <span className="me-1 fw-medium">
                     {receivedGrowthPercent > 0 ? "+" : ""}
                     {receivedGrowthPercent}%
                   </span>
                   <small className="text-muted">than last month</small>
-                </p>
+                </p> */}
               </div>
             </div>
           </div>

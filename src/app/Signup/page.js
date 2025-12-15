@@ -57,6 +57,8 @@ export default function Page() {
     if (trimmed.length < 2) return 'Must be at least 2 characters.'
     // disallow names that are only spaces or punctuation
     if (/^[\s]*$/.test(name)) return 'Cannot be empty or spaces only.'
+    // only allow alphabetic characters and spaces
+    if (!/^[A-Za-z\s]+$/.test(trimmed)) return 'Only alphabetic characters and spaces are allowed.'
     return ''
   }
 
@@ -87,6 +89,18 @@ export default function Page() {
     if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw))
       return 'Password must contain letters and numbers.'
     return ''
+  }
+
+  // Helper function to check if error message indicates duplicate email
+  const isDuplicateEmailError = (message) => {
+    if (!message) return false
+    const lowerMessage = message.toLowerCase()
+    return (
+      (lowerMessage.includes('email') && lowerMessage.includes('already')) ||
+      (lowerMessage.includes('email') && lowerMessage.includes('exist')) ||
+      lowerMessage.includes('user already exists') ||
+      lowerMessage.includes('duplicate email')
+    )
   }
 
   // handle country selection -> set phone code separately
@@ -204,7 +218,12 @@ export default function Page() {
       } else {
         // handle non-0 codes gracefully
         console.log('Signup response:', res.data)
-        setErrorMsg(res.data?.message || 'Registration failed. Please try again.')
+        const backendMessage = res.data?.message
+        if (isDuplicateEmailError(backendMessage)) {
+          setErrorMsg('Email already exists. Please use a different email.')
+        } else {
+          setErrorMsg(backendMessage || 'Registration failed. Please try again.')
+        }
       }
     } catch (error) {
       console.error('Signup error:', error?.response?.data || error.message || error)

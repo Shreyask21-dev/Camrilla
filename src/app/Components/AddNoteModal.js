@@ -13,46 +13,50 @@ export default function AddNoteModal({ show, handleClose, assignmentData, refres
   }, [assignmentData]);
 
   const handleSave = async () => {
-    const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
-    const accessToken = tokenData?.accessToken;
-    if (!accessToken) {
-      alert('Access Token not found');
-      return;
-    }
+  const tokenData = JSON.parse(localStorage.getItem('camrilla_token'));
+  const accessToken = tokenData?.accessToken;
+  if (!accessToken) {
+    alert('Access Token not found');
+    return;
+  }
 
-    try {
-      await axios.put(`${config.BASE_URL}order/assignment/${assignmentData.id}`, {
-        customerName: assignmentData.customerName,
-        customerMobile: assignmentData.customerMobile,
-        customerEmail: assignmentData.customerEmail,
-        customerAddress: assignmentData.customerAddress,
-        assignmentAddress: assignmentData.assignmentAddress,
-        assignmentName: assignmentData.assignmentName,
-        assignmentDateTime: assignmentData.assignmentDateTime,
-        assignmentStatus: assignmentData.assignmentStatus || "Completed",
-        contactPerson1Name: assignmentData.contactPerson1Name || "",
-        contactPerson1Mobile: assignmentData.contactPerson1Mobile || "",
-        contactPerson2Name: assignmentData.contactPerson2Name || "",
-        contactPerson2Mobile: assignmentData.contactPerson2Mobile || "",
-        assignToName: assignmentData.assignToName || "Me",
-        assignToHandle: assignmentData.assignToHandle || "MeTo",
-        assignmentNote: note,
-        totalAmount: assignmentData.totalAmount || 0,
-        reminderBeforedays: assignmentData.reminderBeforedays || 0,
-        reminderDate: assignmentData.reminderDate || ""
-      });
-      // , {
-      //   headers: { Authorization: `Bearer ${accessToken}` }
-      // }
+  // ⛔ Prevent blank updates
+  if (!note.trim()) {
+    alert("Note cannot be blank.");
+    return;
+  }
 
-      alert('Note updated successfully');
-      handleClose();
-      refreshEvents(); // refresh assignments
-    } catch (error) {
-      console.error('Error updating note:', error);
-      alert('Failed to update note');
-    }
-  };
+  try {
+    await axios.put(`${config.BASE_URL}order/assignment/${assignmentData.id}`, {
+      customerName: assignmentData.customerName,
+      customerMobile: assignmentData.customerMobile,
+      customerEmail: assignmentData.customerEmail,
+      customerAddress: assignmentData.customerAddress,
+      assignmentAddress: assignmentData.assignmentAddress,
+      assignmentName: assignmentData.assignmentName,
+      assignmentDateTime: assignmentData.assignmentDateTime,
+      assignmentStatus: assignmentData.assignmentStatus || "Completed",
+      contactPerson1Name: assignmentData.contactPerson1Name || "",
+      contactPerson1Mobile: assignmentData.contactPerson1Mobile || "",
+      contactPerson2Name: assignmentData.contactPerson2Name || "",
+      contactPerson2Mobile: assignmentData.contactPerson2Mobile || "",
+      assignToName: assignmentData.assignToName || "Me",
+      assignToHandle: assignmentData.assignToHandle || "MeTo",
+      assignmentNote: note,        // only updates if not blank
+      totalAmount: assignmentData.totalAmount || 0,
+      reminderBeforedays: assignmentData.reminderBeforedays || 0,
+      reminderDate: assignmentData.reminderDate || ""
+    });
+
+    alert('Note updated successfully');
+    handleClose();
+    refreshEvents(); // refresh assignments
+
+  } catch (error) {
+    console.error('Error updating note:', error);
+    alert('Failed to update note');
+  }
+};
 
   return (
     <Modal show={show} onHide={handleClose}  backdrop="static"  keyboard={false}>

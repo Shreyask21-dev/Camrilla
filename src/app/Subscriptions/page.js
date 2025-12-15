@@ -239,8 +239,10 @@ export default function Page() {
                             </p>
 
                             <div className="pricing-plans row mx-4 gy-3 px-lg-12 mt-5">
-                                {plans.length > 0 ? (
-                                    plans.map((plan, index) => {
+                                {(() => {
+                                    const isExpired = activePlan?.endDate && new Date() > new Date(activePlan.endDate);
+                                    return plans.length > 0 ? (
+                                        plans.map((plan, index) => {
 
                                         const features = JSON.parse(plan.feature);
 
@@ -329,9 +331,9 @@ export default function Page() {
                                                                 <button
                                                                     onClick={() => initiatePayment(plan.id)}
                                                                     className={`btn ${activePlan?.planId === plan.id ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
-                                                                // disabled={activePlan?.planId === plan.id}
+                                                                    disabled={activePlan?.planId === plan.id && !(plan.planName.toLowerCase() === 'professional' && isExpired)}
                                                                 >
-                                                                    {activePlan?.planId === plan.id ? (plan.planName.toLowerCase() === 'professional' ? 'Renew' : 'Your Current Plan') : 'Upgrade'}
+                                                                    {activePlan?.planId === plan.id ? (plan.planName.toLowerCase() === 'professional' && isExpired ? 'Renew' : 'Your Current Plan') : 'Upgrade'}
                                                                 </button>
                                                             )}
                                                     </div>
@@ -341,7 +343,8 @@ export default function Page() {
                                     })
                                 ) : (
                                     <div className="text-center">No plans available</div>
-                                )}
+                                );
+                            })()}
                             </div>
 
                         </div>

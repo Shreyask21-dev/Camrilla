@@ -14,6 +14,7 @@ export default function Page() {
     const [assignments, setAssignments] = useState([]);
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [timeZoneLabel, setTimeZoneLabel] = useState('');
 
     const [assignmentCount, setAssignmentCount] = useState(0);
 useEffect(() => {
@@ -68,6 +69,42 @@ useEffect(() => {
             console.error("Error fetching user plan:", err);
         }
     };
+useEffect(() => {
+  const buildGmtOffset = (offsetMinutes) => {
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const abs = Math.abs(offsetMinutes);
+    const hours = Math.floor(abs / 60);
+    const mins = abs % 60;
+    return `GMT${sign}${String(hours).padStart(2, '0')}${mins ? ':' + String(mins).padStart(2, '0') : ''}`;
+  };
+
+  const tz = userData.userTimeZone;
+
+  // If you have a stored IANA timezone like "Asia/Kolkata"
+  if (tz) {
+    try {
+      // Try to get GMT+X from the stored timezone
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'shortOffset', // often returns "GMT+05:30"
+      });
+
+      const parts = fmt.formatToParts(new Date());
+      const tzPart = parts.find((p) => p.type === 'timeZoneName');
+
+      if (tzPart?.value) {
+        setTimeZoneLabel(tzPart.value); // e.g., "GMT+05:30"
+        return;
+      }
+    } catch (e) {
+      console.warn('Failed to format timezone from userTimeZone, falling back to browser offset', e);
+    }
+  }
+
+  // Fallback: use browser's local offset
+  const offsetMinutes = -new Date().getTimezoneOffset();
+  setTimeZoneLabel(buildGmtOffset(offsetMinutes));
+}, [userData.userTimeZone]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -234,7 +271,8 @@ useEffect(() => {
                                     </li>
                                     <li className="d-flex align-items-center mb-4">
                                         <i className="ri-global-line ri-24px"></i><span className="fw-medium mx-2">Time Zone:</span>
-                                        <span>{userData.userTimeZone || 'Asia'}</span>
+                                        <span>{timeZoneLabel || 'GMT'}</span>
+
                                     </li>
                                     <li className="d-flex align-items-center mb-2">
                                         <i className="ri-translate-2 ri-24px"></i><span className="fw-medium mx-2">Languages:</span>
