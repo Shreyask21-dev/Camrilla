@@ -1,6 +1,6 @@
 // src/app/api/run-migration/route.js
 import { NextResponse } from "next/server";
-import { runMigration } from "../../../../migrations/run-migrations.js"; 
+import { runMigration } from "../../migrations/run-migrations"; 
 // ⬆️ This path is 100% correct for your folder structure
 
 export async function POST(request) {
