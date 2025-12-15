@@ -17,8 +17,8 @@ export async function DELETE(_, context) {
   }
 }
 
-export async function PUT(request, context) {
-  const { id } = context.params; // ✅ No await needed
+export async function PUT(request, { params }) {
+ const { id } = await params;// ✅ No await needed
   const body = await request.json();
   const { description, amount, category, date } = body;
 
