@@ -16,6 +16,8 @@ import { useAssignmentStore } from "../store/store";
 export default function AssignmentPage() {
   const { decrementAssignmentCount } = useAssignmentStore();
 const [showExpenseModal, setShowExpenseModal] = useState(false);
+const [selectedExpenseAssignment, setSelectedExpenseAssignment] = useState(null);
+
   const [showBasicNotice, setShowBasicNotice] = useState(false);
 
   const [planInfo, setPlanInfo] = useState(null);
@@ -102,6 +104,7 @@ const handleAddExpense = (assignment) => {
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAssignment, setPaymentAssignment] = useState(null);
+  
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
 
