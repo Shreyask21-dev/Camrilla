@@ -70,10 +70,20 @@ export default function Page() {
   const [calendarDate, setCalendarDate] = useState(new Date());
 
   const [dateRangeFilter, setDateRangeFilter] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const isWithinSelectedRange = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
+
+    // Custom date range takes precedence
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      return date >= start && date <= end;
+    }
 
     if (dateRangeFilter === null) {
       return (
@@ -190,6 +200,9 @@ export default function Page() {
     totalAmount: "",
     assignmentType: "",
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const leadsPerPage = 5;
   
   const handleDateTimeChange = (dateString) => {
     const timestamp = new Date(dateString).getTime();
@@ -333,6 +346,10 @@ export default function Page() {
     fetchLeads();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedTypes, dateRangeFilter, calendarDate]);
+
   const openAddLeadModal = () => {
     // ✅ fresh form every time
     setNewLead({
@@ -383,6 +400,47 @@ export default function Page() {
 
     return [...new Set(monthLeads.map((lead) => lead.assignmentType))];
   }, [leads, calendarDate]);
+
+  const filteredLeads = useMemo(() => {
+    return leads
+      .filter((lead) => {
+        const text = searchTerm.toLowerCase();
+
+        const matchesSearch =
+          lead.customerName?.toLowerCase().includes(text) ||
+          lead.customerMobile?.toLowerCase().includes(text) ||
+          lead.customerEmail?.toLowerCase().includes(text) ||
+          lead.customerAddress?.toLowerCase().includes(text) ||
+          lead.assignmentType?.toLowerCase().includes(text) ||
+          lead.status?.toLowerCase().includes(text) ||
+          String(lead.totalAmount).includes(text);
+
+        const typeMatch =
+          selectedTypes.includes("all") ||
+          selectedTypes.includes(lead.assignmentType);
+        const dateMatch = isWithinSelectedRange(lead.assignmentDateTime);
+
+        return typeMatch && dateMatch && (!searchTerm || matchesSearch);
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.assignmentDateTime) - new Date(b.assignmentDateTime)
+      );
+  }, [leads, searchTerm, selectedTypes, dateRangeFilter, calendarDate, startDate, endDate]);
+
+  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const endIndex = startIndex + leadsPerPage;
+  const currentLeads = filteredLeads.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleFirst = () => setCurrentPage(1);
+  const handleLast = () => setCurrentPage(totalPages);
+  const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   const handleNextAssignmentTab = () => {
     if (assignmentTab === "customer") setAssignmentTab("assignment");
@@ -645,7 +703,11 @@ export default function Page() {
                           className="form-check-input"
                           type="radio"
                           checked={dateRangeFilter === "lastMonth"}
-                          onChange={() => setDateRangeFilter("lastMonth")}
+                          onChange={() => {
+                            setDateRangeFilter("lastMonth");
+                            setStartDate(null);
+                            setEndDate(null);
+                          }}
                         />
                         <label className="form-check-label">Last Month</label>
                       </div>
@@ -655,7 +717,11 @@ export default function Page() {
                           className="form-check-input"
                           type="radio"
                           checked={dateRangeFilter === "currentYear"}
-                          onChange={() => setDateRangeFilter("currentYear")}
+                          onChange={() => {
+                            setDateRangeFilter("currentYear");
+                            setStartDate(null);
+                            setEndDate(null);
+                          }}
                         />
                         <label className="form-check-label">Current Year</label>
                       </div>
@@ -665,7 +731,11 @@ export default function Page() {
                           className="form-check-input"
                           type="radio"
                           checked={dateRangeFilter === "lastYear"}
-                          onChange={() => setDateRangeFilter("lastYear")}
+                          onChange={() => {
+                            setDateRangeFilter("lastYear");
+                            setStartDate(null);
+                            setEndDate(null);
+                          }}
                         />
                         <label className="form-check-label">Last Year</label>
                       </div>
@@ -675,11 +745,40 @@ export default function Page() {
                           className="form-check-input"
                           type="radio"
                           checked={dateRangeFilter === "all"}
-                          onChange={() => setDateRangeFilter("all")}
+                          onChange={() => {
+                            setDateRangeFilter("all");
+                            setStartDate(null);
+                            setEndDate(null);
+                          }}
                         />
                         <label className="form-check-label" htmlFor="range-all">
                           All
                         </label>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="d-flex gap-2">
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          placeholder="Start Date"
+                          value={startDate || ""}
+                          onInput={(e) => {
+                            setStartDate(e.target.value);
+                            setDateRangeFilter(null);
+                          }}
+                        />
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          placeholder="End Date"
+                          value={endDate || ""}
+                          onInput={(e) => {
+                            setEndDate(e.target.value);
+                            setDateRangeFilter(null);
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -690,136 +789,103 @@ export default function Page() {
                     <p>Loading leads...</p>
                   ) : (
                     <div className="d-flex flex-column gap-4">
-                      {leads
-                        .filter((lead) => {
-                          const text = searchTerm.toLowerCase();
+                      {currentLeads.map((lead) => {
+                        const assignmentDate = new Date(
+                          lead.assignmentDateTime
+                        );
+                        const leadCreatedDate = new Date(lead.leadDate);
 
-                          const matchesSearch =
-                            lead.customerName?.toLowerCase().includes(text) ||
-                            lead.customerMobile?.toLowerCase().includes(text) ||
-                            lead.customerEmail?.toLowerCase().includes(text) ||
-                            lead.customerAddress
-                              ?.toLowerCase()
-                              .includes(text) ||
-                            lead.assignmentType?.toLowerCase().includes(text) ||
-                            lead.status?.toLowerCase().includes(text) ||
-                            String(lead.totalAmount).includes(text);
+                        const day = assignmentDate.getDate();
+                        const month = assignmentDate.toLocaleString(
+                          "default",
+                          { month: "short" }
+                        );
+                        const year = assignmentDate.getFullYear();
 
-                          const typeMatch =
-                            selectedTypes.includes("all") ||
-                            selectedTypes.includes(lead.assignmentType);
-                          const dateMatch = isWithinSelectedRange(
-                            lead.assignmentDateTime
-                          );
-
-                          return (
-                            typeMatch &&
-                            dateMatch &&
-                            (!searchTerm || matchesSearch)
-                          );
-                        })
-                        .sort(
-                          (a, b) =>
-                            new Date(a.assignmentDateTime) -
-                            new Date(b.assignmentDateTime)
-                        )
-                        .map((lead) => {
-                          const assignmentDate = new Date(
-                            lead.assignmentDateTime
-                          );
-                          const leadCreatedDate = new Date(lead.leadDate);
-
-                          const day = assignmentDate.getDate();
-                          const month = assignmentDate.toLocaleString(
-                            "default",
-                            { month: "short" }
-                          );
-                          const year = assignmentDate.getFullYear();
-
-                          return (
+                        return (
+                          <div
+                            key={lead.id}
+                            className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3"
+                            style={{}}
+                          >
+                            {/* Date Column */}
                             <div
-                              key={lead.id}
-                              className="border border-top-0 border-start-0 border-end-0 rounded p-3 d-flex gap-4 mb-3"
-                              style={{}}
+                              className="text-center border border-top-0 border-bottom-0 border-start-0"
+                              style={{ minWidth: "80px" }}
                             >
-                              {/* Date Column */}
-                              <div
-                                className="text-center border border-top-0 border-bottom-0 border-start-0"
-                                style={{ minWidth: "80px" }}
-                              >
-                                <small className="text-muted">{month}</small>
-                                <h3 className="mb-0">{day}</h3>
-                                <small className="text-muted">{year}</small>
-                              </div>
+                              <small className="text-muted">{month}</small>
+                              <h3 className="mb-0">{day}</h3>
+                              <small className="text-muted">{year}</small>
+                            </div>
 
-                              {/* Info Column */}
-                              <div className="flex-grow-1">
-                                <strong className="d-block mb-1">
-                                  {lead.customerName}
-                                </strong>
-                                <div className="text-muted small mb-1">
-                                  {lead.customerEmail || "-"} |{" "}
-                                  {lead.customerMobile || "-"}
-                                </div>
-                                <div className="text-muted small">
-                                  {/* <strong>{lead.assignmentType || '-'}</strong><br /> */}
-                                  <span
-                                    className={`badge bg-${
-                                      assignmentTypeColorMap.get(
-                                        normalize(lead.assignmentType)
-                                      ) || "secondary"
-                                    }`}
-                                  >
-                                    {lead.assignmentType || "-"}
-                                  </span>
-                                  <span>Amount: ₹{lead.totalAmount || 0}</span>
-                                  <br />
-                                  <span>
-                                    Lead Date:{" "}
-                                    {leadCreatedDate.toLocaleDateString()}
-                                  </span>
-                                </div>
+                            {/* Info Column */}
+                            <div className="flex-grow-1">
+                              <strong className="d-block mb-1">
+                                {lead.customerName}
+                              </strong>
+                              <div className="text-muted small mb-1">
+                                {lead.customerEmail || "-"} |{" "}
+                                {lead.customerMobile || "-"}
                               </div>
-
-                              {/* Status + Action Buttons Column */}
-                              <div
-                                className="d-flex flex-column justify-content-between align-items-end gap-2"
-                                style={{ minWidth: "140px" }}
-                              >
+                              <div className="text-muted small">
+                                {/* <strong>{lead.assignmentType || '-'}</strong><br /> */}
                                 <span
-                                  className={`badge rounded-pill text-uppercase ${
-                                    lead.status === "IN-PROGRESS"
-                                      ? "bg-label-info"
-                                      : lead.status === "CONVERTED"
-                                      ? "bg-label-success"
-                                      : lead.status === "NEW"
-                                      ? "bg-label-primary"
-                                      : "bg-label-secondary"
+                                  className={`badge bg-${
+                                    assignmentTypeColorMap.get(
+                                      normalize(lead.assignmentType)
+                                    ) || "secondary"
                                   }`}
                                 >
-                                  {lead.status}
+                                  {lead.assignmentType || "-"}
                                 </span>
-
-                                <div className="d-flex gap-2">
-                                  {lead.status === "CONVERTED" && (
-                                    <button
-                                      className="btn btn-sm btn-outline-warning"
-                                      onClick={() => openAssignmentModal(lead)}
-                                    >
-                                      <i className="bi bi-plus-lg"></i>
-                                    </button>
-                                  )}
-                                  <button
-                                    className="btn btn-sm btn-outline-dark"
-                                    onClick={() => openEditLeadModal(lead)}
-                                  >
-                                    <i className="ri-pencil-line"></i>
-                                  </button>
-                                </div>
+                                <span>Amount: ₹{lead.totalAmount || 0}</span>
+                                <br />
+                                <span>
+                                  Lead Date:{" "}
+                                  {leadCreatedDate.toLocaleDateString()}
+                                </span>
                               </div>
                             </div>
-                          );
-                        })}
+
+                            {/* Status + Action Buttons Column */}
+                            <div
+                              className="d-flex flex-column justify-content-between align-items-end gap-2"
+                              style={{ minWidth: "140px" }}
+                            >
+                              <span
+                                className={`badge rounded-pill text-uppercase ${
+                                  lead.status === "IN-PROGRESS"
+                                    ? "bg-label-info"
+                                    : lead.status === "CONVERTED"
+                                    ? "bg-label-success"
+                                    : lead.status === "NEW"
+                                    ? "bg-label-primary"
+                                    : "bg-label-secondary"
+                                }`}
+                              >
+                                {lead.status}
+                              </span>
+
+                              <div className="d-flex gap-2">
+                                {lead.status === "CONVERTED" && (
+                                  <button
+                                    className="btn btn-sm btn-outline-warning"
+                                    onClick={() => openAssignmentModal(lead)}
+                                  >
+                                    <i className="bi bi-plus-lg"></i>
+                                  </button>
+                                )}
+                                <button
+                                  className="btn btn-sm btn-outline-dark"
+                                  onClick={() => openEditLeadModal(lead)}
+                                >
+                                  <i className="ri-pencil-line"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

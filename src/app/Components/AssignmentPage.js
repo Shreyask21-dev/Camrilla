@@ -170,10 +170,6 @@ const handleAddExpense = (assignment) => {
     }
   };
 
-  useEffect(() => {
-    fetchAssignments(startOfMonth, endOfMonth);
-  }, [startOfMonth, endOfMonth]);
-
   const handleMonthChange = (date) => {
     setCurrentDate(date);
     const newStart = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -208,6 +204,17 @@ const handleAddExpense = (assignment) => {
 
   // const [timeFilter, setTimeFilter] = useState("All");
   const [timeFilter, setTimeFilter] = useState(null);
+  const [customStartDate, setCustomStartDate] = useState(null);
+  const [customEndDate, setCustomEndDate] = useState(null);
+
+  useEffect(() => {
+    const start = customStartDate || startOfMonth;
+    const end = customEndDate || endOfMonth;
+    fetchAssignments(start, end);
+  }, [startOfMonth, endOfMonth, customStartDate, customEndDate]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const filteredAssignments = useMemo(() => {
     const filterByName = selectedAssignmentNames.includes("All")
@@ -242,6 +249,21 @@ const handleAddExpense = (assignment) => {
 
     return filterByName.filter((a) => !searchTerm || matchesSearch(a));
   }, [assignments, selectedAssignmentNames, searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredAssignments]);
+
+  const totalPages = Math.ceil(filteredAssignments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentAssignments = [...filteredAssignments]
+    .sort(
+      (a, b) =>
+        new Date(a.assignmentDateTime) -
+        new Date(b.assignmentDateTime)
+    )
+    .slice(startIndex, endIndex);
 
   const handleFilterChange = (name) => {
     if (name === "All") {
@@ -377,6 +399,18 @@ const handleAddExpense = (assignment) => {
     setTimeFilter(filterType);
     setStartOfMonth(startDate);
     setEndOfMonth(endDate);
+    setCustomStartDate(null);
+    setCustomEndDate(null);
+  };
+
+  const getCurrentStartDate = () => customStartDate || startOfMonth;
+  const getCurrentEndDate = () => customEndDate || endOfMonth;
+
+  const handleCustomDateChange = () => {
+    if (customStartDate && customEndDate) {
+      setTimeFilter(null);
+      fetchAssignments(customStartDate, customEndDate);
+    }
   };
 
   // // Create a mapping of assignment name to a consistent color
@@ -597,18 +631,36 @@ const handleAddExpense = (assignment) => {
                         </label>
                       </div>
                     </div>
+                    <div className="mt-3 d-flex gap-2">
+                      <input
+                        type="date"
+                        className="form-control"
+                        placeholder="Start Date"
+                        value={customStartDate ? customStartDate.toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : null;
+                          setCustomStartDate(date);
+                          handleCustomDateChange();
+                        }}
+                      />
+                      <input
+                        type="date"
+                        className="form-control"
+                        placeholder="End Date"
+                        value={customEndDate ? customEndDate.toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : null;
+                          setCustomEndDate(date);
+                          handleCustomDateChange();
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="card-body mt-4">
                   <div className="d-flex flex-column gap-4">
-                    {[...filteredAssignments]
-                      .sort(
-                        (a, b) =>
-                          new Date(a.assignmentDateTime) -
-                          new Date(b.assignmentDateTime)
-                      )
-                      .map((assignment, index) => {
+                    {currentAssignments.map((assignment, index) => {
                         const date = new Date(assignment.assignmentDateTime);
 
                         return (
@@ -717,6 +769,43 @@ const handleAddExpense = (assignment) => {
                         );
                       })}
                   </div>
+
+                  {totalPages > 1 && (
+                    <div className="d-flex justify-content-center mt-4">
+                      <nav aria-label="Page navigation">
+                        <ul className="pagination">
+                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(currentPage - 1)}
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </button>
+                          </li>
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                              <button
+                                className="page-link"
+                                onClick={() => setCurrentPage(page)}
+                              >
+                                {page}
+                              </button>
+                            </li>
+                          ))}
+                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                            >
+                              Next
+                            </button>
+                          </li>
+                        </ul>
+                      </nav>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

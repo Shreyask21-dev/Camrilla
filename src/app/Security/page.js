@@ -1,16 +1,19 @@
-'use client';
-import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import config from '../config/config';
+"use client";
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import config from "../config/config";
 
 export default function Page() {
+  const router = useRouter();
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [accessToken, setAccessToken] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [isTemporaryPassword, setIsTemporaryPassword] = useState(false);
 
   // SHOW/HIDE password toggles
   const [showCurrent, setShowCurrent] = useState(false);
@@ -21,18 +24,24 @@ export default function Page() {
   const [errors, setErrors] = useState({
     currentPassword: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   useEffect(() => {
-    const userData = localStorage.getItem('userData');
-    const tokenData = localStorage.getItem('camrilla_token');
-    if (userData && tokenData) {
-      const parsedUser = JSON.parse(userData);
-      const parsedToken = JSON.parse(tokenData);
-      setEmail(parsedUser.email);
-      setAccessToken(parsedToken.accessToken);
+    const userData = localStorage.getItem("userData");
+    const tokenData = localStorage.getItem("camrilla_token");
+
+    if (!userData || !tokenData) {
+      router.push("/Login");
+      return;
     }
+
+    const parsedUser = JSON.parse(userData);
+    const parsedToken = JSON.parse(tokenData);
+
+    setEmail(parsedUser.email);
+    setAccessToken(parsedToken.accessToken);
+    setIsTemporaryPassword(parsedUser.isTemporaryPassword || false);
   }, []);
 
   // Remove spaces from input
@@ -44,7 +53,7 @@ export default function Page() {
     if (password.includes(" ")) return "Spaces are not allowed.";
     if (password.length < 8) return "Password must be at least 8 characters.";
     if (!/[a-z]/.test(password)) return "Must contain a lowercase letter.";
-    if (!/[0-9!@#$%^&*.,?_\-]/.test(password)) 
+    if (!/[0-9!@#$%^&*.,?_\-]/.test(password))
       return "Must contain a number or symbol.";
     return "";
   };
@@ -55,10 +64,10 @@ export default function Page() {
     let validationErrors = {
       currentPassword: "",
       newPassword: "",
-      confirmPassword: ""
+      confirmPassword: "",
     };
 
-    if (!currentPassword.trim()) {
+    if (!isTemporaryPassword && !currentPassword.trim()) {
       validationErrors.currentPassword = "Current password is required.";
     }
 
@@ -76,42 +85,63 @@ export default function Page() {
       validationErrors.currentPassword ||
       validationErrors.newPassword ||
       validationErrors.confirmPassword
-    ) return;
+    )
+      return;
 
     try {
+      const payload = isTemporaryPassword
+        ? {
+            email: email,
+            newPassword: newPassword,
+          }
+        : {
+            email: email,
+            oldPassword: currentPassword,
+            newPassword: newPassword,
+          };
+
       const response = await axios.post(
         `${config.BASE_URL}user/reset-password`,
-        {
-          email: email,
-          oldPassword: currentPassword,
-          newPassword: newPassword,
-        }
+        payload
       );
 
-      alert('Password updated successfully!');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      alert("Password updated successfully!");
+
+      // 🔥 CLEAR TEMP PASSWORD FLAG
+      const userData = JSON.parse(localStorage.getItem("userData"));
+
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          ...userData,
+          isTemporaryPassword: false,
+        })
+      );
+
+      // Clear fields
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
 
       setErrors({
         currentPassword: "",
         newPassword: "",
-        confirmPassword: ""
+        confirmPassword: "",
       });
 
+      // Redirect to dashboard
+      router.push("/");
     } catch (error) {
-      console.error('Error updating password:', error);
-      alert(error.response?.data?.message || 'Failed to update password.');
+      console.error("Error updating password:", error);
+      alert(error.response?.data?.message || "Failed to update password.");
     }
   };
 
   return (
     <div>
-
       <div className="container-xxl flex-grow-1 container-p-y">
         <div className="row">
           <div className="col-md-12">
-
             <div className="nav-align-top">
               <ul className="nav nav-pills flex-column flex-md-row mb-6 gap-2 gap-lg-0">
                 <li className="nav-item">
@@ -133,97 +163,127 @@ export default function Page() {
             </div>
 
             <div className="card mb-6">
-              <h5 className="card-header">Change Password</h5>
+              <h5 className="card-header">
+                {isTemporaryPassword ? "Set New Password" : "Change Password"}
+              </h5>
               <div className="card-body pt-1">
-
                 <form id="formAccountSettings" onSubmit={handlePasswordChange}>
+                  {/* CURRENT PASSWORD - Only show if not temporary */}
+                  {!isTemporaryPassword && (
+                    <div className="row">
+                      <div className="mb-5 col-md-6 form-password-toggle">
+                        <div className="input-group input-group-merge">
+                          <div className="form-floating form-floating-outline">
+                            <input
+                              className={`form-control ${
+                                errors.currentPassword ? "is-invalid" : ""
+                              }`}
+                              type={showCurrent ? "text" : "password"}
+                              id="currentPassword"
+                              placeholder="Current Password"
+                              value={currentPassword}
+                              onChange={(e) =>
+                                setCurrentPassword(
+                                  sanitizeInput(e.target.value)
+                                )
+                              }
+                            />
+                            <label htmlFor="currentPassword">
+                              Current Password
+                            </label>
+                            <div className="invalid-feedback">
+                              {errors.currentPassword}
+                            </div>
+                          </div>
 
-                  {/* CURRENT PASSWORD */}
-                  <div className="row">
-                    <div className="mb-5 col-md-6 form-password-toggle">
-                      <div className="input-group input-group-merge">
-                        
-                        <div className="form-floating form-floating-outline">
-                          <input
-                            className={`form-control ${errors.currentPassword ? 'is-invalid' : ''}`}
-                            type={showCurrent ? "text" : "password"}
-                            id="currentPassword"
-                            placeholder="Current Password"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(sanitizeInput(e.target.value))}
-                          />
-                          <label htmlFor="currentPassword">Current Password</label>
-                          <div className="invalid-feedback">{errors.currentPassword}</div>
+                          <span
+                            className="input-group-text cursor-pointer"
+                            onClick={() => setShowCurrent(!showCurrent)}
+                          >
+                            <i
+                              className={
+                                showCurrent ? "ri-eye-line" : "ri-eye-off-line"
+                              }
+                            ></i>
+                          </span>
                         </div>
-
-                        <span
-                          className="input-group-text cursor-pointer"
-                          onClick={() => setShowCurrent(!showCurrent)}
-                        >
-                          <i className={showCurrent ? "ri-eye-line" : "ri-eye-off-line"}></i>
-                        </span>
-
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* NEW + CONFIRM PASSWORD */}
                   <div className="row g-5 mb-6">
-
                     {/* NEW PASSWORD */}
                     <div className="col-md-6 form-password-toggle">
                       <div className="input-group input-group-merge">
-
                         <div className="form-floating form-floating-outline">
                           <input
-                            className={`form-control ${errors.newPassword ? 'is-invalid' : ''}`}
+                            className={`form-control ${
+                              errors.newPassword ? "is-invalid" : ""
+                            }`}
                             type={showNew ? "text" : "password"}
                             id="newPassword"
                             placeholder="New Password"
                             value={newPassword}
-                            onChange={(e) => setNewPassword(sanitizeInput(e.target.value))}
+                            onChange={(e) =>
+                              setNewPassword(sanitizeInput(e.target.value))
+                            }
                           />
                           <label htmlFor="newPassword">New Password</label>
-                          <div className="invalid-feedback">{errors.newPassword}</div>
+                          <div className="invalid-feedback">
+                            {errors.newPassword}
+                          </div>
                         </div>
 
                         <span
                           className="input-group-text cursor-pointer"
                           onClick={() => setShowNew(!showNew)}
                         >
-                          <i className={showNew ? "ri-eye-line" : "ri-eye-off-line"}></i>
+                          <i
+                            className={
+                              showNew ? "ri-eye-line" : "ri-eye-off-line"
+                            }
+                          ></i>
                         </span>
-
                       </div>
                     </div>
 
                     {/* CONFIRM PASSWORD */}
                     <div className="col-md-6 form-password-toggle">
                       <div className="input-group input-group-merge">
-
                         <div className="form-floating form-floating-outline">
                           <input
-                            className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                            className={`form-control ${
+                              errors.confirmPassword ? "is-invalid" : ""
+                            }`}
                             type={showConfirm ? "text" : "password"}
                             id="confirmPassword"
                             placeholder="Confirm Password"
                             value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(sanitizeInput(e.target.value))}
+                            onChange={(e) =>
+                              setConfirmPassword(sanitizeInput(e.target.value))
+                            }
                           />
-                          <label htmlFor="confirmPassword">Confirm New Password</label>
-                          <div className="invalid-feedback">{errors.confirmPassword}</div>
+                          <label htmlFor="confirmPassword">
+                            Confirm New Password
+                          </label>
+                          <div className="invalid-feedback">
+                            {errors.confirmPassword}
+                          </div>
                         </div>
 
                         <span
                           className="input-group-text cursor-pointer"
                           onClick={() => setShowConfirm(!showConfirm)}
                         >
-                          <i className={showConfirm ? "ri-eye-line" : "ri-eye-off-line"}></i>
+                          <i
+                            className={
+                              showConfirm ? "ri-eye-line" : "ri-eye-off-line"
+                            }
+                          ></i>
                         </span>
-
                       </div>
                     </div>
-
                   </div>
 
                   <h6 className="text-body">Password Requirements:</h6>
@@ -235,35 +295,33 @@ export default function Page() {
                   </ul>
 
                   <div className="mt-6">
-                    <button type="submit" className="btn btn-primary me-3">Save changes</button>
+                    <button type="submit" className="btn btn-primary me-3">
+                      Save changes
+                    </button>
 
                     <button
                       type="reset"
                       className="btn btn-outline-secondary"
                       onClick={() => {
-                        setCurrentPassword('');
-                        setNewPassword('');
-                        setConfirmPassword('');
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmPassword("");
                         setErrors({
                           currentPassword: "",
                           newPassword: "",
-                          confirmPassword: ""
+                          confirmPassword: "",
                         });
                       }}
                     >
                       Reset
                     </button>
                   </div>
-
                 </form>
-
               </div>
             </div>
-
           </div>
         </div>
       </div>
-
     </div>
   );
 }

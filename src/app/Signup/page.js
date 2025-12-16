@@ -1,156 +1,171 @@
-'use client'
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import countries from 'world-countries'
-import config from '../config/config'
+"use client";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import countries from "world-countries";
+import config from "../config/config";
 
 export default function Page() {
-  const [successMsg, setSuccessMsg] = useState('')
-  const [errorMsg, setErrorMsg] = useState('')
-  const router = useRouter()
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const router = useRouter();
 
-  const [countryList, setCountryList] = useState([])
+  const [countryList, setCountryList] = useState([]);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    country: '',
-    phoneCode: '',
-    phoneNumber: '',
-    password: ''
-  })
+    firstName: "",
+    lastName: "",
+    email: "",
+    country: "",
+    phoneCode: "",
+    phoneNumber: "",
+    password: "",
+  });
 
   // validation errors per field
   const [errors, setErrors] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    country: '',
-    phoneNumber: '',
-    password: ''
-  })
+    firstName: "",
+    lastName: "",
+    email: "",
+    country: "",
+    phoneNumber: "",
+    password: "",
+  });
 
   useEffect(() => {
     const list = countries.map((country) => {
-      const currencyObject = country.currencies ? Object.values(country.currencies)[0] : null
+      const currencyObject = country.currencies
+        ? Object.values(country.currencies)[0]
+        : null;
       return {
         name: country.name.common,
         code: country.cca2,
         callingCode:
           country.idd && country.idd.root
-            ? `${country.idd.root}${country.idd.suffixes ? country.idd.suffixes[0] || '' : ''}`
-            : '',
-        currency: currencyObject?.name || '',
-        currencyCode: country.currencies ? Object.keys(country.currencies)[0] : ''
-      }
-    })
+            ? `${country.idd.root}${
+                country.idd.suffixes ? country.idd.suffixes[0] || "" : ""
+              }`
+            : "",
+        currency: currencyObject?.name || "",
+        currencyCode: country.currencies
+          ? Object.keys(country.currencies)[0]
+          : "",
+      };
+    });
     // sort alphabetically for nicer UX
-    list.sort((a, b) => a.name.localeCompare(b.name))
-    setCountryList(list)
-  }, [])
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    setCountryList(list);
+  }, []);
 
   const validateName = (name) => {
-    if (!name || typeof name !== 'string') return 'This field is required.'
-    const trimmed = name.trim()
-    if (trimmed.length < 2) return 'Must be at least 2 characters.'
+    if (!name || typeof name !== "string") return "This field is required.";
+    const trimmed = name.trim();
+    if (trimmed.length < 2) return "Must be at least 2 characters.";
     // disallow names that are only spaces or punctuation
-    if (/^[\s]*$/.test(name)) return 'Cannot be empty or spaces only.'
+    if (/^[\s]*$/.test(name)) return "Cannot be empty or spaces only.";
     // only allow alphabetic characters and spaces
-    if (!/^[A-Za-z\s]+$/.test(trimmed)) return 'Only alphabetic characters and spaces are allowed.'
-    return ''
-  }
+    if (!/^[A-Za-z\s]+$/.test(trimmed))
+      return "Only alphabetic characters and spaces are allowed.";
+    return "";
+  };
 
   const validateEmail = (email) => {
-    if (!email) return 'Email is required.'
-    const trimmed = email.trim()
+    if (!email) return "Email is required.";
+    const trimmed = email.trim();
     // simple but robust RFC-like regex (reasonable client-side check)
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!re.test(trimmed)) return 'Enter a valid email address.'
-    return ''
-  }
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!re.test(trimmed)) return "Enter a valid email address.";
+    return "";
+  };
 
   const validatePhoneNumber = (num) => {
-    if (!num) return 'Phone number is required.'
-    const trimmed = num.trim()
+    if (!num) return "Phone number is required.";
+    const trimmed = num.trim();
     // allow digits, spaces, hyphens; remove spaces/hyphens when checking length
-    const digits = trimmed.replace(/[\s-()+]/g, '')
-    if (!/^\d+$/.test(digits)) return 'Phone number must contain only digits.'
-    if (digits.length < 6) return 'Phone number is too short.'
-    if (digits.length > 15) return 'Phone number is too long.'
-    return ''
-  }
+    const digits = trimmed.replace(/[\s-()+]/g, "");
+    if (!/^\d+$/.test(digits)) return "Phone number must contain only digits.";
+    if (digits.length < 6) return "Phone number is too short.";
+    if (digits.length > 15) return "Phone number is too long.";
+    return "";
+  };
 
   const validatePassword = (pw) => {
-    if (!pw) return 'Password is required.'
-    if (pw.length < 8) return 'Password must be at least 8 characters.'
+    if (!pw) return "Password is required.";
+    if (pw.length < 8) return "Password must be at least 8 characters.";
     // require at least one letter and one digit
     if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw))
-      return 'Password must contain letters and numbers.'
-    return ''
-  }
+      return "Password must contain letters and numbers.";
+    return "";
+  };
 
   // Helper function to check if error message indicates duplicate email
   const isDuplicateEmailError = (message) => {
-    if (!message) return false
-    const lowerMessage = message.toLowerCase()
+    if (!message) return false;
+    const lowerMessage = message.toLowerCase();
     return (
-      (lowerMessage.includes('email') && lowerMessage.includes('already')) ||
-      (lowerMessage.includes('email') && lowerMessage.includes('exist')) ||
-      lowerMessage.includes('user already exists') ||
-      lowerMessage.includes('duplicate email')
-    )
-  }
+      (lowerMessage.includes("email") && lowerMessage.includes("already")) ||
+      (lowerMessage.includes("email") && lowerMessage.includes("exist")) ||
+      lowerMessage.includes("user already exists") ||
+      lowerMessage.includes("duplicate email")
+    );
+  };
 
   // handle country selection -> set phone code separately
   const handleCountrySelect = (e) => {
-    const selectedCode = e.target.value
-    const selectedCountry = countryList.find((c) => c.code === selectedCode)
+    const selectedCode = e.target.value;
+    const selectedCountry = countryList.find((c) => c.code === selectedCode);
 
     setFormData((prev) => ({
       ...prev,
       country: selectedCode,
-      phoneCode: selectedCountry?.callingCode ? selectedCountry.callingCode : ''
-    }))
+      phoneCode: selectedCountry?.callingCode
+        ? selectedCountry.callingCode
+        : "",
+    }));
 
     // clear phone errors when changing country
-    setErrors((prev) => ({ ...prev, country: '', phoneNumber: '' }))
-  }
+    setErrors((prev) => ({ ...prev, country: "", phoneNumber: "" }));
+  };
 
   // normalize input: trim leading/trailing spaces for text fields (except password)
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
 
     // For names and email, avoid leading/trailing spaces in state
     const normalized =
-      name === 'firstName' || name === 'lastName' || name === 'email'
-        ? value.replace(/^\s+/g, '') // remove leading spaces, keep internal spaces
-        : value
+      name === "firstName" || name === "lastName" || name === "email"
+        ? value.replace(/^\s+/g, "") // remove leading spaces, keep internal spaces
+        : value;
 
-    setFormData((prev) => ({ ...prev, [name]: normalized }))
+    setFormData((prev) => ({ ...prev, [name]: normalized }));
 
     // validate as user types (live feedback)
     switch (name) {
-      case 'firstName':
-        setErrors((prev) => ({ ...prev, firstName: validateName(normalized) }))
-        break
-      case 'lastName':
-        setErrors((prev) => ({ ...prev, lastName: validateName(normalized) }))
-        break
-      case 'email':
-        setErrors((prev) => ({ ...prev, email: validateEmail(normalized) }))
-        break
-      case 'phoneNumber':
-        setErrors((prev) => ({ ...prev, phoneNumber: validatePhoneNumber(normalized) }))
-        break
-      case 'password':
-        setErrors((prev) => ({ ...prev, password: validatePassword(normalized) }))
-        break
+      case "firstName":
+        setErrors((prev) => ({ ...prev, firstName: validateName(normalized) }));
+        break;
+      case "lastName":
+        setErrors((prev) => ({ ...prev, lastName: validateName(normalized) }));
+        break;
+      case "email":
+        setErrors((prev) => ({ ...prev, email: validateEmail(normalized) }));
+        break;
+      case "phoneNumber":
+        setErrors((prev) => ({
+          ...prev,
+          phoneNumber: validatePhoneNumber(normalized),
+        }));
+        break;
+      case "password":
+        setErrors((prev) => ({
+          ...prev,
+          password: validatePassword(normalized),
+        }));
+        break;
       default:
-        break
+        break;
     }
-  }
+  };
 
   // full form validation before submit - returns boolean
   const validateForm = () => {
@@ -158,20 +173,20 @@ export default function Page() {
       firstName: validateName(formData.firstName),
       lastName: validateName(formData.lastName),
       email: validateEmail(formData.email),
-      country: formData.country ? '' : 'Please select a country.',
+      country: formData.country ? "" : "Please select a country.",
       phoneNumber: validatePhoneNumber(formData.phoneNumber),
-      password: validatePassword(formData.password)
-    }
-    setErrors(fErr)
+      password: validatePassword(formData.password),
+    };
+    setErrors(fErr);
 
     // if any error message present -> invalid
-    return !Object.values(fErr).some((v) => v && v.length > 0)
-  }
+    return !Object.values(fErr).some((v) => v && v.length > 0);
+  };
 
   const handleSignup = async (e) => {
-    e.preventDefault()
-    setSuccessMsg('')
-    setErrorMsg('')
+    e.preventDefault();
+    setSuccessMsg("");
+    setErrorMsg("");
 
     // final trim for sending
     const trimmedData = {
@@ -180,13 +195,13 @@ export default function Page() {
       lastName: formData.lastName.trim(),
       email: formData.email.trim(),
       phoneNumber: formData.phoneNumber.trim(),
-      phoneCode: formData.phoneCode.trim()
-    }
+      phoneCode: formData.phoneCode.trim(),
+    };
 
     // validate
     if (!validateForm()) {
-      setErrorMsg('Please fix validation errors and try again.')
-      return
+      // setErrorMsg("Please fix validation errors and try again.");
+      return;
     }
 
     // prepare payload (adjust as your backend expects)
@@ -197,57 +212,78 @@ export default function Page() {
       country: formData.country,
       mobile: `${trimmedData.phoneCode}${trimmedData.phoneNumber}`, // keep previous contract
       password: formData.password,
-      address: '',
-      isEmailVerified: 'true',
-      googleId: '',
-      facebookId: '',
-      profilePic: '',
-      handle: '#meToo',
-      deviceToken: '',
-      currency: 'INR',
-      userRole: 'USER'
-    }
+      address: "",
+      isEmailVerified: "true",
+      googleId: "",
+      facebookId: "",
+      profilePic: "",
+      handle: "#meToo",
+      deviceToken: "",
+      currency: "INR",
+      userRole: "USER",
+    };
 
     try {
-      console.log('Payload:', payload)
-      const res = await axios.post(`${config.BASE_URL}user/register`, payload)
-      if (res.data && res.data.code === 0) {
-        setSuccessMsg('🎉 Registration successful! Redirecting to login...')
-        // redirect after short delay so user sees the success message
-        setTimeout(() => router.push('/Login'), 1600)
+      console.log("Payload:", payload);
+      const res = await axios.post(`${config.BASE_URL}user/register`, payload);
+      const apiMessage = res.data?.message || "";
+      const apiCode = res.data?.code;
+
+      if (apiCode === 0) {
+        setSuccessMsg("🎉 Registration successful! Redirecting to login...");
+        setTimeout(() => router.push("/Login"), 1600);
       } else {
-        // handle non-0 codes gracefully
-        console.log('Signup response:', res.data)
-        const backendMessage = res.data?.message
-        if (isDuplicateEmailError(backendMessage)) {
-          setErrorMsg('Email already exists. Please use a different email.')
-        } else {
-          setErrorMsg(backendMessage || 'Registration failed. Please try again.')
-        }
+        // 🔴 Backend does not distinguish errors → treat as duplicate email
+        setErrorMsg("Email already exists. Please use a different email.");
+
+        setErrors((prev) => ({
+          ...prev,
+          email: "Email already exists. Please use a different email.",
+        }));
       }
     } catch (error) {
-      console.error('Signup error:', error?.response?.data || error.message || error)
-      setErrorMsg(
-        error?.response?.data?.message ||
-          'The email ID provided may already be associated with an existing account. Try a different email.'
-      )
+      console.log("Signup error full:", error);
+
+      const status = error?.response?.status;
+      const backendData = error?.response?.data;
+
+      // 🔴 FORCE DUPLICATE EMAIL MESSAGE
+      if (status === 409 || status === 400) {
+        setErrorMsg("Email already exists. Please use a different email.");
+
+        // Optional: highlight email field
+        setErrors((prev) => ({
+          ...prev,
+          email: "Email already exists. Please use a different email.",
+        }));
+
+        return;
+      }
+
+      // fallback
+      setErrorMsg("Registration failed. Please try again.");
     }
-  }
+  };
 
   // small helper to display error block
   const FieldError = ({ message }) =>
     message ? (
-      <div className="invalid-feedback d-block" style={{ marginTop: '4px' }}>
+      <div className="invalid-feedback d-block" style={{ marginTop: "4px" }}>
         {message}
       </div>
-    ) : null
+    ) : null;
 
   return (
     <div>
       <div className="authentication-wrapper authentication-cover">
-        <Link href="/" className="auth-cover-brand d-flex align-items-center gap-2">
+        <Link
+          href="/"
+          className="auth-cover-brand d-flex align-items-center gap-2"
+        >
           <img src="/images/logo.png" width="80" alt="logo" />
-          <span className="app-brand-text demo text-heading fw-semibold">Camrilla</span>
+          <span className="app-brand-text demo text-heading fw-semibold">
+            Camrilla
+          </span>
         </Link>
 
         <div className="authentication-inner row m-0">
@@ -269,12 +305,26 @@ export default function Page() {
               <h4 className="mb-1">Adventure starts here 🚀</h4>
               <p className="mb-4">Make your app management easy and fun!</p>
 
+              {successMsg && (
+                <div className="alert alert-success" role="alert">
+                  {successMsg}
+                </div>
+              )}
+
+              {errorMsg && (
+                <div className="alert alert-danger" role="alert">
+                  {errorMsg}
+                </div>
+              )}
+
               <form className="mb-4" onSubmit={handleSignup} noValidate>
                 {/* First Name */}
                 <div className="form-floating form-floating-outline mb-4">
                   <input
                     type="text"
-                    className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
+                    className={`form-control ${
+                      errors.firstName ? "is-invalid" : ""
+                    }`}
                     id="firstName"
                     name="firstName"
                     placeholder="First Name"
@@ -292,7 +342,9 @@ export default function Page() {
                 <div className="form-floating form-floating-outline mb-4">
                   <input
                     type="text"
-                    className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
+                    className={`form-control ${
+                      errors.lastName ? "is-invalid" : ""
+                    }`}
                     id="lastName"
                     name="lastName"
                     placeholder="Last Name"
@@ -309,7 +361,9 @@ export default function Page() {
                 <div className="form-floating form-floating-outline mb-4">
                   <input
                     type="email"
-                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                    className={`form-control ${
+                      errors.email ? "is-invalid" : ""
+                    }`}
                     id="email"
                     name="email"
                     placeholder="Email"
@@ -324,7 +378,9 @@ export default function Page() {
                 {/* Country */}
                 <div className="form-floating form-floating-outline mb-4">
                   <select
-                    className={`form-select ${errors.country ? 'is-invalid' : ''}`}
+                    className={`form-select ${
+                      errors.country ? "is-invalid" : ""
+                    }`}
                     id="country"
                     name="country"
                     value={formData.country}
@@ -355,7 +411,10 @@ export default function Page() {
                         value={formData.phoneCode}
                         readOnly
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, phoneCode: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            phoneCode: e.target.value,
+                          }))
                         }
                         aria-label="Phone code"
                       />
@@ -367,7 +426,9 @@ export default function Page() {
                     <div className="form-floating form-floating-outline">
                       <input
                         type="text"
-                        className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                        className={`form-control ${
+                          errors.phoneNumber ? "is-invalid" : ""
+                        }`}
                         id="phoneNumber"
                         name="phoneNumber"
                         placeholder="Mobile Number"
@@ -386,7 +447,9 @@ export default function Page() {
                 <div className="form-floating form-floating-outline mb-4">
                   <input
                     type="password"
-                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                    className={`form-control ${
+                      errors.password ? "is-invalid" : ""
+                    }`}
                     id="password"
                     name="password"
                     placeholder="Password"
@@ -395,7 +458,7 @@ export default function Page() {
                     required
                   />
                   <label htmlFor="password">Password</label>
-                  <div className="form-text" style={{ marginTop: '4px' }}>
+                  <div className="form-text" style={{ marginTop: "4px" }}>
                     Use at least 8 characters with letters and numbers.
                   </div>
                   <FieldError message={errors.password} />
@@ -410,18 +473,6 @@ export default function Page() {
                 </button>
               </form>
 
-              {successMsg && (
-                <div className="alert alert-success" role="alert">
-                  {successMsg}
-                </div>
-              )}
-
-              {errorMsg && (
-                <div className="alert alert-danger" role="alert">
-                  {errorMsg}
-                </div>
-              )}
-
               <p className="text-center mt-3">
                 <span>Already have an account? </span>
                 <Link href="/Login">
@@ -433,5 +484,5 @@ export default function Page() {
         </div>
       </div>
     </div>
-  )
+  );
 }

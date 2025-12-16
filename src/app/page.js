@@ -528,9 +528,9 @@ export default function Home() {
             role="alert"
           >
             🌟 Enjoying Camrilla Pro? We would love your feedback!{" "}
-            <a href="/Feedback" className="text-decoration-underline fw-bold">
+            <Link href="/Feedback" className="text-decoration-underline fw-bold">
               Write to us
-            </a>
+            </Link>
             .
           </div>
         )}
