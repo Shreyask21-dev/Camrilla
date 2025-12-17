@@ -331,9 +331,9 @@ export default function Page() {
                                                                 <button
                                                                     onClick={() => initiatePayment(plan.id)}
                                                                     className={`btn ${activePlan?.planId === plan.id ? 'btn-primary' : 'btn-outline-primary'} d-grid w-100`}
-                                                                    disabled={activePlan?.planId === plan.id && !(plan.planName.toLowerCase() === 'professional' && isExpired)}
+                                                                    disabled={activePlan?.planId === plan.id && !isExpired}
                                                                 >
-                                                                    {activePlan?.planId === plan.id ? (plan.planName.toLowerCase() === 'professional' && isExpired ? 'Renew' : 'Your Current Plan') : 'Upgrade'}
+                                                                    {activePlan?.planId === plan.id ? (isExpired ? 'Renew' : 'Your Current Plan') : 'Upgrade'}
                                                                 </button>
                                                             )}
                                                     </div>

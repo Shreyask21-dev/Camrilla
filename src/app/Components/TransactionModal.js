@@ -41,22 +41,12 @@ export default function TransactionModal({ show, handleClose, assignment, refres
   };
 
  const handleAddOrUpdateTransaction = async () => {
+    if (!validateTransaction()) {
+      return;
+    }
+
     const token = JSON.parse(localStorage.getItem('camrilla_token'))?.accessToken;
     const receivedDate = new Date(newTransaction.receivedDate).getTime();
-
-    // 🚫 Validation — Block if any field is empty
-    if (!newTransaction.receivedPayment || Number(newTransaction.receivedPayment) <= 0) {
-        alert("Received Payment must be greater than 0");
-        return;
-    }
-    if (!newTransaction.receivedDate) {
-        alert("Received Date is required");
-        return;
-    }
-    if (!newTransaction.paymentNote.trim()) {
-        alert("Payment Note cannot be blank");
-        return;
-    }
 
     try {
         if (editingTransaction) {
@@ -241,6 +231,11 @@ export default function TransactionModal({ show, handleClose, assignment, refres
                 })
               }
             />
+            {errors.paymentNote && (
+              <div className="text-danger small mt-1">
+                {errors.paymentNote}
+              </div>
+            )}
           </Form.Group>
 
           <Button variant="primary" onClick={handleAddOrUpdateTransaction}>

@@ -61,7 +61,7 @@ export default function Navbar() {
                         <div className="nav-item navbar-search-wrapper mb-0">
 
 
-                            <div className="position-relative border border-top-0 border-start-0 border-end-0 " style={{ width: "67.5vw" }}>
+                            {/* <div className="position-relative border border-top-0 border-start-0 border-end-0 " style={{ width: "67.5vw" }}>
                                 <i
                                     className="ri-search-line position-absolute text-muted "
                                     style={{ top: '50%', left: '0px', transform: 'translateY(-50%)' }}
@@ -73,7 +73,7 @@ export default function Navbar() {
                                     aria-label="Search..."
                                     onChange={handleSearchChange}
                                 />
-                            </div>
+                            </div> */}
 
                         </div>
                     </div>

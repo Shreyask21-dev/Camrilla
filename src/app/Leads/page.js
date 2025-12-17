@@ -9,6 +9,49 @@ import useLeadStore from "../store/leadStore";
 
 const normalize = (str) => str?.trim().toLowerCase();
 
+const getDateRange = (dateRangeFilter, calendarDate, startDate, endDate) => {
+  const now = new Date();
+  let start, end;
+
+  if (startDate && endDate) {
+    start = new Date(startDate);
+    end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  if (dateRangeFilter === "lastMonth") {
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    end = new Date(now.getFullYear(), now.getMonth(), 0);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  if (dateRangeFilter === "currentYear") {
+    start = new Date(now.getFullYear(), 0, 1);
+    end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    return { start, end };
+  }
+
+  if (dateRangeFilter === "lastYear") {
+    start = new Date(now.getFullYear() - 1, 0, 1);
+    end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+    return { start, end };
+  }
+
+  if (dateRangeFilter === "all") {
+    start = new Date(2000, 0, 1);
+    end = new Date(2100, 11, 31, 23, 59, 59, 999);
+    return { start, end };
+  }
+
+  // Default: selected month
+  start = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1);
+  end = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+};
+
 const bootstrapColors = [
   "success",
   "warning",
@@ -307,8 +350,15 @@ export default function Page() {
 
     const { accessToken } = JSON.parse(camrillaToken);
 
+    const { start, end } = getDateRange(dateRangeFilter, calendarDate, startDate, endDate);
+
     axios
-      .get(`${config.BASE_URL}lead-manager/lead`)
+      .get(`${config.BASE_URL}lead-manager/lead`, {
+        params: {
+          startDate: start.getTime(),
+          endDate: end.getTime(),
+        },
+      })
       .then((response) => {
         console.log(response.data.data);
         setLeadCount(response.data.data.length);
@@ -345,6 +395,10 @@ export default function Page() {
   useEffect(() => {
     fetchLeads();
   }, []);
+
+  useEffect(() => {
+    fetchLeads();
+  }, [dateRangeFilter, calendarDate, startDate, endDate]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -554,7 +608,7 @@ export default function Page() {
 
     switch (dateRangeFilter) {
       case "all":
-        return "All Leads";
+        return `All Leads (${filteredLeads.length})`;
       case "lastMonth":
         const now = new Date();
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -562,13 +616,13 @@ export default function Page() {
           month: "long",
         });
         const year = lastMonth.getFullYear();
-        return `Leads - ${monthName2} ${year}`;
+        return `Leads - ${monthName2} ${year} (${filteredLeads.length})`;
       case "currentYear":
-        return `Leads - Year ${currentYear}`;
+        return `Leads - Year ${currentYear} (${filteredLeads.length})`;
       case "lastYear":
-        return `Leads - Year ${currentYear - 1}`;
+        return `Leads - Year ${currentYear - 1} (${filteredLeads.length})`;
       default:
-        return `Leads - ${monthName} ${currentYear}`;
+        return `Leads - ${monthName} ${currentYear} (${filteredLeads.length})`;
     }
   };
 
@@ -886,6 +940,61 @@ export default function Page() {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {totalPages > 1 && (
+                    <div className="d-flex justify-content-center mt-4">
+                      <nav aria-label="Page navigation">
+                        <ul className="pagination">
+                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            {/* <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(1)}
+                              disabled={currentPage === 1}
+                            >
+                              First
+                            </button> */}
+                          </li>
+                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(currentPage - 1)}
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </button>
+                          </li>
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                              <button
+                                className="page-link"
+                                onClick={() => setCurrentPage(page)}
+                              >
+                                {page}
+                              </button>
+                            </li>
+                          ))}
+                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                            >
+                              Next
+                            </button>
+                          </li>
+                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            {/* <button
+                              className="page-link"
+                              onClick={() => setCurrentPage(totalPages)}
+                              disabled={currentPage === totalPages}
+                            >
+                              Last
+                            </button> */}
+                          </li>
+                        </ul>
+                      </nav>
                     </div>
                   )}
                 </div>

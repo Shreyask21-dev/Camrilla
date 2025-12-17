@@ -65,6 +65,17 @@ export default function AddEventModal({
         setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
+    // Handler for text inputs to reject inputs starting with space or containing only spaces
+    const handleTextInputChange = (e) => {
+        const { name, value } = e.target;
+        // Reject if starts with space or is only spaces
+        if (value.startsWith(' ') || value.trim() === '') {
+            return; // Do not update state
+        }
+        setFormData(prev => ({ ...prev, [name]: value }));
+        setErrors(prev => ({ ...prev, [name]: '' }));
+    };
+
     // ✅ Separate handler for note (to manage char count & limits)
     const handleNoteChange = (e) => {
     let value = e.target.value;
@@ -141,12 +152,12 @@ export default function AddEventModal({
         if (isEmpty(formData.customerName)) e.customerName = "Customer name is required.";
         const emailErr = validateEmail(formData.customerEmail);
         if (emailErr) e.customerEmail = emailErr;
-    const mobileErr = validateMobile(formData.customerMobile);
-    if (mobileErr) e.customerMobile = mobileErr;
-    if (isEmpty(formData.customerAddress) || formData.customerAddress.length < 2)
-        e.customerAddress = "Address must be at least 2 characters.";
+        const mobileErr = validateMobile(formData.customerMobile);
+        if (mobileErr) e.customerMobile = mobileErr;
+        if (isEmpty(formData.customerAddress) || formData.customerAddress.length < 2)
+            e.customerAddress = "Address must be at least 2 characters.";
 
-    setErrors(prev => ({ ...prev, ...e }));
+        setErrors(prev => ({ ...prev, ...e }));
         return Object.keys(e).length === 0;
     };
 
@@ -291,7 +302,7 @@ export default function AddEventModal({
                                 <Form.Control
                                     name="customerName"
                                     value={formData.customerName}
-                                    onChange={handleInputChange}
+                                    onChange={handleTextInputChange}
                                     isInvalid={!!errors.customerName}
                                 />
                                 <Form.Control.Feedback type="invalid">{errors.customerName}</Form.Control.Feedback>
@@ -302,7 +313,7 @@ export default function AddEventModal({
                                 <Form.Control
                                     name="customerEmail"
                                     value={formData.customerEmail}
-                                    onChange={handleInputChange}
+                                    onChange={handleTextInputChange}
                                     isInvalid={!!errors.customerEmail}
                                 />
                                 <Form.Control.Feedback type="invalid">{errors.customerEmail}</Form.Control.Feedback>
@@ -313,7 +324,7 @@ export default function AddEventModal({
                                 <Form.Control
                                     name="customerMobile"
                                     value={formData.customerMobile}
-                                    onChange={handleInputChange}
+                                    onChange={handleTextInputChange}
                                     isInvalid={!!errors.customerMobile}
                                 />
                                 <Form.Control.Feedback type="invalid">{errors.customerMobile}</Form.Control.Feedback>
@@ -324,7 +335,7 @@ export default function AddEventModal({
                                 <Form.Control
                                     name="customerAddress"
                                     value={formData.customerAddress}
-                                    onChange={handleInputChange}
+                                    onChange={handleTextInputChange}
                                     isInvalid={!!errors.customerAddress}
                                 />
                                 <Form.Control.Feedback type="invalid">{errors.customerAddress}</Form.Control.Feedback>
@@ -356,7 +367,7 @@ export default function AddEventModal({
                                     <Form.Label>New Assignment Name</Form.Label>
                                     <Form.Control
                                         value={customAssignmentName}
-                                        onChange={(e) => setCustomAssignmentName(e.target.value)}
+                                        onChange={(e) => setCustomAssignmentName(e.target.value.trim())}
                                         isInvalid={!!errors.assignmentName}
                                     />
                                     <Form.Control.Feedback type="invalid">{errors.assignmentName}</Form.Control.Feedback>
@@ -368,10 +379,9 @@ export default function AddEventModal({
                                 <Form.Control
                                     name="assignmentAddress"
                                     value={formData.assignmentAddress}
-                                    onChange={handleInputChange}
+                                    onChange={handleTextInputChange}
                                     isInvalid={!!errors.assignmentAddress}
                                 />
-                           
 
                                 <Form.Control.Feedback type="invalid">{errors.assignmentAddress}</Form.Control.Feedback>
                             </Form.Group>
@@ -381,7 +391,7 @@ export default function AddEventModal({
                                 <Form.Control
                                     name="contactPerson1Mobile"
                                     value={formData.contactPerson1Mobile}
-                                    onChange={handleInputChange}
+                                    onChange={handleTextInputChange}
                                     isInvalid={!!errors.contactPerson1Mobile}
                                 />
                                 <Form.Control.Feedback type="invalid">{errors.contactPerson1Mobile}</Form.Control.Feedback>
@@ -473,7 +483,7 @@ export default function AddEventModal({
                                     <Form.Control
                                         type="text"
                                         value={customAssignToHandle}
-                                        onChange={(e) => setCustomAssignToHandle(e.target.value)}
+                                        onChange={(e) => setCustomAssignToHandle(e.target.value.replace(/^\s+/, ''))}
                                         isInvalid={!!errors.assignTo}
                                     />
                                     <Form.Control.Feedback type="invalid">{errors.assignTo}</Form.Control.Feedback>
