@@ -169,6 +169,26 @@ function paymentDateToMillis(value) {
   return Number.isNaN(parsedDate) ? Date.now() : parsedDate;
 }
 
+function addOneYearMillis(value) {
+  const date = new Date(value);
+  date.setFullYear(date.getFullYear() + 1);
+  return date.getTime();
+}
+
+function optionalDateToMillis(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const numericDate = Number(value);
+  if (Number.isFinite(numericDate)) {
+    return Math.trunc(numericDate);
+  }
+
+  const parsedDate = Date.parse(value);
+  return Number.isNaN(parsedDate) ? null : parsedDate;
+}
+
 function resolveUserId(authUser, bodyUserId) {
   return (
     asInteger(authUser?.id) ??
@@ -228,6 +248,12 @@ export async function POST(req) {
   const paymentCompletionDate = paymentDateToMillis(
     body.paymentCompletionDate ?? body.payment_completion_date
   );
+  const planStartDate =
+    optionalDateToMillis(body.startDate ?? body.start_date) ?? paymentDate;
+  const planEndDate =
+    optionalDateToMillis(body.endDate ?? body.end_date) ??
+    addOneYearMillis(planStartDate);
+  const autoRenewal = asInteger(body.autoRenewal ?? body.auto_renewal) ?? 1;
   const paymentMethod = "Apple App Store";
   const paymentNotes = [
     paymentMethod,
@@ -346,6 +372,8 @@ export async function POST(req) {
 
     let paymentId = null;
     let action = "updated";
+    let userPlanId = null;
+    let userPlanAction = "updated";
 
     if (updateResult.affectedRows === 0) {
       const [insertResult] = await connection.execute(
@@ -384,6 +412,57 @@ export async function POST(req) {
       paymentId = existingPayment?.id ?? null;
     }
 
+    const [activePlanRows] = await connection.execute(
+      `SELECT id
+       FROM user_plan
+       WHERE user_id = ? AND plan_id = ? AND plan_status = 'ACTIVE'
+       ORDER BY id DESC
+       LIMIT 1`,
+      [userId, planId]
+    );
+    const activeUserPlan = activePlanRows[0] ?? null;
+
+    if (activeUserPlan?.id) {
+      userPlanId = activeUserPlan.id;
+
+      await connection.execute(
+        "UPDATE user_plan SET plan_status = 'INACTIVE' WHERE user_id = ? AND plan_status = 'ACTIVE' AND id <> ?",
+        [userId, userPlanId]
+      );
+
+      await connection.execute(
+        `UPDATE user_plan
+         SET plan_id = ?,
+             plan_status = 'ACTIVE',
+             start_date = ?,
+             end_date = ?,
+             auto_renewal = ?
+         WHERE id = ?`,
+        [planId, planStartDate, planEndDate, autoRenewal, userPlanId]
+      );
+    } else {
+      await connection.execute(
+        "UPDATE user_plan SET plan_status = 'INACTIVE' WHERE user_id = ? AND plan_status = 'ACTIVE'",
+        [userId]
+      );
+
+      const [userPlanInsertResult] = await connection.execute(
+        `INSERT INTO user_plan (
+          user_id,
+          plan_id,
+          plan_status,
+          start_date,
+          end_date,
+          auto_renewal
+        )
+        VALUES (?, ?, 'ACTIVE', ?, ?, ?)`,
+        [userId, planId, planStartDate, planEndDate, autoRenewal]
+      );
+
+      userPlanId = userPlanInsertResult.insertId;
+      userPlanAction = "inserted";
+    }
+
     await connection.commit();
 
     return NextResponse.json({
@@ -395,6 +474,11 @@ export async function POST(req) {
         orderId,
         paymentStatus: "SUCCESS",
         paymentMethod,
+        userPlanAction,
+        userPlanId,
+        planStatus: "ACTIVE",
+        planStartDate,
+        planEndDate,
       },
     });
   } catch (err) {
