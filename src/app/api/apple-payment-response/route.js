@@ -9,6 +9,23 @@ const JWT_HMAC_ALGORITHMS = {
   HS512: "sha512",
 };
 
+function getJwtSecrets() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return [];
+
+  const trimmedSecret = secret.trim();
+  const secrets = [Buffer.from(trimmedSecret, "utf8")];
+
+  try {
+    const base64Secret = Buffer.from(trimmedSecret, "base64");
+    if (base64Secret.length > 0) {
+      secrets.push(base64Secret);
+    }
+  } catch {}
+
+  return secrets;
+}
+
 function base64UrlDecode(value) {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
   const padded = normalized.padEnd(
@@ -33,12 +50,7 @@ function getUserFromRequest(req) {
   const token = authHeader.slice("Bearer ".length).trim();
   const [encodedHeader, encodedPayload, signature] = token.split(".");
 
-  if (
-    !encodedHeader ||
-    !encodedPayload ||
-    !signature ||
-    !process.env.JWT_SECRET
-  ) {
+  if (!encodedHeader || !encodedPayload || !signature) {
     return null;
   }
 
@@ -50,20 +62,25 @@ function getUserFromRequest(req) {
       return null;
     }
 
-    const expectedSignature = base64UrlEncode(
-      crypto
-        .createHmac(digestAlgorithm, process.env.JWT_SECRET)
-        .update(`${encodedHeader}.${encodedPayload}`)
-        .digest()
-    );
+    const secrets = getJwtSecrets();
+    const isValidSignature = secrets.some((secret) => {
+      const expectedSignature = base64UrlEncode(
+        crypto
+          .createHmac(digestAlgorithm, secret)
+          .update(`${encodedHeader}.${encodedPayload}`)
+          .digest()
+      );
 
-    const signatureBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expectedSignature);
+      const signatureBuffer = Buffer.from(signature);
+      const expectedBuffer = Buffer.from(expectedSignature);
 
-    if (
-      signatureBuffer.length !== expectedBuffer.length ||
-      !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)
-    ) {
+      return (
+        signatureBuffer.length === expectedBuffer.length &&
+        crypto.timingSafeEqual(signatureBuffer, expectedBuffer)
+      );
+    });
+
+    if (!isValidSignature) {
       return null;
     }
 
