@@ -43,7 +43,49 @@ function base64UrlEncode(value) {
     .replace(/\//g, "_");
 }
 
-function getUserFromRequest(req) {
+function decodeJwtPayload(encodedPayload) {
+  const payload = JSON.parse(base64UrlDecode(encodedPayload).toString("utf8"));
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+
+  if (payload.exp && Number(payload.exp) < nowInSeconds) {
+    return null;
+  }
+
+  return payload;
+}
+
+async function validateTokenWithIssuer(authHeader) {
+  const authApiBaseUrl =
+    process.env.AUTH_API_BASE_URL?.replace(/\/$/, "") ??
+    "https://api.camrilla.com";
+
+  try {
+    const response = await fetch(`${authApiBaseUrl}/user-plan`, {
+      method: "GET",
+      headers: {
+        Authorization: authHeader,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Apple payment issuer auth failed:",
+        response.status,
+        response.statusText
+      );
+      return false;
+    }
+
+    const data = await response.json().catch(() => null);
+    return data?.code === 0;
+  } catch (err) {
+    console.error("Apple payment issuer auth error:", err.message);
+    return false;
+  }
+}
+
+async function getUserFromRequest(req) {
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) return null;
 
@@ -81,17 +123,15 @@ function getUserFromRequest(req) {
     });
 
     if (!isValidSignature) {
-      return null;
+      const isValidIssuerToken = await validateTokenWithIssuer(authHeader);
+      if (!isValidIssuerToken) {
+        return null;
+      }
+
+      return decodeJwtPayload(encodedPayload);
     }
 
-    const payload = JSON.parse(base64UrlDecode(encodedPayload).toString("utf8"));
-    const nowInSeconds = Math.floor(Date.now() / 1000);
-
-    if (payload.exp && Number(payload.exp) < nowInSeconds) {
-      return null;
-    }
-
-    return payload;
+    return decodeJwtPayload(encodedPayload);
   } catch (err) {
     console.error("Apple payment JWT auth error:", err.message);
     return null;
@@ -143,7 +183,7 @@ function resolveUserEmail(authUser) {
 }
 
 export async function POST(req) {
-  const authUser = getUserFromRequest(req);
+  const authUser = await getUserFromRequest(req);
 
   if (!authUser) {
     return NextResponse.json(
