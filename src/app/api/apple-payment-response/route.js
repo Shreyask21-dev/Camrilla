@@ -3,6 +3,11 @@ import crypto from "crypto";
 import db from "@/lib/db";
 
 const SUCCESS_STATUSES = new Set(["SUCCESS", "PURCHASED", "RESTORED"]);
+const JWT_HMAC_ALGORITHMS = {
+  HS256: "sha256",
+  HS384: "sha384",
+  HS512: "sha512",
+};
 
 function base64UrlDecode(value) {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -40,13 +45,14 @@ function getUserFromRequest(req) {
   try {
     const header = JSON.parse(base64UrlDecode(encodedHeader).toString("utf8"));
 
-    if (header.alg !== "HS256") {
+    const digestAlgorithm = JWT_HMAC_ALGORITHMS[header.alg];
+    if (!digestAlgorithm) {
       return null;
     }
 
     const expectedSignature = base64UrlEncode(
       crypto
-        .createHmac("sha256", process.env.JWT_SECRET)
+        .createHmac(digestAlgorithm, process.env.JWT_SECRET)
         .update(`${encodedHeader}.${encodedPayload}`)
         .digest()
     );
@@ -113,6 +119,10 @@ function resolveUserId(authUser, bodyUserId) {
     asInteger(authUser?.user_id) ??
     asInteger(bodyUserId)
   );
+}
+
+function resolveUserEmail(authUser) {
+  return asNullableString(authUser?.email ?? authUser?.sub);
 }
 
 export async function POST(req) {
@@ -205,7 +215,20 @@ export async function POST(req) {
     const existingPayment = existingRows[0] ?? null;
     const existingUserId = asInteger(existingPayment?.user_id);
     const existingPlanId = asInteger(existingPayment?.plan_id);
-    const userId = authUserId ?? existingUserId ?? bodyUserId;
+    let authenticatedUserId = authUserId;
+
+    if (!authenticatedUserId) {
+      const authEmail = resolveUserEmail(authUser);
+      if (authEmail) {
+        const [userRows] = await connection.execute(
+          "SELECT id FROM `user` WHERE email = ? LIMIT 1",
+          [authEmail]
+        );
+        authenticatedUserId = asInteger(userRows[0]?.id);
+      }
+    }
+
+    const userId = authenticatedUserId ?? existingUserId ?? bodyUserId;
     const planId = existingPlanId ?? bodyPlanId;
 
     if (!userId) {
@@ -225,9 +248,9 @@ export async function POST(req) {
     }
 
     if (
-      authUserId &&
+      authenticatedUserId &&
       existingPayment?.user_id &&
-      authUserId !== asInteger(existingPayment.user_id)
+      authenticatedUserId !== asInteger(existingPayment.user_id)
     ) {
       await connection.rollback();
       return NextResponse.json(
